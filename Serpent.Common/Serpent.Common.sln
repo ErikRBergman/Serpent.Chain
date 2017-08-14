@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.BaseTypeExte
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.DapperExtensions", "Serpent.Common.DapperExtensions\Serpent.Common.DapperExtensions.csproj", "{5BF8D8C7-1729-4394-9844-CADB83B15AC3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.Async", "Serpent.Common.Async\Serpent.Common.Async.csproj", "{A681DB21-642D-4E05-812B-97D21E778D88}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{5BF8D8C7-1729-4394-9844-CADB83B15AC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5BF8D8C7-1729-4394-9844-CADB83B15AC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5BF8D8C7-1729-4394-9844-CADB83B15AC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A681DB21-642D-4E05-812B-97D21E778D88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A681DB21-642D-4E05-812B-97D21E778D88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A681DB21-642D-4E05-812B-97D21E778D88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A681DB21-642D-4E05-812B-97D21E778D88}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
