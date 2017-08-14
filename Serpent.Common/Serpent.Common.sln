@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.DapperExtens
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.Async", "Serpent.Common.Async\Serpent.Common.Async.csproj", "{A681DB21-642D-4E05-812B-97D21E778D88}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.Xml", "Serpent.Common.Xml\Serpent.Common.Xml.csproj", "{F04ED5AE-14DA-4B86-9FB3-7F636DA16512}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{A681DB21-642D-4E05-812B-97D21E778D88}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A681DB21-642D-4E05-812B-97D21E778D88}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A681DB21-642D-4E05-812B-97D21E778D88}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F04ED5AE-14DA-4B86-9FB3-7F636DA16512}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F04ED5AE-14DA-4B86-9FB3-7F636DA16512}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F04ED5AE-14DA-4B86-9FB3-7F636DA16512}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F04ED5AE-14DA-4B86-9FB3-7F636DA16512}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

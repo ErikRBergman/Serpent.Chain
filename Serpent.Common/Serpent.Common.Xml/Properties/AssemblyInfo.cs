@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Serpent.Common.BaseTypeExtensions")]
-[assembly: AssemblyDescription("Base type extensions")]
+[assembly: AssemblyTitle("Serpent.Common.Xml")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Serpent.Common.BaseTypeExtensions")]
-[assembly: AssemblyCopyright("Copyright © 2017")]
+[assembly: AssemblyProduct("Serpent.Common.Xml")]
+[assembly: AssemblyCopyright("Copyright ©  2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,9 +20,5 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("a449c162-1cea-41d1-8140-d74a45d6224e")]
-
+[assembly: Guid("f04ed5ae-14da-4b86-9fb3-7f636da16512")]
 [assembly: AssemblyVersion("0.1.*")]
-[assembly: InternalsVisibleTo("Serpent.Common.BaseTypeExtensions.Tests")]
-[assembly: InternalsVisibleTo("Serpent.Common.BaseTypeExtensions.Explorables")]
-
