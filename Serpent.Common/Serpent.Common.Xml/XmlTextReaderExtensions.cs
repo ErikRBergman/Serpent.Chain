@@ -1,4 +1,4 @@
-﻿namespace Serpent.Commmon.Xml
+﻿namespace Serpent.Common.Xml
 {
     using System.Xml;
 
