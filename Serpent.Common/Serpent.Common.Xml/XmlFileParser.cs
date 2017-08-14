@@ -1,4 +1,4 @@
-﻿namespace Serpent.Commmon.Xml
+﻿namespace Serpent.Common.Xml
 {
     using System;
     using System.Collections.Generic;
@@ -6,7 +6,8 @@
     using System.Threading.Tasks;
     using System.Xml;
 
-    using Temp;
+    using Serpent.Commmon.Xml;
+    using Serpent.Common.BaseTypeExtensions.Collections;
 
     public class XmlFileParser
     {
