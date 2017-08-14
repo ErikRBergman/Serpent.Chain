@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.Async", "Ser
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.Xml", "Serpent.Common.Xml\Serpent.Common.Xml.csproj", "{F04ED5AE-14DA-4B86-9FB3-7F636DA16512}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.Stream", "Serpent.Common.Stream\Serpent.Common.Stream.csproj", "{6F567AFD-A1C8-435C-95E8-617E0DE4ECAC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{F04ED5AE-14DA-4B86-9FB3-7F636DA16512}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F04ED5AE-14DA-4B86-9FB3-7F636DA16512}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F04ED5AE-14DA-4B86-9FB3-7F636DA16512}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F567AFD-A1C8-435C-95E8-617E0DE4ECAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F567AFD-A1C8-435C-95E8-617E0DE4ECAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F567AFD-A1C8-435C-95E8-617E0DE4ECAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F567AFD-A1C8-435C-95E8-617E0DE4ECAC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
