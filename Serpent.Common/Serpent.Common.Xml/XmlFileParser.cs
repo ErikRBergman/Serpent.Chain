@@ -88,11 +88,6 @@
                         {
                             if (reader.IsEmptyElement == false)
                             {
-                                if (path == "/Product/Items/Item/Resources/Resource/Filename")
-                                {
-                                    var z = filename;
-                                }
-
                                 if (elementMap.TryGetValue(path, out var action))
                                 {
                                     if (string.IsNullOrWhiteSpace(reader.Value) == false)
