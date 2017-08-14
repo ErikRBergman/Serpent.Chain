@@ -76,7 +76,7 @@
 
                     for (var i = 0; i < this.concurrencyLevel; i++)
                     {
-                        tasks.Add(Task.Run(this.WorkerMethodAsync));
+                        tasks.Add(Task.Run(() => this.WorkerMethodAsync(this.cancellationTokenSource.Token)));
                     }
 
                     this.workerTasks = tasks;
@@ -110,14 +110,8 @@
             }
         }
 
-        private async Task WorkerMethodAsync()
+        private async Task WorkerMethodAsync(CancellationToken token)
         {
-            CancellationToken token;
-            lock (this.lockObject)
-            {
-                token = this.cancellationTokenSource.Token;
-            }
-
             while (true)
             {
                 await this.semaphoreSlim.WaitAsync(token);
