@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ObjectExtensions.cs" />
     <Compile Include="ParallelForEach.cs" />
     <Compile Include="ParallelQueueWorker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

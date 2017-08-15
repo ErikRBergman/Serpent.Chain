@@ -13,12 +13,12 @@
 
             xmlTextReader.Read();
 
-            if (xmlTextReader.NodeType != XmlNodeType.CDATA && xmlTextReader.NodeType != XmlNodeType.Text)
+            if (xmlTextReader.NodeType == XmlNodeType.CDATA || xmlTextReader.NodeType == XmlNodeType.Text)
             {
-                return null;
+                return xmlTextReader.Value;
             }
 
-            return xmlTextReader.Value;
+            return null;
         }
     }
 }

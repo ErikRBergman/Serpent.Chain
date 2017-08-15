@@ -7,7 +7,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public static class Parallel
+    public static class EnumerableExtensions
     {
         private static readonly int ProcessorCount = Environment.ProcessorCount;
 
