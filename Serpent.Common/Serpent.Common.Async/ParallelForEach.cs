@@ -33,6 +33,18 @@
             return Task.WhenAll(Enumerable.Range(0, concurrencyLevel).Select(v => Task.Run(() => ForEachAsyncWorker(queue, workerFunc, cancellationToken), cancellationToken)));
         }
 
+        public static Task ForEachAsync<T>(this IEnumerable<T> items, Func<T, CancellationToken, Task> workerFunc, int concurrencyLevel, CancellationToken cancellationToken)
+        {
+            if (concurrencyLevel < 1)
+            {
+                throw new ArgumentException("concurrencyCount may not be less than 1");
+            }
+
+            var queue = new ConcurrentQueue<T>(items);
+
+            return Task.WhenAll(Enumerable.Range(0, concurrencyLevel).Select(v => Task.Run(() => ForEachAsyncWorker(queue, workerFunc, cancellationToken), cancellationToken)));
+        }
+
         public static Task ForEachAsync<TItem, TContext>(this IEnumerable<TItem> items, TContext context, Func<TItem, TContext, CancellationToken, Task> workerFunc, int concurrencyLevel, CancellationToken cancellationToken)
         {
             if (concurrencyLevel < 1)
@@ -55,6 +67,19 @@
                 }
 
                 await workerFunc(queueItem).ConfigureAwait(false);
+            }
+        }
+
+        private static async Task ForEachAsyncWorker<T>(ConcurrentQueue<T> queue, Func<T, CancellationToken, Task> workerFunc, CancellationToken cancellationToken)
+        {
+            while (queue.TryDequeue(out var queueItem))
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                await workerFunc(queueItem, cancellationToken).ConfigureAwait(false);
             }
         }
 
