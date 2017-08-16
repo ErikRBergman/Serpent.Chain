@@ -44,6 +44,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Result.cs" />
+    <Compile Include="ResultStatus.cs" />
     <Compile Include="XmlFileParser.cs" />
     <Compile Include="XmlTextReaderExtensions.cs" />
   </ItemGroup>

@@ -14,11 +14,11 @@
         {
             using (var dataStream = await GetDataStreamAsync(filename))
             {
-                this.ReadXmlFileAsync(dataStream, elementHandlerFunc, endElementHandlerFunc);
+                this.ReadXmlStream(dataStream, elementHandlerFunc, endElementHandlerFunc);
             }
         }
 
-        public void ReadXmlFileAsync(Stream dataStream, Func<string, XmlTextReader, bool> elementHandlerFunc, Func<string, bool> endElementHandlerFunc = null)
+        public void ReadXmlStream(Stream dataStream, Func<string, XmlTextReader, bool> elementHandlerFunc, Func<string, bool> endElementHandlerFunc = null)
         {
             var pathList = new List<string>(16)
                                {
@@ -81,7 +81,7 @@
         {
             try
             {
-                this.ReadXmlFileAsync(
+                this.ReadXmlStream(
                     dataStream,
                     (path, reader) =>
                         {
@@ -120,11 +120,11 @@
                             return true;
                         });
 
-                return new Result<T>(filename, Result<T>.ResultStatus.Success, item);
+                return new Result<T>(filename, ResultStatus.Success, item);
             }
             catch (Exception exception)
             {
-                return new Result<T>(filename, Result<T>.ResultStatus.Failure, exception);
+                return new Result<T>(filename, ResultStatus.Failure, exception);
             }
         }
 
@@ -141,40 +141,6 @@
             }
 
             return dataStream;
-        }
-
-        public class Result<T>
-        {
-            public Result(string inputFilename, ResultStatus status, T resultItem)
-            {
-                this.InputFilename = inputFilename;
-                this.Status = status;
-                this.ResultItem = resultItem;
-            }
-
-            public Result(string inputFilename, ResultStatus status, Exception exception)
-            {
-                this.InputFilename = inputFilename;
-                this.Status = status;
-                this.Exception = exception;
-            }
-
-            public enum ResultStatus
-            {
-                Unprocessed = 0,
-
-                Success = 10,
-
-                Failure = 20
-            }
-
-            public Exception Exception { get; }
-
-            public string InputFilename { get; }
-
-            public T ResultItem { get; }
-
-            public ResultStatus Status { get; }
         }
     }
 }
