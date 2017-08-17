@@ -49,7 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DiskServiceStorage.cs" />
+    <Compile Include="JsonDiskServiceStorageService.cs" />
     <Compile Include="DiskServiceStorageServiceOptions.cs" />
     <Compile Include="IServiceStorageService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
