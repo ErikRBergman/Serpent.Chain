@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.Stream", "Se
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.ServiceStorage", "Serpent.Common.ServiceStorage\Serpent.Common.ServiceStorage.csproj", "{99F3BE00-74AD-4B4B-A2E1-9B2AE555714E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.ServiceStorage.Tests", "Serpent.Common.ServiceStorage.Tests\Serpent.Common.ServiceStorage.Tests.csproj", "{4820D3D3-3BD2-4C9F-9A62-D1C6C0F036BD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{99F3BE00-74AD-4B4B-A2E1-9B2AE555714E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99F3BE00-74AD-4B4B-A2E1-9B2AE555714E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{99F3BE00-74AD-4B4B-A2E1-9B2AE555714E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4820D3D3-3BD2-4C9F-9A62-D1C6C0F036BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4820D3D3-3BD2-4C9F-9A62-D1C6C0F036BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4820D3D3-3BD2-4C9F-9A62-D1C6C0F036BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4820D3D3-3BD2-4C9F-9A62-D1C6C0F036BD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

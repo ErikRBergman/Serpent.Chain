@@ -1,6 +1,6 @@
 ﻿namespace Serpent.Common.ServiceStorage
 {
-    public class DiskServiceStorageServiceOptions<T>
+    public class JsonDiskServiceStorageServiceOptions<T>
     {
         public string Filename { get; set; }
     }

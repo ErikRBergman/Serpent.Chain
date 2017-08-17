@@ -7,6 +7,8 @@
     {
         Task<TServiceStorageType> GetStorageAsync();
 
+        Task<TServiceStorageType> GetOrCreateStorageAsync(Func<TServiceStorageType> func);
+
         Task UpdateStorageAsync(TServiceStorageType storage);
 
         Task UpdateStorageAsync(Func<TServiceStorageType, bool> updateFunc);

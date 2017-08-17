@@ -2,6 +2,7 @@
 {
     using System;
     using System.IO;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -16,9 +17,12 @@
 
         private readonly SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1);
 
-        private readonly JsonSerializer serializer = new JsonSerializer();
+        private readonly JsonSerializer serializer = new JsonSerializer()
+                                                         {
+                                                             Formatting = Formatting.Indented
+                                                         };
 
-        public JsonDiskServiceStorageService(DiskServiceStorageServiceOptions<T> options)
+        public JsonDiskServiceStorageService(JsonDiskServiceStorageServiceOptions<T> options)
         {
             this.filename = options.Filename;
         }
@@ -35,19 +39,54 @@
             return this.DeserializeStream(memoryStream);
         }
 
-        public async Task UpdateStorageAsync(T storage)
+        public async Task<T> GetOrCreateStorageAsync(Func<T> func)
         {
-            Stream memoryStream = new MemoryStream(16 * 1024);
-
             using (await this.semaphoreSlim.LockAsync())
             {
-                this.serializer.Serialize(new StreamWriter(memoryStream), storage);
-                memoryStream.Position = 0;
-
-                using (var fileStream = File.Create(this.filename))
+                if (File.Exists(this.filename))
                 {
-                    await memoryStream.CopyToAsync(fileStream);
+                    var stream = await this.GetMemoryStreamFromFile();
+                    var resultStorage = this.DeserializeStream(stream);
+
+                    if (resultStorage != null)
+                    {
+                        return resultStorage;
+                    }
                 }
+
+                var storage = func();
+
+                await this.WriteStorageToFile(storage);
+
+                return storage;
+            }
+        }
+
+        private async Task WriteStorageToFile(T storage)
+        {
+            var memoryStream = new MemoryStream(16 * 1024);
+            this.SerializeToStream(memoryStream, storage);
+            memoryStream.Position = 0;
+
+            using (var fileStream = File.Create(this.filename))
+            {
+                await memoryStream.CopyToAsync(fileStream);
+            }
+        }
+
+        private void SerializeToStream(Stream memoryStream, T storage)
+        {
+            using (var writer = new StreamWriter(memoryStream, Encoding.Default, 4096, true))
+            {
+                this.serializer.Serialize(new JsonTextWriter(writer), storage);
+            }
+        }
+
+        public async Task UpdateStorageAsync(T storage)
+        {
+            using (await this.semaphoreSlim.LockAsync())
+            {
+                await this.WriteStorageToFile(storage);
             }
         }
 
@@ -60,15 +99,7 @@
 
                 if (updateFunc(storage))
                 {
-                    memoryStream.SetLength(0);
-
-                    this.serializer.Serialize(new StreamWriter(memoryStream), storage);
-                    memoryStream.Position = 0;
-
-                    using (var fileStream = File.Create(this.filename))
-                    {
-                        await memoryStream.CopyToAsync(fileStream);
-                    }
+                    await this.WriteStorageToFile(storage);
                 }
             }
         }

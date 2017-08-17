@@ -50,7 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="JsonDiskServiceStorageService.cs" />
-    <Compile Include="DiskServiceStorageServiceOptions.cs" />
+    <Compile Include="JsonDiskServiceStorageServiceOptions.cs" />
     <Compile Include="IServiceStorageService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
