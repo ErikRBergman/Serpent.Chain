@@ -19,6 +19,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.ServiceStora
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.ServiceStorage.Tests", "Serpent.Common.ServiceStorage.Tests\Serpent.Common.ServiceStorage.Tests.csproj", "{4820D3D3-3BD2-4C9F-9A62-D1C6C0F036BD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.Rotators", "Serpent.Common.Rotators\Serpent.Common.Rotators.csproj", "{9850A668-E37B-436A-9F89-2357F7B0A50A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.Rotators.Tests", "Serpent.Common.Rotators.Tests\Serpent.Common.Rotators.Tests.csproj", "{CFBFF571-7465-4D8A-9FAF-245967AB233E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +61,14 @@ Global
 		{4820D3D3-3BD2-4C9F-9A62-D1C6C0F036BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4820D3D3-3BD2-4C9F-9A62-D1C6C0F036BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4820D3D3-3BD2-4C9F-9A62-D1C6C0F036BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9850A668-E37B-436A-9F89-2357F7B0A50A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9850A668-E37B-436A-9F89-2357F7B0A50A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9850A668-E37B-436A-9F89-2357F7B0A50A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9850A668-E37B-436A-9F89-2357F7B0A50A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFBFF571-7465-4D8A-9FAF-245967AB233E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFBFF571-7465-4D8A-9FAF-245967AB233E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFBFF571-7465-4D8A-9FAF-245967AB233E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFBFF571-7465-4D8A-9FAF-245967AB233E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
