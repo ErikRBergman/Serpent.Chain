@@ -2,8 +2,11 @@
 {
     using System;
     using System.Collections.Concurrent;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
+
+    using Serpent.Common.MessageBus.BusPublishers;
 
     public class ConcurrentMessageBus<T> : IMessageBus<T>
     {
@@ -13,9 +16,9 @@
 
         private readonly ExclusiveAccess<int> currentSubscriptionId = new ExclusiveAccess<int>(0);
 
-        private readonly Func<T, Task> publishAsyncFunc;
+        private readonly Func<IEnumerable<ISubscription<T>>, T, Task> publishAsyncFunc;
 
-        private readonly ConcurrentDictionary<int, ISubscription> subscribers = new ConcurrentDictionary<int, ISubscription>();
+        private readonly ConcurrentDictionary<int, ISubscription<T>> subscribers = new ConcurrentDictionary<int, ISubscription<T>>();
 
         public ConcurrentMessageBus(ConcurrentEventBusOptions concurrentEventBusOptions) : this()
         {
@@ -27,14 +30,21 @@
             this.publishAsyncFunc = this.GetPublishFunc(this.concurrentEventBusOptions);
         }
 
-        private interface ISubscription
+        public ConcurrentMessageBus(ConcurrentEventBusOptions concurrentEventBusOptions, Func<IEnumerable<ISubscription<T>>, T, Task> publishFunction)
         {
-            Func<T, Task> EventInvocationFunc { get; }
+            this.concurrentEventBusOptions = concurrentEventBusOptions;
+            this.publishAsyncFunc = publishFunction;
+        }
+
+        public ConcurrentMessageBus(ConcurrentEventBusOptions concurrentEventBusOptions, BusPublisher<T> publisher)
+        {
+            this.concurrentEventBusOptions = concurrentEventBusOptions;
+            this.publishAsyncFunc = publisher.PublishAsync;
         }
 
         public int SubscriberCount => this.subscribers.Count;
 
-        public Task PublishEventAsync(T eventData) => this.publishAsyncFunc(eventData);
+        public Task PublishEventAsync(T eventData) => this.publishAsyncFunc(this.subscribers.Values, eventData);
 
         public IMessageBusSubscription Subscribe(Func<T, Task> invocationFunc)
         {
@@ -52,11 +62,11 @@
             return new ConcurrentMessageBusSubscription(() => this.Unsubscribe(newSubscriptionId));
         }
 
-        private ISubscription CreateSubscription(Func<T, Task> eventSubscription)
+        private ISubscription<T> CreateSubscription(Func<T, Task> eventSubscription)
         {
             return this.concurrentEventBusOptions.SubscriptionReferenceType != ConcurrentEventBusOptions.SubscriptionReferenceTypeType.WeakReferences
                        ? new StrongReferenceSubscription(eventSubscription)
-                       : (ISubscription)new WeakReferenceSubscription(eventSubscription);
+                       : (ISubscription<T>)new WeakReferenceSubscription(eventSubscription);
         }
 
         private int GetNewSubscriptionId()
@@ -69,52 +79,18 @@
             return result;
         }
 
-        private Func<T, Task> GetPublishFunc(ConcurrentEventBusOptions eventBusOptions)
+        private Func<IEnumerable<ISubscription<T>>, T, Task> GetPublishFunc(ConcurrentEventBusOptions eventBusOptions)
         {
             switch (eventBusOptions.InvokationMethod)
             {
                 case ConcurrentEventBusOptions.InvokationMethodType.Serial:
-                    return this.PublishEventsSerialAsync;
+                    return SerialPublisher<T>.Default.PublishAsync;
                 case ConcurrentEventBusOptions.InvokationMethodType.Parallel:
-                    return this.PublishEventsInParallel;
+                    return ParallelPublisher<T>.Default.PublishAsync;
                 case ConcurrentEventBusOptions.InvokationMethodType.ForcedParallel:
-                    return this.PublishEventsInForcedParallel;
+                    return ForcedParallelPublisher<T>.Default.PublishAsync;
                 default:
                     throw new NotImplementedException();
-            }
-        }
-
-        private async Task PublishEventsInForcedParallel(T eventData)
-        {
-            await Task.WhenAll(
-                this.subscribers.Values.Select(
-                    s =>
-                        {
-                            var receiveEventAsync = s.EventInvocationFunc;
-                            return receiveEventAsync != null ? Task.Run(() => receiveEventAsync(eventData)) : Task.CompletedTask;
-                        }));
-        }
-
-        private async Task PublishEventsInParallel(T eventData)
-        {
-            await Task.WhenAll(
-                this.subscribers.Values.Select(
-                    s =>
-                        {
-                            var receiveEventAsync = s.EventInvocationFunc;
-                            return receiveEventAsync == null ? Task.CompletedTask : receiveEventAsync(eventData);
-                        }));
-        }
-
-        private async Task PublishEventsSerialAsync(T eventData)
-        {
-            foreach (var subscription in this.subscribers.Values)
-            {
-                var receiveEventAsync = subscription.EventInvocationFunc;
-                if (receiveEventAsync != null)
-                {
-                    await receiveEventAsync(eventData);
-                }
             }
         }
 
@@ -157,7 +133,7 @@
             }
         }
 
-        private struct StrongReferenceSubscription : ISubscription
+        private struct StrongReferenceSubscription : ISubscription<T>
         {
             public StrongReferenceSubscription(Func<T, Task> eventInvocationFunc)
             {
@@ -167,7 +143,7 @@
             public Func<T, Task> EventInvocationFunc { get; set; }
         }
 
-        private struct WeakReferenceSubscription : ISubscription
+        private struct WeakReferenceSubscription : ISubscription<T>
         {
             private readonly WeakReference<Func<T, Task>> eventInvocationFunc;
 

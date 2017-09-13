@@ -9,7 +9,6 @@
     [TestClass]
     public class ConcurrentMessageBusTests
     {
-
         private class MessageBase
         {
             
