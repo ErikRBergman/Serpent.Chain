@@ -6,7 +6,7 @@
     <Version>0.0.1</Version>
     <Authors>Erik Bergman</Authors>
     <Company>Serpent</Company>
-    <Description>A message bus</Description>
+    <Description>An asynchronous message bus</Description>
     <FileVersion>0.0.1.0</FileVersion>
   </PropertyGroup>
 
