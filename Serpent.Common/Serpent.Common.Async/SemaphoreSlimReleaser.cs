@@ -16,6 +16,5 @@ namespace Serpent.Common.Async
         {
             this.semaphoreSlim.Release();
         }
-
     }
 }

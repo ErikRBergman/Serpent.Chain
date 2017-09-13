@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>0.0.1</Version>
+    <Authors>Erik Bergman</Authors>
+    <Company>Serpent</Company>
+    <Description>A message bus</Description>
+    <FileVersion>0.0.1.0</FileVersion>
+  </PropertyGroup>
+
+</Project>

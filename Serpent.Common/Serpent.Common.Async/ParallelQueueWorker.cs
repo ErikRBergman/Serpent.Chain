@@ -24,16 +24,18 @@
 
         private IReadOnlyCollection<Task> workerTasks;
 
-        public ParallelQueueWorker(Func<T, CancellationToken, Task> workerFunc, IEnumerable<T> items = null, int concurrencyLevel = 16)
+        public ParallelQueueWorker(Func<T, CancellationToken, Task> workerFunc, IEnumerable<T> items = null, int? maxConcurrencyLevel = null)
         {
-            if (concurrencyLevel < 1)
+            maxConcurrencyLevel = maxConcurrencyLevel ?? Environment.ProcessorCount * 2;
+
+            if (maxConcurrencyLevel < 1)
             {
-                throw new ArgumentException("concurrencyLevel may not be less than 1");
+                throw new ArgumentException("maxConcurrencyLevel may not be less than 1");
             }
 
             this.workerFunc = workerFunc ?? throw new ArgumentNullException(nameof(workerFunc));
 
-            this.concurrencyLevel = concurrencyLevel;
+            this.concurrencyLevel = maxConcurrencyLevel.Value;
             if (items != null)
             {
                 this.EnqueueRange(items);

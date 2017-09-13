@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.3
+VisualStudioVersion = 15.0.26730.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.BaseTypeExtensions", "Serpent.Common.BaseTypeExtensions\Serpent.Common.BaseTypeExtensions.csproj", "{A449C162-1CEA-41D1-8140-D74A45D6224E}"
 EndProject
@@ -22,6 +22,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.Rotators", "Serpent.Common.Rotators\Serpent.Common.Rotators.csproj", "{9850A668-E37B-436A-9F89-2357F7B0A50A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.Rotators.Tests", "Serpent.Common.Rotators.Tests\Serpent.Common.Rotators.Tests.csproj", "{CFBFF571-7465-4D8A-9FAF-245967AB233E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.MessageBus", "Serpent.Common.MessageBus\Serpent.Common.MessageBus.csproj", "{337F53B2-4AD1-4DBC-B622-F6965F0602E4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serpent.Common.MessageBus.Tests", "Serpent.Common.MessageBus.Tests\Serpent.Common.MessageBus.Tests.csproj", "{C35E8B92-654C-4319-A6F8-6D5167B6147B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,6 +73,14 @@ Global
 		{CFBFF571-7465-4D8A-9FAF-245967AB233E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CFBFF571-7465-4D8A-9FAF-245967AB233E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CFBFF571-7465-4D8A-9FAF-245967AB233E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{337F53B2-4AD1-4DBC-B622-F6965F0602E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{337F53B2-4AD1-4DBC-B622-F6965F0602E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{337F53B2-4AD1-4DBC-B622-F6965F0602E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{337F53B2-4AD1-4DBC-B622-F6965F0602E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C35E8B92-654C-4319-A6F8-6D5167B6147B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C35E8B92-654C-4319-A6F8-6D5167B6147B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C35E8B92-654C-4319-A6F8-6D5167B6147B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C35E8B92-654C-4319-A6F8-6D5167B6147B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

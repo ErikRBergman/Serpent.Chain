@@ -22,6 +22,7 @@
         {
             get
             {
+                // ReSharper disable once InconsistentlySynchronizedField - its outside the lock on purpose to prevent locking from being used when it's not needed
                 var value = this.cachedValue;
 
                 if (value != null)

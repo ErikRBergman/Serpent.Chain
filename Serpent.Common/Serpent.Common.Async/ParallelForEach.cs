@@ -16,6 +16,11 @@
             return ForEachAsync(items, workerFunc, concurrencyLevel, CancellationToken.None);
         }
 
+        public static Task ForEachAlternativeAsync<T>(this IEnumerable<T> items, Func<T, Task> workerFunc)
+        {
+            return Task.WhenAll(items.Select(item => Task.Run(() => workerFunc(item))));
+        }
+
         public static Task ForEachAsync<T>(this IEnumerable<T> items, Func<T, Task> workerFunc)
         {
             return ForEachAsync(items, workerFunc, ProcessorCount * 4, CancellationToken.None);
