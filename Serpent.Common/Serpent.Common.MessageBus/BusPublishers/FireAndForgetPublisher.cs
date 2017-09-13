@@ -17,7 +17,7 @@ namespace Serpent.Common.MessageBus.BusPublishers
 
         public override Task PublishAsync(IEnumerable<ISubscription<T>> subscriptions, T message)
         {
-            Task.Run(() => this.innerPublisher.PublishAsync(subscriptions, message)));
+            Task.Run(() => this.innerPublisher.PublishAsync(subscriptions, message));
             return Task.CompletedTask;
         }
     }
