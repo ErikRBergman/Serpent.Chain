@@ -12,7 +12,7 @@
     {
         private readonly ConcurrentQueue<int> recycledSubscriptionIds = new ConcurrentQueue<int>();
 
-        private readonly ConcurrentEventBusOptions concurrentEventBusOptions = ConcurrentEventBusOptions.Default;
+        private readonly ConcurrentMessageBusOptions concurrentMessageBusOptions = ConcurrentMessageBusOptions.Default;
 
         private readonly ExclusiveAccess<int> currentSubscriptionId = new ExclusiveAccess<int>(0);
 
@@ -20,25 +20,32 @@
 
         private readonly ConcurrentDictionary<int, ISubscription<T>> subscribers = new ConcurrentDictionary<int, ISubscription<T>>();
 
-        public ConcurrentMessageBus(ConcurrentEventBusOptions concurrentEventBusOptions) : this()
+        public ConcurrentMessageBus(ConcurrentMessageBusOptions concurrentMessageBusOptions) : this()
         {
-            this.concurrentEventBusOptions = concurrentEventBusOptions;
+            this.concurrentMessageBusOptions = concurrentMessageBusOptions;
         }
 
         public ConcurrentMessageBus()
         {
-            this.publishAsyncFunc = this.GetPublishFunc(this.concurrentEventBusOptions);
+            if (this.concurrentMessageBusOptions.CustomBusPublisher != null)
+            {
+                this.publishAsyncFunc = this.concurrentMessageBusOptions.CustomBusPublisher.PublishAsync;
+            }
+            else
+            {
+                this.publishAsyncFunc = this.GetPublishFunc(this.concurrentMessageBusOptions.InvokationMethod);
+            }
         }
 
-        public ConcurrentMessageBus(ConcurrentEventBusOptions concurrentEventBusOptions, Func<IEnumerable<ISubscription<T>>, T, Task> publishFunction)
+        public ConcurrentMessageBus(ConcurrentMessageBusOptions concurrentMessageBusOptions, Func<IEnumerable<ISubscription<T>>, T, Task> publishFunction)
         {
-            this.concurrentEventBusOptions = concurrentEventBusOptions;
+            this.concurrentMessageBusOptions = concurrentMessageBusOptions;
             this.publishAsyncFunc = publishFunction;
         }
 
-        public ConcurrentMessageBus(ConcurrentEventBusOptions concurrentEventBusOptions, BusPublisher<T> publisher)
+        public ConcurrentMessageBus(ConcurrentMessageBusOptions concurrentMessageBusOptions, BusPublisher<T> publisher)
         {
-            this.concurrentEventBusOptions = concurrentEventBusOptions;
+            this.concurrentMessageBusOptions = concurrentMessageBusOptions;
             this.publishAsyncFunc = publisher.PublishAsync;
         }
 
@@ -64,7 +71,7 @@
 
         private ISubscription<T> CreateSubscription(Func<T, Task> eventSubscription)
         {
-            return this.concurrentEventBusOptions.SubscriptionReferenceType != ConcurrentEventBusOptions.SubscriptionReferenceTypeType.WeakReferences
+            return this.concurrentMessageBusOptions.SubscriptionReferenceType != ConcurrentMessageBusOptions.SubscriptionReferenceTypeType.WeakReferences
                        ? new StrongReferenceSubscription(eventSubscription)
                        : (ISubscription<T>)new WeakReferenceSubscription(eventSubscription);
         }
@@ -79,16 +86,24 @@
             return result;
         }
 
-        private Func<IEnumerable<ISubscription<T>>, T, Task> GetPublishFunc(ConcurrentEventBusOptions eventBusOptions)
+        private Func<IEnumerable<ISubscription<T>>, T, Task> GetPublishFunc(ConcurrentMessageBusOptions.InvokationMethodType invokationMethodType)
         {
-            switch (eventBusOptions.InvokationMethod)
+            switch (invokationMethodType)
             {
-                case ConcurrentEventBusOptions.InvokationMethodType.Serial:
+                case ConcurrentMessageBusOptions.InvokationMethodType.Serial:
                     return SerialPublisher<T>.Default.PublishAsync;
-                case ConcurrentEventBusOptions.InvokationMethodType.Parallel:
+                case ConcurrentMessageBusOptions.InvokationMethodType.Parallel:
                     return ParallelPublisher<T>.Default.PublishAsync;
-                case ConcurrentEventBusOptions.InvokationMethodType.ForcedParallel:
+                case ConcurrentMessageBusOptions.InvokationMethodType.ForcedParallel:
                     return ForcedParallelPublisher<T>.Default.PublishAsync;
+                case ConcurrentMessageBusOptions.InvokationMethodType.Custom:
+
+                    if (this.concurrentMessageBusOptions.CustomBusPublisher == null)
+                    {
+                        throw new Exception("The custom bus publisher must be set to use a custom bus publisher");
+                    }
+
+                    return this.concurrentMessageBusOptions.CustomBusPublisher.PublishAsync;
                 default:
                     throw new NotImplementedException();
             }
@@ -166,7 +181,7 @@
             }
         }
 
-        public class ConcurrentEventBusOptions
+        public class ConcurrentMessageBusOptions
         {
             public enum InvokationMethodType
             {
@@ -174,7 +189,9 @@
 
                 Parallel,
 
-                ForcedParallel
+                ForcedParallel,
+
+                Custom
             }
 
             public enum SubscriptionReferenceTypeType
@@ -184,12 +201,14 @@
                 WeakReferences
             }
 
-            public static ConcurrentEventBusOptions Default { get; } = new ConcurrentEventBusOptions
-                                                                           {
-                                                                               InvokationMethod = InvokationMethodType.Parallel,
-                                                                               SubscriptionReferenceType =
+            public BusPublisher<T> CustomBusPublisher { get; set; }
+
+            public static ConcurrentMessageBusOptions Default { get; } = new ConcurrentMessageBusOptions
+            {
+                InvokationMethod = InvokationMethodType.Parallel,
+                SubscriptionReferenceType =
                                                                                    SubscriptionReferenceTypeType.StrongReferences,
-                                                                           };
+            };
 
             public InvokationMethodType InvokationMethod { get; set; } = InvokationMethodType.Parallel;
 
@@ -200,11 +219,11 @@
             public struct WeakReferenceGarbageCollectionOptions
             {
                 public static WeakReferenceGarbageCollectionOptions Default { get; } = new WeakReferenceGarbageCollectionOptions
-                                                                                           {
-                                                                                               CollectionInterval =
+                {
+                    CollectionInterval =
                                                                                                    TimeSpan.FromSeconds(30),
-                                                                                               IsEnabled = true
-                                                                                           };
+                    IsEnabled = true
+                };
 
                 public TimeSpan CollectionInterval { get; set; }
 

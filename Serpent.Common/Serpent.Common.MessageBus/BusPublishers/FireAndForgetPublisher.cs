@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Serpent.Common.MessageBus.BusPublishers
+﻿namespace Serpent.Common.MessageBus.BusPublishers
 {
+    using System.Collections.Generic;
     using System.Threading.Tasks;
 
     public class FireAndForgetPublisher<T> : BusPublisher<T>
