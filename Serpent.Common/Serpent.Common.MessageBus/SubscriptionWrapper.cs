@@ -17,7 +17,7 @@
             this.Dispose();
         }
 
-        public static SubscriptionWrapper<T> Create(IMessageBus<T> messageBus, Func<T, Task> invocationFunc, Func<T, bool> eventFilterFunc = null)
+        public static SubscriptionWrapper<T> Create(IMessageBusSubscriber<T> messageBus, Func<T, Task> invocationFunc, Func<T, bool> eventFilterFunc = null)
         {
             IMessageBusSubscription subscription;
 

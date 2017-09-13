@@ -5,19 +5,14 @@
     using System.Linq;
     using System.Threading.Tasks;
 
-    public static class MessageBusExtensions
+    public static class MessageBusSubscriberExtensions
     {
-        public static SubscriptionWrapper<T> Subscribe<T>(this IMessageBus<T> messageBus, Func<T, Task> invocationFunc, Func<T, bool> eventFilterFunc = null)
+        public static SubscriptionWrapper<T> Subscribe<T>(this IMessageBusSubscriber<T> messageBus, Func<T, Task> invocationFunc, Func<T, bool> eventFilterFunc = null)
         {
             return SubscriptionWrapper<T>.Create(messageBus, invocationFunc, eventFilterFunc);
         }
 
-        public static void PublishEventWithoutFeedback<T>(this IMessageBus<T> messageBus, T eventData)
-        {
-            Task.Run(() => messageBus.PublishEventAsync(eventData));
-        }
-
-        public static SubscriptionWrapper<TBusMessageType> Subscribe<TBusMessageType, TItemType>(this IMessageBus<TBusMessageType> messageBus, Func<TItemType, Task> invocationFunc)
+        public static SubscriptionWrapper<TBusMessageType> Subscribe<TBusMessageType, TItemType>(this IMessageBusSubscriber<TBusMessageType> messageBus, Func<TItemType, Task> invocationFunc)
             where TItemType : TBusMessageType
         {
             return SubscriptionWrapper<TBusMessageType>.Create(messageBus, message => invocationFunc((TItemType)message), message => message is TItemType);
@@ -30,7 +25,7 @@
         /// <param name="messageBus">The message bus</param>
         /// <param name="mapAction">A method that is called to setup the map</param>
         /// <returns>The new subscription</returns>
-        public static IMessageBusSubscription Subscribe<T>(this IMessageBus<T> messageBus, Action<IMessageSubscriptionBuilder<T>> mapAction)
+        public static IMessageBusSubscription Subscribe<T>(this IMessageBusSubscriber<T> messageBus, Action<IMessageSubscriptionBuilder<T>> mapAction)
         {
             var builder = new MessageBusSubscriptionBuilder<T>();
             mapAction.Invoke(builder);

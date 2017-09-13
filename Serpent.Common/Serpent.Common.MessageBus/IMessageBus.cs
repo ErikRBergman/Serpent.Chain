@@ -3,10 +3,12 @@
     using System;
     using System.Threading.Tasks;
 
-    public interface IMessageBus<TMessage>
+    public interface IMessageBus<TMessage> : IMessageBusPublisher<TMessage>, IMessageBusSubscriber<TMessage>
     {
-        Task PublishEventAsync(TMessage eventData);
+    }
 
+    public interface IMessageBusSubscriber<TMessage>
+    {
         IMessageBusSubscription Subscribe(Func<TMessage, Task> invocationFunc);
     }
 }
