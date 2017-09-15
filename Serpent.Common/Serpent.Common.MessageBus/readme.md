@@ -87,7 +87,90 @@ Customizing publishing affects all messages being published, while customizing t
 
 My recommendation would be to use custom subscriptions before custom publishing, since it''s it will not change as much 
 
-### Custom subscriptions
+### Customizing subscriptions
+
+#### Normal subscription
+Just call the Subscribe method.
+
+#### FireAndForgetSubscription
+Invokes all handlers in a Fire and Forget manner.
+
+Example:
+```csharp
+  var subscriptionWrapper = messageBusSubscriber.CreateFireAndForgetSubscription(async message => { Console.WriteLine("Fired and forgotten"); })
+```
+
+#### BackgroundSemaphoreSubscription
+Allows you to set the number of concurrent handler method dispatches. 
+The subscription will enqueue all incoming messages in a fire and forget manner and as soon as any of the concurrent workers (TPL Tasks) are available, the handler method is invoked.
+
+The subscription will not use any system resources while inactive, since the workers are awaiting a SemaphoreSlim to be released.
+
+Example:
+```csharp
+	var concurrencyLevel = 2;
+	var subscriptionWrapper = messageBusSubscriber.CreateBackgroundSemaphoreSubscription(async message => { await Task.Delay(2000); Console.WriteLine("Called concurrently"); }, concurrencyLevel);
+	
+	for (var i = 0; i < 100; i++)
+	{
+		messageBusPublisher.PublishAsync(new SampleMessage());
+	}
+
+```
+In this example, 2 messages are handled simulataneously and since the handler takes 2 seconds to execute, up to 2 messages are dispatched every 2 seconds.
+
+#### BackgroundSemaphoreDuplicateEliminatingSubscription
+This is a variation of the BackgroundSemaphoreSubscription that will not add a duplicate message to the queue, based on a key selector method.
+
+A new message with the same key is allowed to be added again AFTER the handler is invoked. If you want to allow adding messages to the queue while a message is being handled, i suggest you couple it with a FireAndForgetSubscription. See the examples
+
+Eliminate duplicates by KEY
+```csharp
+	var concurrencyLevel = 2;
+	var subscriptionWrapper = messageBusSubscriber.CreateBackgroundSemaphoreWithDuplicateEliminationSubscription(async message => { await Task.Delay(2000); Console.WriteLine("Called concurrently"); }, message => message.Id, concurrencyLevel);
+
+	for (var i = 0; i < 100; i++)
+	{
+		messageBusPublisher.PublishAsync(new SampleMessage(i % 10));
+	}
+```
+In this example, the duplicate elimination key is the id field. If you have advanced keys, like structs, make sure you have implemented Equals() and GetHashCode() on them for performance.
+Only 10 messages will be added to the queue and dispatched to the handler unless one of the messages are handled before the loop adding them is done
+
+
+Eliminate duplicates by INSTANCE
+```csharp
+	var concurrencyLevel = 2;
+	var subscriptionWrapper = messageBusSubscriber.CreateBackgroundSemaphoreWithDuplicateEliminationSubscription(async message => { await Task.Delay(2000); Console.WriteLine("Called concurrently"); }, message => message, concurrencyLevel);
+
+	// Create 10 messages
+	var messages = new List<SampleMessage>(10);
+	for (var i = 0; i < 100; i++)
+	{
+		messages.Add(new SampleMessage(i % 10));
+	}
+
+	// Publish messages to the bus
+	for (var i = 0; i < 100; i++)
+	{
+		messageBusPublisher.PublishAsync(messages[i % 10]);
+	}
+```
+In this example, the duplicate elimination key is the message itself, so the same instance can not be added twice. 
+
+
+If you want to be able to handle add duplicates to the subscription queue after a message handler has started but before it has finished,
+you can couple this subscription with the FireAndForGetSubscription:
+```csharp
+	var concurrencyLevel = 2;
+	var subscriptionWrapper = messageBusSubscriber.CreateBackgroundSemaphoreWithDuplicateEliminationSubscription(new FireAndForgetSubscription(async message => { await Task.Delay(2000); Console.WriteLine("Called concurrently"); }), message => message.Id, concurrencyLevel);
+
+	for (var i = 0; i < 100; i++)
+	{
+		messageBusPublisher.PublishAsync(new SampleMessage(i % 10));
+	}
+```
+
 
 
 #### Customizing publishing
