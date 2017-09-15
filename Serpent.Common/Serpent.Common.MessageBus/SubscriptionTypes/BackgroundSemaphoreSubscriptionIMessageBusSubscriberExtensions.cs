@@ -8,16 +8,16 @@ namespace Serpent.Common.MessageBus
 
     public static class BackgroundSemaphoreSubscriptionIMessageBusSubscriberExtensions
     {
-        public static SubscriptionWrapper<T> CreateBackgroundSemaphoreSubscription<T>(this IMessageBusSubscriber<T> messageBus, Func<T, Task> handlerFunc, int concurrencyLevel = -1)
+        public static SubscriptionWrapper<TMessageType> CreateBackgroundSemaphoreSubscription<TMessageType>(this IMessageBusSubscriber<TMessageType> messageBus, Func<TMessageType, Task> handlerFunc, int concurrencyLevel = -1)
         {
-            var subscription = messageBus.Subscribe(new BackgroundSemaphoreSubscription<T>(handlerFunc, concurrencyLevel).HandleMessageAsync);
-            return new SubscriptionWrapper<T>(subscription);
+            var subscription = messageBus.Subscribe(new BackgroundSemaphoreSubscription<TMessageType>(handlerFunc, concurrencyLevel).HandleMessageAsync);
+            return new SubscriptionWrapper<TMessageType>(subscription);
         }
 
-        public static SubscriptionWrapper<T> CreateBackgroundSemaphoreSubscription<T>(this IMessageBusSubscriber<T> messageBus, BusSubscription<T> innerSubscription, int concurrencyLevel = -1)
+        public static SubscriptionWrapper<TMessageType> CreateBackgroundSemaphoreSubscription<TMessageType>(this IMessageBusSubscriber<TMessageType> messageBus, BusSubscription<TMessageType> innerSubscription, int concurrencyLevel = -1)
         {
-            var subscription = messageBus.Subscribe(new BackgroundSemaphoreSubscription<T>(innerSubscription, concurrencyLevel).HandleMessageAsync);
-            return new SubscriptionWrapper<T>(subscription);
+            var subscription = messageBus.Subscribe(new BackgroundSemaphoreSubscription<TMessageType>(innerSubscription, concurrencyLevel).HandleMessageAsync);
+            return new SubscriptionWrapper<TMessageType>(subscription);
         }
     }
 }

@@ -5,19 +5,36 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class BackgroundSemaphoreSubscription<TMessageType> : BusSubscription<TMessageType>
+    public class BackgroundSemaphoreDuplicateEliminatingSubscription<TMessageType, TKeyType> : BusSubscription<TMessageType>
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 
         private readonly BusSubscription<TMessageType> innerSubscription;
 
-        private readonly ConcurrentQueue<TMessageType> messages = new ConcurrentQueue<TMessageType>();
+        private readonly Func<TMessageType, TKeyType> keySelector;
+
+        private readonly ConcurrentDictionary<TKeyType, bool> queuedKeys = new ConcurrentDictionary<TKeyType, bool>();
+
+        private readonly ConcurrentQueue<MessageAndKey> messages = new ConcurrentQueue<MessageAndKey>();
 
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(0);
 
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-        public BackgroundSemaphoreSubscription(BusSubscription<TMessageType> innerSubscription, int concurrencyLevel = -1)
+        private struct MessageAndKey
+        {
+            public MessageAndKey(TKeyType key, TMessageType message)
+            {
+                this.Key = key;
+                this.Message = message;
+            }
+
+            public TMessageType Message { get; }
+
+            public TKeyType Key { get; }
+        }
+
+        public BackgroundSemaphoreDuplicateEliminatingSubscription(BusSubscription<TMessageType> innerSubscription, Func<TMessageType, TKeyType> keySelector, int concurrencyLevel = -1)
         {
             if (concurrencyLevel < 0)
             {
@@ -26,6 +43,7 @@
 
             this.innerSubscription = innerSubscription;
             this.handlerFunc = innerSubscription.HandleMessageAsync;
+            this.keySelector = keySelector;
 
             for (var i = 0; i < concurrencyLevel; i++)
             {
@@ -33,7 +51,7 @@
             }
         }
 
-        public BackgroundSemaphoreSubscription(Func<TMessageType, Task> handlerFunc, int concurrencyLevel = -1)
+        public BackgroundSemaphoreDuplicateEliminatingSubscription(Func<TMessageType, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector, int concurrencyLevel = -1)
         {
             if (concurrencyLevel < 0)
             {
@@ -41,6 +59,7 @@
             }
 
             this.handlerFunc = handlerFunc;
+            this.keySelector = keySelector;
 
             for (var i = 0; i < concurrencyLevel; i++)
             {
@@ -50,8 +69,14 @@
 
         public override Task HandleMessageAsync(TMessageType message)
         {
-            this.messages.Enqueue(message);
-            this.semaphore.Release();
+            var key = this.keySelector(message);
+
+            if (this.queuedKeys.TryAdd(key, true))
+            {
+                this.messages.Enqueue(new MessageAndKey(key, message));
+                this.semaphore.Release();
+            }
+
             return Task.CompletedTask;
         }
 
@@ -65,7 +90,10 @@
 
                 if (this.messages.TryDequeue(out var message))
                 {
-                    await this.handlerFunc(message);
+                    await this.handlerFunc(message.Message);
+
+                    // Remove key after the message handler is invoked. The user can decorate with a fire and forget subscription to have the key removed before the handler is invoked.
+                    this.queuedKeys.TryRemove(message.Key, out _);
                 }
             }
         }
