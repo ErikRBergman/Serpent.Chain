@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="AsyncTaskScheduler.cs" />
     <Compile Include="LazyAsync.cs" />
+    <Compile Include="LazyAsyncWithTimeout.cs" />
     <Compile Include="ObjectExtensions.cs" />
     <Compile Include="ParallelForEach.cs" />
     <Compile Include="ParallelQueueWorker.cs" />
