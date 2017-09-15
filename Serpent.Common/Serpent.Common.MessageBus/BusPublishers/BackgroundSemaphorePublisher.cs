@@ -10,13 +10,13 @@
     {
         private readonly ConcurrentQueue<MessageContainer> publications = new ConcurrentQueue<MessageContainer>();
 
-        private readonly SemaphoreSlim semaphore;
+        private readonly SemaphoreSlim semaphore = new SemaphoreSlim(0);
 
-        private Func<IEnumerable<ISubscription<T>>, T, Task> publishMethod;
+        private readonly Func<IEnumerable<ISubscription<T>>, T, Task> publishMethod;
 
         public BackgroundSemaphorePublisher(int concurrencyLevel = -1, BusPublisher<T> innerPublisher = null)
         {
-            innerPublisher = innerPublisher ?? SerialPublisher<T>.Default;
+            innerPublisher = innerPublisher ?? ParallelPublisher<T>.Default;
 
             this.publishMethod = innerPublisher.PublishAsync;
 
@@ -24,8 +24,6 @@
             {
                 concurrencyLevel = Environment.ProcessorCount * 2;
             }
-
-            this.semaphore = new SemaphoreSlim(concurrencyLevel);
 
             for (var i = 0; i < concurrencyLevel; i++)
             {

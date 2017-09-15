@@ -11,10 +11,10 @@ namespace Serpent.Common.MessageBus.BusPublishers
         {
             foreach (var subscription in subscriptions)
             {
-                var receiveEventAsync = subscription.EventInvocationFunc;
-                if (receiveEventAsync != null)
+                var subscriptionHandlerFunc = subscription.SubscriptionHandlerFunc;
+                if (subscriptionHandlerFunc != null)
                 {
-                    await receiveEventAsync(message);
+                    await subscriptionHandlerFunc(message);
                 }
             }
         }

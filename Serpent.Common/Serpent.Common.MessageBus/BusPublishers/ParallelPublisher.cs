@@ -14,8 +14,8 @@ namespace Serpent.Common.MessageBus.BusPublishers
                 subscriptions.Select(
                     s =>
                         {
-                            var receiveEventAsync = s.EventInvocationFunc;
-                            return receiveEventAsync == null ? Task.CompletedTask : receiveEventAsync(message);
+                            var subscriptionHandlerFunc = s.SubscriptionHandlerFunc;
+                            return subscriptionHandlerFunc == null ? Task.CompletedTask : subscriptionHandlerFunc(message);
                         }));
         }
     }

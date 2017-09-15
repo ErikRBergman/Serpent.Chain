@@ -51,7 +51,7 @@
 
             const string text = "Test";
 
-            await messageType1Bus.PublishEventAsync(new MessageType1(text));
+            await messageType1Bus.PublishAsync(new MessageType1(text));
             Assert.AreEqual(1, type1Received.Count);
 
             Assert.AreEqual(text, type1Received.First().Name);
@@ -84,12 +84,12 @@
                         return Task.CompletedTask;
                     });
 
-            await bus.PublishEventAsync(new MessageType1("John Yolo"));
+            await bus.PublishAsync(new MessageType1("John Yolo"));
 
             Assert.IsTrue(type1Received.Count == 1);
             Assert.IsTrue(type2Received.Count == 0);
 
-            await bus.PublishEventAsync(new MessageType2("John Yolo"));
+            await bus.PublishAsync(new MessageType2("John Yolo"));
 
             Assert.IsTrue(type1Received.Count == 1);
             Assert.IsTrue(type2Received.Count == 1);

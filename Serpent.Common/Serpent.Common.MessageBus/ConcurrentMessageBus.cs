@@ -3,24 +3,24 @@
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading.Tasks;
 
     using Serpent.Common.MessageBus.BusPublishers;
 
     public class ConcurrentMessageBus<T> : IMessageBus<T>
     {
-        private readonly ConcurrentQueue<int> recycledSubscriptionIds = new ConcurrentQueue<int>();
-
         private readonly ConcurrentMessageBusOptions concurrentMessageBusOptions = ConcurrentMessageBusOptions.Default;
 
         private readonly ExclusiveAccess<int> currentSubscriptionId = new ExclusiveAccess<int>(0);
 
         private readonly Func<IEnumerable<ISubscription<T>>, T, Task> publishAsyncFunc;
 
+        private readonly ConcurrentQueue<int> recycledSubscriptionIds = new ConcurrentQueue<int>();
+
         private readonly ConcurrentDictionary<int, ISubscription<T>> subscribers = new ConcurrentDictionary<int, ISubscription<T>>();
 
-        public ConcurrentMessageBus(ConcurrentMessageBusOptions concurrentMessageBusOptions) : this()
+        public ConcurrentMessageBus(ConcurrentMessageBusOptions concurrentMessageBusOptions)
+            : this()
         {
             this.concurrentMessageBusOptions = concurrentMessageBusOptions;
         }
@@ -33,7 +33,7 @@
             }
             else
             {
-                this.publishAsyncFunc = this.GetPublishFunc(this.concurrentMessageBusOptions.InvokationMethod);
+                this.publishAsyncFunc = this.GetPublishFunc(this.concurrentMessageBusOptions.PublishType);
             }
         }
 
@@ -51,7 +51,7 @@
 
         public int SubscriberCount => this.subscribers.Count;
 
-        public Task PublishEventAsync(T eventData) => this.publishAsyncFunc(this.subscribers.Values, eventData);
+        public Task PublishAsync(T message) => this.publishAsyncFunc(this.subscribers.Values, message);
 
         public IMessageBusSubscription Subscribe(Func<T, Task> invocationFunc)
         {
@@ -69,11 +69,11 @@
             return new ConcurrentMessageBusSubscription(() => this.Unsubscribe(newSubscriptionId));
         }
 
-        private ISubscription<T> CreateSubscription(Func<T, Task> eventSubscription)
+        private ISubscription<T> CreateSubscription(Func<T, Task> subscriptionHandlerFunc)
         {
             return this.concurrentMessageBusOptions.SubscriptionReferenceType != ConcurrentMessageBusOptions.SubscriptionReferenceTypeType.WeakReferences
-                       ? new StrongReferenceSubscription(eventSubscription)
-                       : (ISubscription<T>)new WeakReferenceSubscription(eventSubscription);
+                       ? new StrongReferenceSubscription(subscriptionHandlerFunc)
+                       : (ISubscription<T>)new WeakReferenceSubscription(subscriptionHandlerFunc);
         }
 
         private int GetNewSubscriptionId()
@@ -86,17 +86,17 @@
             return result;
         }
 
-        private Func<IEnumerable<ISubscription<T>>, T, Task> GetPublishFunc(ConcurrentMessageBusOptions.InvokationMethodType invokationMethodType)
+        private Func<IEnumerable<ISubscription<T>>, T, Task> GetPublishFunc(ConcurrentMessageBusOptions.PublishTypeType publishTypeType)
         {
-            switch (invokationMethodType)
+            switch (publishTypeType)
             {
-                case ConcurrentMessageBusOptions.InvokationMethodType.Serial:
+                case ConcurrentMessageBusOptions.PublishTypeType.Serial:
                     return SerialPublisher<T>.Default.PublishAsync;
-                case ConcurrentMessageBusOptions.InvokationMethodType.Parallel:
+                case ConcurrentMessageBusOptions.PublishTypeType.Parallel:
                     return ParallelPublisher<T>.Default.PublishAsync;
-                case ConcurrentMessageBusOptions.InvokationMethodType.ForcedParallel:
+                case ConcurrentMessageBusOptions.PublishTypeType.ForcedParallel:
                     return ForcedParallelPublisher<T>.Default.PublishAsync;
-                case ConcurrentMessageBusOptions.InvokationMethodType.Custom:
+                case ConcurrentMessageBusOptions.PublishTypeType.Custom:
 
                     if (this.concurrentMessageBusOptions.CustomBusPublisher == null)
                     {
@@ -146,32 +146,37 @@
                 this.unsubscribeAction.Invoke();
                 this.unsubscribeAction = DoNothing;
             }
+
+            public void Dispose()
+            {
+                this.Unsubscribe();
+            }
         }
 
         private struct StrongReferenceSubscription : ISubscription<T>
         {
-            public StrongReferenceSubscription(Func<T, Task> eventInvocationFunc)
+            public StrongReferenceSubscription(Func<T, Task> subscriptionHandlerFunc)
             {
-                this.EventInvocationFunc = eventInvocationFunc;
+                this.SubscriptionHandlerFunc = subscriptionHandlerFunc;
             }
 
-            public Func<T, Task> EventInvocationFunc { get; set; }
+            public Func<T, Task> SubscriptionHandlerFunc { get; set; }
         }
 
         private struct WeakReferenceSubscription : ISubscription<T>
         {
-            private readonly WeakReference<Func<T, Task>> eventInvocationFunc;
+            private readonly WeakReference<Func<T, Task>> subscriptionHandlerFunc;
 
-            public WeakReferenceSubscription(Func<T, Task> eventInvocationFunc)
+            public WeakReferenceSubscription(Func<T, Task> subscriptionHandlerFunc)
             {
-                this.eventInvocationFunc = new WeakReference<Func<T, Task>>(eventInvocationFunc);
+                this.subscriptionHandlerFunc = new WeakReference<Func<T, Task>>(subscriptionHandlerFunc);
             }
 
-            public Func<T, Task> EventInvocationFunc
+            public Func<T, Task> SubscriptionHandlerFunc
             {
                 get
                 {
-                    if (this.eventInvocationFunc.TryGetTarget(out var target))
+                    if (this.subscriptionHandlerFunc.TryGetTarget(out var target))
                     {
                         return target;
                     }
@@ -183,14 +188,32 @@
 
         public class ConcurrentMessageBusOptions
         {
-            public enum InvokationMethodType
+            public enum PublishTypeType
             {
+                /// <summary>
+                /// A message is sent to the handler functions serially, 
+                /// which means the first subscriber must finish handling the message before the second handler is invoked.
+                /// The Task returned by PublishAsync is done when all handlers Tasks are done
+                /// </summary>
                 Serial,
 
+                /// <summary>
+                /// A message is sent to all handler functions serially, not awaiting each handler to finish before the next handler is invoked
+                /// This is the DEFAULT value. If all handlers are written to follow the TPL guidelines (never blocking), this is usually the best option. 
+                /// The Task returned by PublishAsync is done when all handlers Tasks are done
+                /// </summary>
                 Parallel,
 
+                /// <summary>
+                /// A message is sent to all handler functions in parallel, not awaiting each handler to finish before the next handler is invoked
+                /// This is the DEFAULT value. If all handlers are written to follow the TPL guidelines (never blocking), this is usually the best option.
+                /// The Task returned by PublishAsync is done when all handlers Tasks are done
+                /// </summary>
                 ForcedParallel,
 
+                /// <summary>
+                /// Use this option to use the CustomBusPublisher property for a custom publisher
+                /// </summary>
                 Custom
             }
 
@@ -201,16 +224,15 @@
                 WeakReferences
             }
 
-            public BusPublisher<T> CustomBusPublisher { get; set; }
-
             public static ConcurrentMessageBusOptions Default { get; } = new ConcurrentMessageBusOptions
             {
-                InvokationMethod = InvokationMethodType.Parallel,
-                SubscriptionReferenceType =
-                                                                                   SubscriptionReferenceTypeType.StrongReferences,
+                PublishType = PublishTypeType.Parallel,
+                SubscriptionReferenceType = SubscriptionReferenceTypeType.StrongReferences
             };
 
-            public InvokationMethodType InvokationMethod { get; set; } = InvokationMethodType.Parallel;
+            public BusPublisher<T> CustomBusPublisher { get; set; }
+
+            public PublishTypeType PublishType { get; set; } = PublishTypeType.Parallel;
 
             public SubscriptionReferenceTypeType SubscriptionReferenceType { get; set; }
 

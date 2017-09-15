@@ -15,9 +15,9 @@
             this.filterFunc = filterFunc;
         }
 
-        public Task PublishEventAsync(T eventData)
+        public Task PublishAsync(T message)
         {
-            return this.innerMessageBus.PublishEventAsync(eventData);
+            return this.innerMessageBus.PublishAsync(message);
         }
 
         public IMessageBusSubscription Subscribe(Func<T, Task> invocationFunc)

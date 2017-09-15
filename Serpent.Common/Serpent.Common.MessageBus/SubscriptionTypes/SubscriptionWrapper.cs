@@ -1,4 +1,5 @@
-﻿namespace Serpent.Common.MessageBus
+﻿//// ReSharper disable CheckNamespace
+namespace Serpent.Common.MessageBus
 {
     using System;
     using System.Threading.Tasks;
@@ -17,13 +18,13 @@
             this.Dispose();
         }
 
-        public static SubscriptionWrapper<T> Create(IMessageBusSubscriber<T> messageBus, Func<T, Task> invocationFunc, Func<T, bool> eventFilterFunc = null)
+        public static SubscriptionWrapper<T> Create(IMessageBusSubscriber<T> messageBus, Func<T, Task> invocationFunc, Func<T, bool> messageFilterFunc = null)
         {
             IMessageBusSubscription subscription;
 
-            if (eventFilterFunc != null)
+            if (messageFilterFunc != null)
             {
-                subscription = messageBus.Subscribe(arg => eventFilterFunc(arg) ? invocationFunc(arg) : Task.CompletedTask);
+                subscription = messageBus.Subscribe(arg => messageFilterFunc(arg) ? invocationFunc(arg) : Task.CompletedTask);
             }
             else
             {

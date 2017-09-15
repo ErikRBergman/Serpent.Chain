@@ -30,8 +30,8 @@
                         return Task.CompletedTask;
                     });
 
-            bus.PublishEventAsync(new MessageType1("Haj"));
-            bus.PublishEventAsync(
+            bus.PublishAsync(new MessageType1("Haj"));
+            bus.PublishAsync(
                 new MessageType2()
                     {
                         Name = "Boj"

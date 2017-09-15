@@ -51,6 +51,7 @@
     <Compile Include="ConcurrentMessageBusTests.cs" />
     <Compile Include="MessageBusExtensionsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SubscriptionTypes\BackgroundSemaphoreSubscriptionTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

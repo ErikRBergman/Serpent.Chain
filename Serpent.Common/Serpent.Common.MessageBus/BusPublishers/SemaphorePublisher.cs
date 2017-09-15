@@ -14,7 +14,7 @@
 
         public SemaphorePublisher(int concurrencyLevel = -1, BusPublisher<T> innerPublisher = null)
         {
-            innerPublisher = innerPublisher ?? SerialPublisher<T>.Default;
+            innerPublisher = innerPublisher ?? ParallelPublisher<T>.Default;
 
             this.publishMethod = innerPublisher.PublishAsync;
 

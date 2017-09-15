@@ -9,7 +9,7 @@
 
         public FireAndForgetPublisher(BusPublisher<T> innerPublisher)
         {
-            this.innerPublisher = innerPublisher;
+            this.innerPublisher = innerPublisher ?? ParallelPublisher<T>.Default;
         }
 
         public override Task PublishAsync(IEnumerable<ISubscription<T>> subscriptions, T message)

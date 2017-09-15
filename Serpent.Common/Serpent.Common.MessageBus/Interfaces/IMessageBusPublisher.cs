@@ -4,6 +4,6 @@
 
     public interface IMessageBusPublisher<TMessage>
     {
-        Task PublishEventAsync(TMessage eventData);
+        Task PublishAsync(TMessage message);
     }
 }
