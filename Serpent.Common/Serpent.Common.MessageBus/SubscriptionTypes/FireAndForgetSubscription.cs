@@ -3,16 +3,21 @@
     using System;
     using System.Threading.Tasks;
 
-    public class FireAndForgetSubscription<T> : BusSubscription<T>
+    public class FireAndForgetSubscription<TMessageType> : BusSubscription<TMessageType>
     {
-        private readonly Func<T, Task> handlerFunc;
+        private readonly Func<TMessageType, Task> handlerFunc;
 
-        public FireAndForgetSubscription(Func<T, Task> handlerFunc)
+        public FireAndForgetSubscription(Func<TMessageType, Task> handlerFunc)
         {
             this.handlerFunc = handlerFunc;
         }
 
-        public override Task HandleMessageAsync(T message)
+        public FireAndForgetSubscription(BusSubscription<TMessageType> innerSubscription)
+        {
+            this.handlerFunc = innerSubscription.HandleMessageAsync;
+        }
+
+        public override Task HandleMessageAsync(TMessageType message)
         {
             Task.Run(() => this.handlerFunc(message));
             return Task.CompletedTask;

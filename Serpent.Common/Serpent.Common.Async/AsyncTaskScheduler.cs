@@ -44,6 +44,9 @@
 #pragma warning disable 4014
                             Task.Run(() => this.funcToExecute(cancellationToken), cancellationToken);
 #pragma warning restore 4014
+
+                            // Make sure some time has passed
+                            await Task.Delay(10, cancellationToken);
                         }
                     });
         }

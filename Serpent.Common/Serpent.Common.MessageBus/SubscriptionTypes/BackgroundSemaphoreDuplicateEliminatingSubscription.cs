@@ -13,7 +13,7 @@
 
         private readonly Func<TMessageType, TKeyType> keySelector;
 
-        private readonly ConcurrentDictionary<TKeyType, bool> queuedKeys = new ConcurrentDictionary<TKeyType, bool>();
+        private readonly ConcurrentDictionary<TKeyType, bool> keyDictionary = new ConcurrentDictionary<TKeyType, bool>();
 
         private readonly ConcurrentQueue<MessageAndKey> messages = new ConcurrentQueue<MessageAndKey>();
 
@@ -71,7 +71,7 @@
         {
             var key = this.keySelector(message);
 
-            if (this.queuedKeys.TryAdd(key, true))
+            if (this.keyDictionary.TryAdd(key, true))
             {
                 this.messages.Enqueue(new MessageAndKey(key, message));
                 this.semaphore.Release();
@@ -90,10 +90,17 @@
 
                 if (this.messages.TryDequeue(out var message))
                 {
-                    await this.handlerFunc(message.Message);
+                    try
+                    {
+                        await this.handlerFunc(message.Message);
+                    }
+                    catch (Exception)
+                    {
+                        // don't ruin the subscription when the user has not caught an exception
+                    }
 
                     // Remove key after the message handler is invoked. The user can decorate with a fire and forget subscription to have the key removed before the handler is invoked.
-                    this.queuedKeys.TryRemove(message.Key, out _);
+                    this.keyDictionary.TryRemove(message.Key, out _);
                 }
             }
         }

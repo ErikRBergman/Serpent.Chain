@@ -9,16 +9,19 @@ namespace Serpent.Common.MessageBus
 
     public static class FireAndForgetSubscriptionMessageBusSubscriberExtensions
     {
-        public static SubscriptionWrapper<T> CreateFireAndForgetSubscription<T>(this IMessageBusSubscriber<T> messageBus, Func<T, Task> handlerFunc)
+        public static IMessageBusSubscription CreateFireAndForgetSubscription<TMessageType>(this IMessageBusSubscriber<TMessageType> messageBus, Func<TMessageType, Task> handlerFunc)
         {
-            var subscription = messageBus.Subscribe(new FireAndForgetSubscription<T>(handlerFunc).HandleMessageAsync);
-            return new SubscriptionWrapper<T>(subscription);
+            return messageBus.Subscribe(new FireAndForgetSubscription<TMessageType>(handlerFunc).HandleMessageAsync);
         }
 
-        public static SubscriptionWrapper<T> CreateFireAndForgetSubscription<T>(this IMessageBusSubscriber<T> messageBus, IMessageHandler<T> handler)
+        public static IMessageBusSubscription CreateFireAndForgetSubscription<TMessageType>(this IMessageBusSubscriber<TMessageType> messageBus, IMessageHandler<TMessageType> handler)
         {
-            var subscription = messageBus.Subscribe(new FireAndForgetSubscription<T>(handler.HandleMessageAsync).HandleMessageAsync);
-            return new SubscriptionWrapper<T>(subscription);
+            return messageBus.Subscribe(new FireAndForgetSubscription<TMessageType>(handler.HandleMessageAsync).HandleMessageAsync);
+        }
+
+        public static IMessageBusSubscription CreateFireAndForgetSubscription<TMessageType>(this IMessageBusSubscriber<TMessageType> messageBus, BusSubscription<TMessageType> innerSubscription)
+        {
+            return messageBus.Subscribe(new FireAndForgetSubscription<TMessageType>(innerSubscription).HandleMessageAsync);
         }
     }
 }

@@ -7,16 +7,14 @@
 
     public static class BackgroundSemaphoreDuplicateEliminatingSubscriptionMessageSubsubscriberExtensions
     {
-        public static SubscriptionWrapper<TMessageType> CreateBackgroundSemaphoreWithDuplicateEliminationSubscription<TMessageType, TKeyType>(this IMessageBusSubscriber<TMessageType> messageBus, Func<TMessageType, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector, int concurrencyLevel = -1)
+        public static IMessageBusSubscription CreateBackgroundSemaphoreWithDuplicateEliminationSubscription<TMessageType, TKeyType>(this IMessageBusSubscriber<TMessageType> messageBus, Func<TMessageType, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector, int concurrencyLevel = -1)
         {
-            var subscription = messageBus.Subscribe(new BackgroundSemaphoreDuplicateEliminatingSubscription<TMessageType, TKeyType>(handlerFunc, keySelector, concurrencyLevel).HandleMessageAsync);
-            return new SubscriptionWrapper<TMessageType>(subscription);
+            return messageBus.Subscribe(new BackgroundSemaphoreDuplicateEliminatingSubscription<TMessageType, TKeyType>(handlerFunc, keySelector, concurrencyLevel).HandleMessageAsync);
         }
 
-        public static SubscriptionWrapper<TMessageType> CreateBackgroundSemaphoreWithDuplicateEliminationSubscription<TMessageType, TKeyType>(this IMessageBusSubscriber<TMessageType> messageBus, BusSubscription<TMessageType> innerSubscription, Func<TMessageType, TKeyType> keySelector, int concurrencyLevel = -1)
+        public static IMessageBusSubscription CreateBackgroundSemaphoreWithDuplicateEliminationSubscription<TMessageType, TKeyType>(this IMessageBusSubscriber<TMessageType> messageBus, BusSubscription<TMessageType> innerSubscription, Func<TMessageType, TKeyType> keySelector, int concurrencyLevel = -1)
         {
-            var subscription = messageBus.Subscribe(new BackgroundSemaphoreDuplicateEliminatingSubscription<TMessageType, TKeyType>(innerSubscription, keySelector, concurrencyLevel).HandleMessageAsync);
-            return new SubscriptionWrapper<TMessageType>(subscription);
+            return messageBus.Subscribe(new BackgroundSemaphoreDuplicateEliminatingSubscription<TMessageType, TKeyType>(innerSubscription, keySelector, concurrencyLevel).HandleMessageAsync);
         }
     }
 }

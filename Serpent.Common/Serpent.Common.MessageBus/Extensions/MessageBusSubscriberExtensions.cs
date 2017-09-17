@@ -4,6 +4,7 @@ namespace Serpent.Common.MessageBus
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public static class MessageBusSubscriberExtensions
@@ -11,14 +12,48 @@ namespace Serpent.Common.MessageBus
         /// <summary>
         /// Subscribes to a messages, with an optional filter function
         /// </summary>
-        /// <typeparam name="TMessage">The message bus message type</typeparam>
+        /// <typeparam name="TMessageType">The message bus message type</typeparam>
         /// <param name="messageBus">the message bus</param>
         /// <param name="invocationFunc">The function to invoke when a message is received</param>
         /// <param name="messageFilterFunc">A function filtering messages. If this function returns true, the messages is sent to the invocation func</param>
         /// <returns>A subscription wrapper</returns>
-        public static SubscriptionWrapper<TMessage> Subscribe<TMessage>(this IMessageBusSubscriber<TMessage> messageBus, Func<TMessage, Task> invocationFunc, Func<TMessage, bool> messageFilterFunc = null)
+        public static SubscriptionWrapper Subscribe<TMessageType>(this IMessageBusSubscriber<TMessageType> messageBus, Func<TMessageType, Task> invocationFunc, Func<TMessageType, bool> messageFilterFunc = null)
         {
-            return SubscriptionWrapper<TMessage>.Create(messageBus, invocationFunc, messageFilterFunc);
+            return SubscriptionWrapper.Create(messageBus, invocationFunc, messageFilterFunc);
+        }
+
+        //public static async Task<TMessageType> GetMessageAsync<TMessageType>(this IMessageBusSubscriber<TMessageType> messageBus)
+        //{
+        //    var completion = new TaskCompletionSource<TMessageType>();
+
+        //    using (messageBus.Subscribe(
+        //        message =>
+        //            {
+        //                completion.SetResult(message);
+        //                return Task.CompletedTask;
+        //            }))
+        //    {
+        //        return await completion.Task;
+        //    }
+        //}
+
+        public static async Task<TMessageType> GetMessageAsync<TMessageType>(this IMessageBusSubscriber<TMessageType> messageBus)
+        {
+            var completion = new TaskCompletionSource<TMessageType>();
+            int isCompleted = 0;
+
+            using (messageBus.Subscribe(
+                message =>
+                    {
+                        if (Interlocked.CompareExchange(ref isCompleted, 1, 0) == 0)
+                        {
+                            completion.SetResult(message);
+                        }
+                        return Task.CompletedTask;
+                    }))
+            {
+                return await completion.Task;
+            }
         }
 
         /// <summary>
@@ -29,10 +64,10 @@ namespace Serpent.Common.MessageBus
         /// <param name="messageBus">the message bus</param>
         /// <param name="invocationFunc">The function to invoke when a message is received</param>
         /// <returns>A subscription wrapper</returns>
-        public static SubscriptionWrapper<TBaseMessage> Subscribe<TBaseMessage, TMessage>(this IMessageBusSubscriber<TBaseMessage> messageBus, Func<TMessage, Task> invocationFunc)
+        public static SubscriptionWrapper Subscribe<TBaseMessage, TMessage>(this IMessageBusSubscriber<TBaseMessage> messageBus, Func<TMessage, Task> invocationFunc)
             where TMessage : TBaseMessage
         {
-            return SubscriptionWrapper<TBaseMessage>.Create(messageBus, message => invocationFunc((TMessage)message), message => message is TMessage);
+            return SubscriptionWrapper.Create(messageBus, message => invocationFunc((TMessage)message), message => message is TMessage);
         }
 
         /// <summary>
@@ -46,9 +81,9 @@ namespace Serpent.Common.MessageBus
         /// <param name="messageHandlerFactoryFunc">The factory func (that creates the handler)</param>
         /// <param name="messageHandlerFactoryFuncSelector">The func that selectes the function to execute on the handler</param>
         /// <returns>A subscription wrapper</returns>
-        public static SubscriptionWrapper<TMessage> RegisterFactory<TMessage, THandler>(this IMessageBusSubscriber<TMessage> messageBus, Func<THandler> messageHandlerFactoryFunc, Func<THandler, Func<TMessage, Task>> messageHandlerFactoryFuncSelector)
+        public static SubscriptionWrapper RegisterFactory<TMessage, THandler>(this IMessageBusSubscriber<TMessage> messageBus, Func<THandler> messageHandlerFactoryFunc, Func<THandler, Func<TMessage, Task>> messageHandlerFactoryFuncSelector)
         {
-            return SubscriptionWrapper<TMessage>.Create(
+            return SubscriptionWrapper.Create(
                 messageBus,
                 message =>
                     {
@@ -69,10 +104,10 @@ namespace Serpent.Common.MessageBus
         /// <param name="messageHandlerFactoryFunc">The factory func (that creates the handler)</param>
         /// <param name="messageHandlerFactoryFuncSelector">The func that selectes the function to execute on the handler</param>
         /// <returns>A subscription wrapper</returns>
-        public static SubscriptionWrapper<TMessage> RegisterFactoryWithDisposableHandler<TMessage, THandler>(this IMessageBusSubscriber<TMessage> messageBus, Func<THandler> messageHandlerFactoryFunc, Func<THandler, Func<TMessage, Task>> messageHandlerFactoryFuncSelector)
+        public static SubscriptionWrapper RegisterFactoryWithDisposableHandler<TMessage, THandler>(this IMessageBusSubscriber<TMessage> messageBus, Func<THandler> messageHandlerFactoryFunc, Func<THandler, Func<TMessage, Task>> messageHandlerFactoryFuncSelector)
             where THandler : IDisposable
         {
-            return SubscriptionWrapper<TMessage>.Create(
+            return SubscriptionWrapper.Create(
                 messageBus,
                 async message =>
                     {

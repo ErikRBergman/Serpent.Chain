@@ -65,7 +65,14 @@
 
                 if (this.messages.TryDequeue(out var message))
                 {
-                    await this.handlerFunc(message);
+                    try
+                    {
+                        await this.handlerFunc(message);
+                    }
+                    catch (Exception)
+                    {
+                        // don't ruin the subscription when the user has not caught an exception
+                    }
                 }
             }
         }
