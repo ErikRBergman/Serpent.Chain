@@ -1,7 +1,22 @@
 ﻿namespace Serpent.Common.MessageBus
 {
+    using System;
+
     internal class Readme
     {
+        private void RetrySubscriptionExample()
+        {
+            var bus = new ConcurrentMessageBus<int>();
+
+            bus.CreateRetrySubscription(
+                message =>
+                    {
+                        throw new Exception("Handler failed");
+                    }, 
+                10,
+                TimeSpan.FromMilliseconds(500));
+        }
+
         private void FireAndForgetNew()
         {
             // Instantiate a new FireAndForgetPublisher

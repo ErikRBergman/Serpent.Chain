@@ -87,10 +87,16 @@ Customizing publishing affects all messages being published, while customizing t
 
 My recommendation would be to use custom subscriptions before custom publishing, since it''s it will not change as much 
 
-### Customizing subscriptions
+### Subscriptions
+All subscriptions except the normal subscription can be stacked/decorated to combine their functionallity.
 
 #### Normal subscription
 Just call the Subscribe method.
+
+Example:
+```csharp
+  // TODO: Add example
+```
 
 #### FireAndForgetSubscription
 Invokes all handlers in a Fire and Forget manner.
@@ -171,8 +177,38 @@ you can couple this subscription with the FireAndForGetSubscription:
 	}
 ```
 
+#### Limited Throughput subscription
 
-#### Publishing
+Example:
+```csharp
+	// TODO: add example
+```
+
+#### Retry subscription
+This subscription will automatically retry X times if the handler throws an exception. 
+Each retry (not the initial try) is separated by a user specified delay.
+If all X attempts fail, the subscription throws an exception with the last exception as inner exception
+
+Example:
+```csharp
+	
+	var bus = new ConcurrentMessageBus<int>();
+
+	// Try invoking the handler 10 times with 500ms in between before propagating the last
+    bus.CreateRetrySubscription(
+        message =>
+            {
+				// This handler fails
+                throw new Exception("Handler failed");
+            }, 
+        10,
+        TimeSpan.FromMilliseconds(500));
+		
+```
+After 10 attempts, an Exception is thrown with the last handler exception as inner exception
+
+
+### Publishing
 The default method of publishing messages to the subscribers is Parallel. The subscriber methods are invoked in parallel and are then awaited as a group. See ParallelPublisher below.
 
 Publishing is implemented by Publishers, types deriving from BusPublisher<TMessageType>. Serpent.Common.MessageBus has implementation for a lot of common scenarios.
