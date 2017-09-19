@@ -5,55 +5,59 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    using Serpent.Common.MessageBus.BusPublishers;
-
-    public class ConcurrentMessageBus<T> : IMessageBus<T>
+    public class ConcurrentMessageBus<TMessageType> : IMessageBus<TMessageType>
     {
-        private readonly ConcurrentMessageBusOptions concurrentMessageBusOptions = ConcurrentMessageBusOptions.Default;
+        private readonly ConcurrentMessageBusOptions<TMessageType> options = ConcurrentMessageBusOptions<TMessageType>.Default;
 
         private readonly ExclusiveAccess<int> currentSubscriptionId = new ExclusiveAccess<int>(0);
 
-        private readonly Func<IEnumerable<ISubscription<T>>, T, Task> publishAsyncFunc;
+        private readonly Func<IEnumerable<ISubscription<TMessageType>>, TMessageType, Task> publishAsyncFunc;
 
         private readonly ConcurrentQueue<int> recycledSubscriptionIds = new ConcurrentQueue<int>();
 
-        private readonly ConcurrentDictionary<int, ISubscription<T>> subscribers = new ConcurrentDictionary<int, ISubscription<T>>();
+        private readonly ConcurrentDictionary<int, ISubscription<TMessageType>> subscribers = new ConcurrentDictionary<int, ISubscription<TMessageType>>();
 
-        public ConcurrentMessageBus(ConcurrentMessageBusOptions concurrentMessageBusOptions)
-            : this()
+        public ConcurrentMessageBus(ConcurrentMessageBusOptions<TMessageType> options)
         {
-            this.concurrentMessageBusOptions = concurrentMessageBusOptions;
+            this.options = options;
+            this.publishAsyncFunc = this.options.BusPublisher.PublishAsync;
+        }
+
+        public ConcurrentMessageBus(Action<ConcurrentMessageBusOptions<TMessageType>> optionsFunc)
+        {
+            var options = new ConcurrentMessageBusOptions<TMessageType>();
+            optionsFunc(options);
+            this.options = options;
+            this.publishAsyncFunc = this.options.BusPublisher.PublishAsync;
         }
 
         public ConcurrentMessageBus()
         {
-            if (this.concurrentMessageBusOptions.CustomBusPublisher != null)
+            if (this.options.BusPublisher == null)
             {
-                this.publishAsyncFunc = this.concurrentMessageBusOptions.CustomBusPublisher.PublishAsync;
+                throw new Exception("No BusPublisher must not be null");
             }
-            else
-            {
-                this.publishAsyncFunc = this.GetPublishFunc(this.concurrentMessageBusOptions.PublishType);
-            }
+
+            this.publishAsyncFunc = this.options.BusPublisher.PublishAsync;
         }
 
-        public ConcurrentMessageBus(ConcurrentMessageBusOptions concurrentMessageBusOptions, Func<IEnumerable<ISubscription<T>>, T, Task> publishFunction)
+        public ConcurrentMessageBus(ConcurrentMessageBusOptions<TMessageType> options, Func<IEnumerable<ISubscription<TMessageType>>, TMessageType, Task> publishFunction)
         {
-            this.concurrentMessageBusOptions = concurrentMessageBusOptions;
+            this.options = options;
             this.publishAsyncFunc = publishFunction;
         }
 
-        public ConcurrentMessageBus(ConcurrentMessageBusOptions concurrentMessageBusOptions, BusPublisher<T> publisher)
+        public ConcurrentMessageBus(ConcurrentMessageBusOptions<TMessageType> options, BusPublisher<TMessageType> publisher)
         {
-            this.concurrentMessageBusOptions = concurrentMessageBusOptions;
+            this.options = options;
             this.publishAsyncFunc = publisher.PublishAsync;
         }
 
         public int SubscriberCount => this.subscribers.Count;
 
-        public Task PublishAsync(T message) => this.publishAsyncFunc(this.subscribers.Values, message);
+        public Task PublishAsync(TMessageType message) => this.publishAsyncFunc(this.subscribers.Values, message);
 
-        public IMessageBusSubscription Subscribe(Func<T, Task> invocationFunc)
+        public IMessageBusSubscription Subscribe(Func<TMessageType, Task> invocationFunc)
         {
             var subscription = this.CreateSubscription(invocationFunc);
 
@@ -69,11 +73,11 @@
             return new ConcurrentMessageBusSubscription(() => this.Unsubscribe(newSubscriptionId));
         }
 
-        private ISubscription<T> CreateSubscription(Func<T, Task> subscriptionHandlerFunc)
+        private ISubscription<TMessageType> CreateSubscription(Func<TMessageType, Task> subscriptionHandlerFunc)
         {
-            return this.concurrentMessageBusOptions.SubscriptionReferenceType != ConcurrentMessageBusOptions.SubscriptionReferenceTypeType.WeakReferences
+            return this.options.SubscriptionReferenceType != SubscriptionReferenceTypeType.WeakReferences
                        ? new StrongReferenceSubscription(subscriptionHandlerFunc)
-                       : (ISubscription<T>)new WeakReferenceSubscription(subscriptionHandlerFunc);
+                       : (ISubscription<TMessageType>)new WeakReferenceSubscription(subscriptionHandlerFunc);
         }
 
         private int GetNewSubscriptionId()
@@ -84,29 +88,6 @@
             }
 
             return result;
-        }
-
-        private Func<IEnumerable<ISubscription<T>>, T, Task> GetPublishFunc(ConcurrentMessageBusOptions.PublishTypeType publishTypeType)
-        {
-            switch (publishTypeType)
-            {
-                case ConcurrentMessageBusOptions.PublishTypeType.Serial:
-                    return SerialPublisher<T>.Default.PublishAsync;
-                case ConcurrentMessageBusOptions.PublishTypeType.Parallel:
-                    return ParallelPublisher<T>.Default.PublishAsync;
-                case ConcurrentMessageBusOptions.PublishTypeType.ForcedParallel:
-                    return ForcedParallelPublisher<T>.Default.PublishAsync;
-                case ConcurrentMessageBusOptions.PublishTypeType.Custom:
-
-                    if (this.concurrentMessageBusOptions.CustomBusPublisher == null)
-                    {
-                        throw new Exception("The custom bus publisher must be set to use a custom bus publisher");
-                    }
-
-                    return this.concurrentMessageBusOptions.CustomBusPublisher.PublishAsync;
-                default:
-                    throw new NotImplementedException();
-            }
         }
 
         private void Unsubscribe(int subscriptionId)
@@ -153,26 +134,26 @@
             }
         }
 
-        private struct StrongReferenceSubscription : ISubscription<T>
+        private struct StrongReferenceSubscription : ISubscription<TMessageType>
         {
-            public StrongReferenceSubscription(Func<T, Task> subscriptionHandlerFunc)
+            public StrongReferenceSubscription(Func<TMessageType, Task> subscriptionHandlerFunc)
             {
                 this.SubscriptionHandlerFunc = subscriptionHandlerFunc;
             }
 
-            public Func<T, Task> SubscriptionHandlerFunc { get; set; }
+            public Func<TMessageType, Task> SubscriptionHandlerFunc { get; set; }
         }
 
-        private struct WeakReferenceSubscription : ISubscription<T>
+        private struct WeakReferenceSubscription : ISubscription<TMessageType>
         {
-            private readonly WeakReference<Func<T, Task>> subscriptionHandlerFunc;
+            private readonly WeakReference<Func<TMessageType, Task>> subscriptionHandlerFunc;
 
-            public WeakReferenceSubscription(Func<T, Task> subscriptionHandlerFunc)
+            public WeakReferenceSubscription(Func<TMessageType, Task> subscriptionHandlerFunc)
             {
-                this.subscriptionHandlerFunc = new WeakReference<Func<T, Task>>(subscriptionHandlerFunc);
+                this.subscriptionHandlerFunc = new WeakReference<Func<TMessageType, Task>>(subscriptionHandlerFunc);
             }
 
-            public Func<T, Task> SubscriptionHandlerFunc
+            public Func<TMessageType, Task> SubscriptionHandlerFunc
             {
                 get
                 {
@@ -183,73 +164,6 @@
 
                     return null;
                 }
-            }
-        }
-
-        public class ConcurrentMessageBusOptions
-        {
-            public enum PublishTypeType
-            {
-                /// <summary>
-                /// A message is sent to the handler functions serially, 
-                /// which means the first subscriber must finish handling the message before the second handler is invoked.
-                /// The Task returned by PublishAsync is done when all handlers Tasks are done
-                /// </summary>
-                Serial,
-
-                /// <summary>
-                /// A message is sent to all handler functions serially, not awaiting each handler to finish before the next handler is invoked
-                /// This is the DEFAULT value. If all handlers are written to follow the TPL guidelines (never blocking), this is usually the best option. 
-                /// The Task returned by PublishAsync is done when all handlers Tasks are done
-                /// </summary>
-                Parallel,
-
-                /// <summary>
-                /// A message is sent to all handler functions in parallel, not awaiting each handler to finish before the next handler is invoked
-                /// This is the DEFAULT value. If all handlers are written to follow the TPL guidelines (never blocking), this is usually the best option.
-                /// The Task returned by PublishAsync is done when all handlers Tasks are done
-                /// </summary>
-                ForcedParallel,
-
-                /// <summary>
-                /// Use this option to use the CustomBusPublisher property for a custom publisher
-                /// </summary>
-                Custom
-            }
-
-            public enum SubscriptionReferenceTypeType
-            {
-                StrongReferences,
-
-                WeakReferences
-            }
-
-            public static ConcurrentMessageBusOptions Default { get; } = new ConcurrentMessageBusOptions
-            {
-                PublishType = PublishTypeType.Parallel,
-                SubscriptionReferenceType = SubscriptionReferenceTypeType.StrongReferences
-            };
-
-            public BusPublisher<T> CustomBusPublisher { get; set; }
-
-            public PublishTypeType PublishType { get; set; } = PublishTypeType.Parallel;
-
-            public SubscriptionReferenceTypeType SubscriptionReferenceType { get; set; }
-
-            public WeakReferenceGarbageCollectionOptions WeakReferenceGarbageCollection { get; set; } = WeakReferenceGarbageCollectionOptions.Default;
-
-            public struct WeakReferenceGarbageCollectionOptions
-            {
-                public static WeakReferenceGarbageCollectionOptions Default { get; } = new WeakReferenceGarbageCollectionOptions
-                {
-                    CollectionInterval =
-                                                                                                   TimeSpan.FromSeconds(30),
-                    IsEnabled = true
-                };
-
-                public TimeSpan CollectionInterval { get; set; }
-
-                public bool IsEnabled { get; set; }
             }
         }
     }

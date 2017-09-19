@@ -1,20 +1,14 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Serpent.Common.MessageBus.Tests.SubscriptionTypes
+﻿namespace Serpent.Common.MessageBus.Tests.SubscriptionTypes
 {
     using System.Threading.Tasks;
+
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class FireAndForgetSubscriptionTests
     {
-        private class Message1
-        {
-            public string Status { get; set; }
-        }
-
         [TestMethod]
-        public async Task TestMethod1()
+        public async Task TestFireAndForgetSubscription()
         {
             var bus = new ConcurrentMessageBus<Message1>();
 
@@ -32,6 +26,11 @@ namespace Serpent.Common.MessageBus.Tests.SubscriptionTypes
             await Task.Delay(200);
 
             Assert.AreEqual("Got it!", msg.Status);
+        }
+
+        private class Message1
+        {
+            public string Status { get; set; }
         }
     }
 }

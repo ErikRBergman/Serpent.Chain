@@ -1,4 +1,5 @@
-namespace Serpent.Common.MessageBus.BusPublishers
+// ReSharper disable once CheckNamespace
+namespace Serpent.Common.MessageBus
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;

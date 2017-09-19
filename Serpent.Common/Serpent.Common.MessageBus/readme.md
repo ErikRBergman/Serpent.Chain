@@ -172,46 +172,34 @@ you can couple this subscription with the FireAndForGetSubscription:
 ```
 
 
+#### Publishing
+The default method of publishing messages to the subscribers is Parallel. The subscriber methods are invoked in parallel and are then awaited as a group. See ParallelPublisher below.
 
-#### Customizing publishing
-If you change the way messages are published, naturally it applies to all messages published to the bus.
+Publishing is implemented by Publishers, types deriving from BusPublisher<TMessageType>. Serpent.Common.MessageBus has implementation for a lot of common scenarios.
 
-##### Simple publish options
-Changing ConcurrentMessageBus<T>.ConcurrentMessageBusOptions.PublishType can change the way messages are published
+To change publisher, change the BusPublisher property on the ConcurrentMessageBusOptions<TMessageType>, either directly or by using one of the extension methods.
+
+3 examples to use FireAndForgetPublisher:
 
 ```csharp
-public enum PublishTypeType
-    {
-        /// <summary>
-        /// A message is sent to the handler functions serially, 
-        /// which means the first subscriber must finish handling the message before the second handler is invoked.
-        /// The Task returned by PublishAsync is done when all handlers Tasks are done
-        /// </summary>
-        Serial,
 
-        /// <summary>
-        /// A message is sent to all handler functions serially, not awaiting each handler to finish before the next handler is invoked
-        /// This is the DEFAULT value. If all handlers are written to follow the TPL guidelines (never blocking), this is usually the best option. 
-        /// The Task returned by PublishAsync is done when all handlers Tasks are done
-        /// </summary>
-        Parallel,
+	var bus = new ConcurrentMessageBus<int>(options => {
+		options.BusPublisher = new FireAndForgetPublisher<int>();
+	});
 
-        /// <summary>
-        /// A message is sent to all handler functions in parallel, not awaiting each handler to finish before the next handler is invoked
-        /// This is the DEFAULT value. If all handlers are written to follow the TPL guidelines (never blocking), this is usually the best option.
-        /// The Task returned by PublishAsync is done when all handlers Tasks are done
-        /// </summary>
-        ForcedParallel,
+	var bus = new ConcurrentMessageBus<int>(options => {
+		options.BusPublisher = FireAndForgetPublisher<int>.Default;
+	});
 
-        /// <summary>
-        /// Use this option to use the CustomBusPublisher property for a custom publisher
-        /// </summary>
-        Custom
-    }
+	var bus = new ConcurrentMessageBus<int>(options => {
+		options.UseFireAndForgetPublisher();
+	});
 ```
 
-##### Custom Bus Publishers
+You can also implement your own bus publishers by deriving from BusPublisher<TMessageType> and by implementing/overriding PublishAsync(IEnumerable<ISubscription<T>> subscriptions, T message).
 
+
+##### Bus Publishers
 The bus publishers are categorized in Publishers and Decorators. Some of the bus publishers are dectorators with a default Publisher.
 The publishers will actually call the subscribers. The decorators will modify the behaviour of a Publisher.
 
@@ -233,11 +221,80 @@ Makes PublishAsync return without allowing the caller to decide if all handlers 
 
 The publisher use ParallelPublisher<T> by default for publishing messages but this can be customized through the constructor.
 
-##### ForcedParallelPublisher (used when specifying PublishTypeType.ForcedParallel)
-The type used when PublishTypeType.ForcedParallel is specified.
+```csharp
 
-##### ParallelPublisher (used when specifying PublishTypeType.Parallel)
-The type used when PublishTypeType.Parallel is specified.
+	// Instantiate a new FireAndForgetPublisher
+	var bus = new ConcurrentMessageBus<int>(options => {
+		options.BusPublisher = new FireAndForgetPublisher<int>();
+	});
+
+	// Using the default FireAndForgetPublisher
+	var bus = new ConcurrentMessageBus<int>(options => {
+		options.BusPublisher = FireAndForgetPublisher<int>.Default;
+	});
+
+	// Using the options extension method
+	var bus = new ConcurrentMessageBus<int>(options => {
+		options.UseFireAndForgetPublisher();
+	});
+
+            // Using the options extension method to decorate ParallelPublisher with FireAndForgetPublisher
+            var bus = new ConcurrentMessageBus<int>(options =>
+            {
+                options.UseFireAndForgetPublisher(ParallelPublisher<int>.Default);
+            });
+
+```
+
+##### ForcedParallelPublisher
+A message is sent to all handler functions in parallel, not awaiting each handler to finish before the next handler is invoked
+The Task returned by PublishAsync is done when all handlers Tasks are done
+
+##### FuncPublisher
+The subscribers and message are sent to a provided function. 
+
+Examples:
+
+```csharp
+
+	// Instantiate a new FuncPublisher to drop all messages
+	var bus = new ConcurrentMessageBus<int>(options => {
+		options.BusPublisher = new FuncPublisher<int>((subscribers, message) => Task.CompletedTask);
+	});
+
+	// Using the options extension method
+	var bus = new ConcurrentMessageBus<int>(options => {
+		options.UseFuncPublisher((subscribers, message) => Task.CompletedTask);
+	});
+
+
+	// Using the options extension method to log all messages published and then send them to the default ParallelPublisher
+	// The logger of your choice
+	ILogger log = GetLogger();
+
+	// Make a reference to prevent calling unnecessary calls to the ParallelPublisher<int>.Default property.
+    Func<IEnumerable<ISubscription<int>>, int, Task> publishAsync = ParallelPublisher<int>.Default.PublishAsync;
+
+    var bus = new ConcurrentMessageBus<int>(
+        options =>
+            {
+                options.UseFuncPublisher((subscribers, message) =>
+                    {
+                        log.LogTrace(message + " was published");
+                        return publishAsync(subscribers, message);
+                    });
+            });
+	});
+
+```
+
+##### LoggingPublisher
+
+
+##### ParallelPublisher
+A message is sent to all handler functions serially, not awaiting each handler to finish before the next handler is invoked
+This is the DEFAULT value. If all handlers are written to follow the TPL guidelines (never blocking), this is usually the best option. 
+The Task returned by PublishAsync is done when all handlers Tasks are done.
 
 ##### SemaphorePublisher (Decorator)
 This concurrency level decides the number messages the bus can publish simultaneously. 
@@ -247,8 +304,13 @@ The mechanisms behind them are different. Use SemaphorePublisher to LIMIT the nu
 
 The publisher use ParallelPublisher<T> by default for publishing messages but this can be customized through the constructor.
 
-##### SerialPublisher (used when specifying PublishTypeType.Serial)
-The type used when PublishTypeType.Serial is specified.
+##### SerialPublisher
+A message is sent to the handler functions serially, which means the first subscriber must finish handling the message before the second handler is invoked.
+The Task returned by PublishAsync is done when all handler functions Tasks are done
+
+##### SingleReceiverPublisher
+A message is sent to only a single subscriber, rotating so every subscriber get approximtely the same number of messages.
+For a bus where subscribers are added and removed frequently, messages may be sent in a higher frequency to long time subscribers.
 
 
 #### Implement your own BusPublisher

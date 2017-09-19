@@ -1,18 +1,21 @@
-﻿namespace Serpent.Common.MessageBus.BusPublishers
+﻿// ReSharper disable once CheckNamespace
+namespace Serpent.Common.MessageBus
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    public class FireAndForgetPublisher<T> : BusPublisher<T>
+    public class FireAndForgetPublisher<TMessageType> : BusPublisher<TMessageType>
     {
-        private readonly BusPublisher<T> innerPublisher;
+        private readonly BusPublisher<TMessageType> innerPublisher;
 
-        public FireAndForgetPublisher(BusPublisher<T> innerPublisher)
+        public FireAndForgetPublisher(BusPublisher<TMessageType> innerPublisher = null)
         {
-            this.innerPublisher = innerPublisher ?? ParallelPublisher<T>.Default;
+            this.innerPublisher = innerPublisher ?? ParallelPublisher<TMessageType>.Default;
         }
 
-        public override Task PublishAsync(IEnumerable<ISubscription<T>> subscriptions, T message)
+        public static BusPublisher<TMessageType> Default { get; } = new FireAndForgetPublisher<TMessageType>();
+
+        public override Task PublishAsync(IEnumerable<ISubscription<TMessageType>> subscriptions, TMessageType message)
         {
             Task.Run(() => this.innerPublisher.PublishAsync(subscriptions, message));
             return Task.CompletedTask;
