@@ -52,26 +52,29 @@
         {
             var token = this.cancellationTokenSource.Token;
 
-            DateTime periodStart = DateTime.Now;
+            DateTime periodStart = DateTime.UtcNow;
             var periodMessageCount = 0;
+            var periodTimeSpan = this.periodSpan;
 
             while (token.IsCancellationRequested == false)
             {
                 await this.semaphore.WaitAsync(token);
 
-                if (periodMessageCount >= this.maxMessagesPerPeriod)
+                var diff = (periodStart + periodTimeSpan) - DateTime.UtcNow;
+                if (diff < TimeSpan.Zero)
                 {
-                    var now = DateTime.Now;
-
-                    var diff = (periodStart + this.periodSpan) - now;
-
+                    periodStart = DateTime.UtcNow;
+                    periodMessageCount = 0;
+                }
+                else if (periodMessageCount >= this.maxMessagesPerPeriod)
+                {
                     // We will have to await the next period start
                     if (diff > TimeSpan.Zero)
                     {
                         await Task.Delay(diff, token);
                     }
 
-                    periodStart = DateTime.Now;
+                    periodStart = DateTime.UtcNow;
                     periodMessageCount = 0;
                 }
 
