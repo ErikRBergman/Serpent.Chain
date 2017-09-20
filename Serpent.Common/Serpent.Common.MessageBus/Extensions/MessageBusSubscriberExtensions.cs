@@ -22,21 +22,6 @@ namespace Serpent.Common.MessageBus
             return SubscriptionWrapper.Create(messageBus, invocationFunc, messageFilterFunc);
         }
 
-        //public static async Task<TMessageType> GetMessageAsync<TMessageType>(this IMessageBusSubscriber<TMessageType> messageBus)
-        //{
-        //    var completion = new TaskCompletionSource<TMessageType>();
-
-        //    using (messageBus.Subscribe(
-        //        message =>
-        //            {
-        //                completion.SetResult(message);
-        //                return Task.CompletedTask;
-        //            }))
-        //    {
-        //        return await completion.Task;
-        //    }
-        //}
-
         public static async Task<TMessageType> GetMessageAsync<TMessageType>(this IMessageBusSubscriber<TMessageType> messageBus)
         {
             var completion = new TaskCompletionSource<TMessageType>();
@@ -52,7 +37,7 @@ namespace Serpent.Common.MessageBus
                         return Task.CompletedTask;
                     }))
             {
-                return await completion.Task;
+                return await completion.Task.ConfigureAwait(false);
             }
         }
 
@@ -113,7 +98,7 @@ namespace Serpent.Common.MessageBus
                     {
                         var handler = messageHandlerFactoryFunc();
                         var handlerFunc = messageHandlerFactoryFuncSelector(handler);
-                        await handlerFunc(message);
+                        await handlerFunc(message).ConfigureAwait(false);
                         handler.Dispose();
                     });
         }

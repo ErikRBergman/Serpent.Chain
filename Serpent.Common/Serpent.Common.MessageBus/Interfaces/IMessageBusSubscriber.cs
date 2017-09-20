@@ -1,3 +1,4 @@
+// ReSharper disable once CheckNamespace
 namespace Serpent.Common.MessageBus
 {
     using System;

@@ -31,8 +31,8 @@ namespace Serpent.Common.MessageBus
         {
             try
             {
-                await this.semaphore.WaitAsync();
-                await this.publishMethod(subscriptions, message);
+                await this.semaphore.WaitAsync().ConfigureAwait(false);
+                await this.publishMethod(subscriptions, message).ConfigureAwait(false);
             }
             finally
             {

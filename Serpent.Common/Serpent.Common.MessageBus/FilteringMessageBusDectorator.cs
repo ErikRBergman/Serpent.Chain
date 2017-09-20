@@ -25,9 +25,9 @@
             return this.innerMessageBus.Subscribe(
                 async message =>
                     {
-                        if (await this.filterFunc(message))
+                        if (await this.filterFunc(message).ConfigureAwait(false))
                         {
-                            await invocationFunc(message);
+                            await invocationFunc(message).ConfigureAwait(false);
                         }
                     });
         }

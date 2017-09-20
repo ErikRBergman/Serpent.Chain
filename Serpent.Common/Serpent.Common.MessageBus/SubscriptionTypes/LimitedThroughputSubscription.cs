@@ -58,7 +58,7 @@
 
             while (token.IsCancellationRequested == false)
             {
-                await this.semaphore.WaitAsync(token);
+                await this.semaphore.WaitAsync(token).ConfigureAwait(false);
 
                 var diff = (periodStart + periodTimeSpan) - DateTime.UtcNow;
                 if (diff < TimeSpan.Zero)
@@ -71,7 +71,7 @@
                     // We will have to await the next period start
                     if (diff > TimeSpan.Zero)
                     {
-                        await Task.Delay(diff, token);
+                        await Task.Delay(diff, token).ConfigureAwait(false);
                     }
 
                     periodStart = DateTime.UtcNow;
@@ -84,7 +84,7 @@
 
                     try
                     {
-                        await this.handlerFunc(message);
+                        await this.handlerFunc(message).ConfigureAwait(false);
                     }
                     catch (Exception)
                     {

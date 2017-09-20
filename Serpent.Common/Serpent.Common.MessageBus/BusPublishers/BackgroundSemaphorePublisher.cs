@@ -44,11 +44,11 @@ namespace Serpent.Common.MessageBus
         {
             while (true)
             {
-                await this.semaphore.WaitAsync();
+                await this.semaphore.WaitAsync().ConfigureAwait(false);
 
                 if (this.publications.TryDequeue(out var message))
                 {
-                    await this.publishMethod(message.Subscriptions, message.Message);
+                    await this.publishMethod(message.Subscriptions, message.Message).ConfigureAwait(false);
                 }
             }
         }

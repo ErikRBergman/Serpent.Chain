@@ -61,13 +61,13 @@
 
             while (token.IsCancellationRequested == false)
             {
-                await this.semaphore.WaitAsync(token);
+                await this.semaphore.WaitAsync(token).ConfigureAwait(false);
 
                 if (this.messages.TryDequeue(out var message))
                 {
                     try
                     {
-                        await this.handlerFunc(message);
+                        await this.handlerFunc(message).ConfigureAwait(false);
                     }
                     catch (Exception)
                     {

@@ -3,17 +3,17 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.19</Version>
+    <Version>0.0.20</Version>
     <Authors>Erik Bergman</Authors>
     <Company>Serpent</Company>
     <Description>An asynchronous message bus</Description>
-    <FileVersion>0.0.2.0</FileVersion>
+    <FileVersion>0.0.21.0</FileVersion>
     <PackageProjectUrl>https://github.com/ErikRBergman/Serpent.Common/tree/master/Serpent.Common/Serpent.Common.MessageBus</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ErikRBergman/Serpent.Common/tree/master/Serpent.Common/Serpent.Common.MessageBus</RepositoryUrl>
     <RepositoryType>Github</RepositoryType>
     <PackageTags>Message bus, event bus</PackageTags>
-    <AssemblyVersion>0.0.2.0</AssemblyVersion>
-    <PackageReleaseNotes>Added bus publishers for custom publishing and 5 bus publishers, where 3 are standard and 2 are decorators.</PackageReleaseNotes>
+    <AssemblyVersion>0.0.21.0</AssemblyVersion>
+    <PackageReleaseNotes>Added a subscription builder for a simpler subscription process</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

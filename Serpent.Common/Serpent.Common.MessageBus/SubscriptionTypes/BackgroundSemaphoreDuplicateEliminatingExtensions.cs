@@ -6,7 +6,7 @@ namespace Serpent.Common.MessageBus
 
     using Serpent.Common.MessageBus.SubscriptionTypes;
 
-    public static class BackgroundSemaphoreDuplicateEliminatingSubscriptionMessageSubsubscriberExtensions
+    public static class BackgroundSemaphoreDuplicateEliminatingExtensions
     {
         public static IMessageBusSubscription CreateBackgroundSemaphoreWithDuplicateEliminationSubscription<TMessageType, TKeyType>(this IMessageBusSubscriber<TMessageType> messageBus, Func<TMessageType, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector, int concurrencyLevel = -1)
         {

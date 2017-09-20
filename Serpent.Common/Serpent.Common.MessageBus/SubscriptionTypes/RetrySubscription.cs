@@ -14,12 +14,12 @@
         public RetrySubscription(Func<TMessageType, Task> handlerFunc, int maxNumberOfAttempts, TimeSpan retryDelay)
         {
             this.handlerFunc = handlerFunc;
+            this.maxNumberOfAttempts = maxNumberOfAttempts;
             if (this.maxNumberOfAttempts < 1)
             {
                 throw new ArgumentException("Max number of attempts must be at least 1");
             }
 
-            this.maxNumberOfAttempts = maxNumberOfAttempts;
             this.retryDelay = retryDelay;
         }
 
@@ -43,7 +43,7 @@
             {
                 try
                 {
-                    await this.handlerFunc(message);
+                    await this.handlerFunc(message).ConfigureAwait(false);
                     return; // success
                 }
                 catch (Exception exception)
@@ -52,7 +52,7 @@
                 }
 
                 // await and then retry
-                await Task.Delay(this.retryDelay);
+                await Task.Delay(this.retryDelay).ConfigureAwait(false);
             }
 
             throw new Exception("Message handler failed " + this.maxNumberOfAttempts + " attempts.", lastException);

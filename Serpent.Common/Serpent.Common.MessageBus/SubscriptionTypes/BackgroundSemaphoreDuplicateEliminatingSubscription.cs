@@ -7,34 +7,24 @@
 
     public class BackgroundSemaphoreDuplicateEliminatingSubscription<TMessageType, TKeyType> : BusSubscription<TMessageType>
     {
+        private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+
         private readonly Func<TMessageType, Task> handlerFunc;
 
         private readonly BusSubscription<TMessageType> innerSubscription;
 
-        private readonly Func<TMessageType, TKeyType> keySelector;
-
         private readonly ConcurrentDictionary<TKeyType, bool> keyDictionary = new ConcurrentDictionary<TKeyType, bool>();
+
+        private readonly Func<TMessageType, TKeyType> keySelector;
 
         private readonly ConcurrentQueue<MessageAndKey> messages = new ConcurrentQueue<MessageAndKey>();
 
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(0);
 
-        private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-
-        private struct MessageAndKey
-        {
-            public MessageAndKey(TKeyType key, TMessageType message)
-            {
-                this.Key = key;
-                this.Message = message;
-            }
-
-            public TMessageType Message { get; }
-
-            public TKeyType Key { get; }
-        }
-
-        public BackgroundSemaphoreDuplicateEliminatingSubscription(BusSubscription<TMessageType> innerSubscription, Func<TMessageType, TKeyType> keySelector, int concurrencyLevel = -1)
+        public BackgroundSemaphoreDuplicateEliminatingSubscription(
+            BusSubscription<TMessageType> innerSubscription,
+            Func<TMessageType, TKeyType> keySelector,
+            int concurrencyLevel = -1)
         {
             if (concurrencyLevel < 0)
             {
@@ -86,13 +76,13 @@
 
             while (token.IsCancellationRequested == false)
             {
-                await this.semaphore.WaitAsync(token);
+                await this.semaphore.WaitAsync(token).ConfigureAwait(false);
 
                 if (this.messages.TryDequeue(out var message))
                 {
                     try
                     {
-                        await this.handlerFunc(message.Message);
+                        await this.handlerFunc(message.Message).ConfigureAwait(false);
                     }
                     catch (Exception)
                     {
@@ -103,6 +93,19 @@
                     this.keyDictionary.TryRemove(message.Key, out _);
                 }
             }
+        }
+
+        private struct MessageAndKey
+        {
+            public MessageAndKey(TKeyType key, TMessageType message)
+            {
+                this.Key = key;
+                this.Message = message;
+            }
+
+            public TKeyType Key { get; }
+
+            public TMessageType Message { get; }
         }
     }
 }

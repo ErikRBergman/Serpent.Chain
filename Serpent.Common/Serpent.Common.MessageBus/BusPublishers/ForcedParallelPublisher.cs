@@ -15,7 +15,7 @@ namespace Serpent.Common.MessageBus
                 var subscriptionHandlerFunc = subscription.SubscriptionHandlerFunc;
                 if (subscriptionHandlerFunc != null)
                 {
-                    await subscriptionHandlerFunc(message);
+                    await subscriptionHandlerFunc(message).ConfigureAwait(false);
                 }
             }
         }
