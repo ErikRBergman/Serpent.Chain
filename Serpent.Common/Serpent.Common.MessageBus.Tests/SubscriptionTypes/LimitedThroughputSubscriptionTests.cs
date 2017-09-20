@@ -1,10 +1,13 @@
 ﻿namespace Serpent.Common.MessageBus.Tests.SubscriptionTypes
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Threading;
     using System.Threading.Tasks;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using System.Diagnostics;
+    using System.Linq;
 
     [TestClass]
     public class LimitedThroughputSubscriptionTests
@@ -16,14 +19,16 @@
 
             int count = 0;
 
-            var sub = bus.CreateLimitedThroughputSubscription(
-                msgz =>
+            var times = new ConcurrentDictionary<TimeSpan, int>();
+
+            var sub = bus.Subscribe()
+                .LimitedThroughput(10, TimeSpan.FromMilliseconds(100))
+                .Handler(msgz =>
                     {
                         Interlocked.Increment(ref count);
-                        return Task.CompletedTask;
-                    }, 
-                10, 
-                TimeSpan.FromMilliseconds(100));
+                    });
+
+            var sw = Stopwatch.StartNew();
 
             for (int i = 0; i < 2000; i++)
             {

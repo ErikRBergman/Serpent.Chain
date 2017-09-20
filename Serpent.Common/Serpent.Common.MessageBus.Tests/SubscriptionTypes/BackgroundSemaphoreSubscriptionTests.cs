@@ -20,7 +20,7 @@
 
             int counter = 0;
 
-            using (bus.CreateBackgroundSemaphoreSubscription(
+            using (bus.CreateConcurrentSubscription(
                 async message =>
                     {
                         await Task.Delay(500);

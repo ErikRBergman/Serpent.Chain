@@ -5,7 +5,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class BackgroundSemaphoreSubscription<TMessageType> : BusSubscription<TMessageType>
+    public class ConcurrentSubscription<TMessageType> : BusSubscription<TMessageType>
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 
@@ -17,7 +17,7 @@
 
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-        public BackgroundSemaphoreSubscription(BusSubscription<TMessageType> innerSubscription, int concurrencyLevel = -1)
+        public ConcurrentSubscription(BusSubscription<TMessageType> innerSubscription, int concurrencyLevel = -1)
         {
             if (concurrencyLevel < 0)
             {
@@ -33,7 +33,7 @@
             }
         }
 
-        public BackgroundSemaphoreSubscription(Func<TMessageType, Task> handlerFunc, int concurrencyLevel = -1)
+        public ConcurrentSubscription(Func<TMessageType, Task> handlerFunc, int concurrencyLevel = -1)
         {
             if (concurrencyLevel < 0)
             {

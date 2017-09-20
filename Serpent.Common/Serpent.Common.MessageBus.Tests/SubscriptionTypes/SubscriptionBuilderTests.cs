@@ -30,6 +30,7 @@
             var sub = bus
                 .Subscribe()
                 .NoDuplicates(message => message.Id)
+                .Concurrent(16)
                 .FireAndForget()
                 .Retry(5, TimeSpan.FromSeconds(5))
                 .Semaphore(5)

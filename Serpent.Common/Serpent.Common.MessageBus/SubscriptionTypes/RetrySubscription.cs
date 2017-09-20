@@ -11,7 +11,11 @@
 
         private readonly TimeSpan retryDelay;
 
-        public RetrySubscription(Func<TMessageType, Task> handlerFunc, int maxNumberOfAttempts, TimeSpan retryDelay)
+        private readonly Func<TMessageType, int, Exception, Task> exceptionFunc;
+
+        private readonly Func<TMessageType, Task> successFunc;
+
+        public RetrySubscription(Func<TMessageType, Task> handlerFunc, int maxNumberOfAttempts, TimeSpan retryDelay, Func<TMessageType, int, Exception, Task> exceptionFunc = null, Func<TMessageType, Task> successFunc = null)
         {
             this.handlerFunc = handlerFunc;
             this.maxNumberOfAttempts = maxNumberOfAttempts;
@@ -21,9 +25,11 @@
             }
 
             this.retryDelay = retryDelay;
+            this.exceptionFunc = exceptionFunc;
+            this.successFunc = successFunc;
         }
 
-        public RetrySubscription(BusSubscription<TMessageType> innerSubscription, int maxNumberOfAttempts, TimeSpan retryDelay)
+        public RetrySubscription(BusSubscription<TMessageType> innerSubscription, int maxNumberOfAttempts, TimeSpan retryDelay, Func<TMessageType, int, Exception, Task> exceptionFunc = null, Func<TMessageType, Task> successFunc = null)
         {
             this.maxNumberOfAttempts = maxNumberOfAttempts;
             if (this.maxNumberOfAttempts < 1)
@@ -32,6 +38,8 @@
             }
 
             this.retryDelay = retryDelay;
+            this.exceptionFunc = exceptionFunc;
+            this.successFunc = successFunc;
             this.handlerFunc = innerSubscription.HandleMessageAsync;
         }
 
@@ -44,6 +52,12 @@
                 try
                 {
                     await this.handlerFunc(message).ConfigureAwait(false);
+
+                    if (this.successFunc != null)
+                    {
+                        await this.successFunc(message);
+                    }
+
                     return; // success
                 }
                 catch (Exception exception)
@@ -51,8 +65,16 @@
                     lastException = exception;
                 }
 
-                // await and then retry
-                await Task.Delay(this.retryDelay).ConfigureAwait(false);
+                if (this.exceptionFunc != null)
+                {
+                    await this.exceptionFunc.Invoke(message, i, lastException);
+                }
+
+                if (i != this.maxNumberOfAttempts - 1)
+                {
+                    // await and then retry
+                    await Task.Delay(this.retryDelay).ConfigureAwait(false);
+                }
             }
 
             throw new Exception("Message handler failed " + this.maxNumberOfAttempts + " attempts.", lastException);
