@@ -35,6 +35,7 @@
                 .Retry(5, TimeSpan.FromSeconds(5))
                 .Semaphore(5)
                 .LimitedThroughput(10, TimeSpan.FromSeconds(0.1))
+                .Delay(TimeSpan.FromMilliseconds(50))
                 .Handler(
                     async message =>
                         {

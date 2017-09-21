@@ -11,11 +11,11 @@
 
         private readonly TimeSpan retryDelay;
 
-        private readonly Func<TMessageType, int, Exception, Task> exceptionFunc;
+        private readonly Func<TMessageType, Exception, int, int, Task> exceptionFunc;
 
         private readonly Func<TMessageType, Task> successFunc;
 
-        public RetrySubscription(Func<TMessageType, Task> handlerFunc, int maxNumberOfAttempts, TimeSpan retryDelay, Func<TMessageType, int, Exception, Task> exceptionFunc = null, Func<TMessageType, Task> successFunc = null)
+        public RetrySubscription(Func<TMessageType, Task> handlerFunc, int maxNumberOfAttempts, TimeSpan retryDelay, Func<TMessageType, Exception, int, int, Task> exceptionFunc = null, Func<TMessageType, Task> successFunc = null)
         {
             this.handlerFunc = handlerFunc;
             this.maxNumberOfAttempts = maxNumberOfAttempts;
@@ -29,7 +29,7 @@
             this.successFunc = successFunc;
         }
 
-        public RetrySubscription(BusSubscription<TMessageType> innerSubscription, int maxNumberOfAttempts, TimeSpan retryDelay, Func<TMessageType, int, Exception, Task> exceptionFunc = null, Func<TMessageType, Task> successFunc = null)
+        public RetrySubscription(BusSubscription<TMessageType> innerSubscription, int maxNumberOfAttempts, TimeSpan retryDelay, Func<TMessageType, Exception, int, int, Task> exceptionFunc = null, Func<TMessageType, Task> successFunc = null)
         {
             this.maxNumberOfAttempts = maxNumberOfAttempts;
             if (this.maxNumberOfAttempts < 1)
@@ -67,7 +67,7 @@
 
                 if (this.exceptionFunc != null)
                 {
-                    await this.exceptionFunc.Invoke(message, i, lastException);
+                    await this.exceptionFunc.Invoke(message, lastException, i + 1, this.maxNumberOfAttempts);
                 }
 
                 if (i != this.maxNumberOfAttempts - 1)
