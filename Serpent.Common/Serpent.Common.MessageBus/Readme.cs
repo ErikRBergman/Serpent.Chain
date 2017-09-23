@@ -3,11 +3,49 @@
     using System;
     using System.Threading.Tasks;
 
+    using Serpent.Common.MessageBus.Interfaces;
+
     internal class ExampleMessage
     {
         public string Id { get; set; }
     }
 
+    internal class ExampleMessage2
+    {
+        public string Sid { get; set; }
+    }
+
+    internal class ReadmeFactoryHandler : IMessageHandler<ExampleMessage>, IDisposable
+    {
+        public void Dispose()
+        {
+        }
+
+        public async Task HandleMessageAsync(ExampleMessage message)
+        {
+        }
+    }
+
+    internal class ReadmeFactoryHandlerSetup
+    {
+        public void SetupSubscription(IMessageBusSubscriber<ExampleMessage> bus)
+        {
+            bus
+                .Subscribe()
+                .Factory(() => new ReadmeFactoryHandler());
+        }
+    }
+
+    internal class ReadmeHandler : IMessageHandler<ExampleMessage>, IMessageHandler<ExampleMessage2>
+    {
+        public async Task HandleMessageAsync(ExampleMessage message)
+        {
+        }
+
+        public async Task HandleMessageAsync(ExampleMessage2 message)
+        {   
+        }
+    }
 
     internal class ReadmeExampleBus
     {

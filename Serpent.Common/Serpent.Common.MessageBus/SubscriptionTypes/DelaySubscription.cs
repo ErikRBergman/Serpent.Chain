@@ -18,6 +18,7 @@
         public DelaySubscription(BusSubscription<TMessageType> innerSubscription, TimeSpan timeToWait)
         {
             this.handlerFunc = innerSubscription.HandleMessageAsync;
+            this.timeToWait = timeToWait;
         }
 
         public override async Task HandleMessageAsync(TMessageType message)

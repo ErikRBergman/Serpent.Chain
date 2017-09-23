@@ -55,7 +55,7 @@
 
                     if (this.successFunc != null)
                     {
-                        await this.successFunc(message);
+                        await this.successFunc(message).ConfigureAwait(false);
                     }
 
                     return; // success
@@ -67,7 +67,7 @@
 
                 if (this.exceptionFunc != null)
                 {
-                    await this.exceptionFunc.Invoke(message, lastException, i + 1, this.maxNumberOfAttempts);
+                    await this.exceptionFunc.Invoke(message, lastException, i + 1, this.maxNumberOfAttempts).ConfigureAwait(false);
                 }
 
                 if (i != this.maxNumberOfAttempts - 1)

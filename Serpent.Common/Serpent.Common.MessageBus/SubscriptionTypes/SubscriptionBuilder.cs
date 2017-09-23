@@ -33,6 +33,16 @@ namespace Serpent.Common.MessageBus
             return this.subscriber.Subscribe(this.Build(handlerFunc));
         }
 
+        public IMessageBusSubscription Handler(Action<TMessageType> handlerAction)
+        {
+            return this.subscriber.Subscribe(this.Build(
+                message =>
+                    {
+                        handlerAction(message);
+                        return Task.CompletedTask;
+                    }));
+        }
+
         public IMessageBusSubscription Handler(IMessageHandler<TMessageType> handler)
         {
             return this.subscriber.Subscribe(this.Build(handler.HandleMessageAsync));
@@ -68,11 +78,9 @@ namespace Serpent.Common.MessageBus
                         }));
         }
 
-        private Func<TMessageType, Task> Build(Func<TMessageType, Task> handlerFunc)
+        internal Func<TMessageType, Task> Build(Func<TMessageType, Task> handlerFunc)
         {
             return this.handlerSetupFuncs.Aggregate(handlerFunc, (current, handlerSetupFunc) => handlerSetupFunc(current));
         }
     }
-
- 
 }

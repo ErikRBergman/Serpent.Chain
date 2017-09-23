@@ -1,6 +1,6 @@
 # Serpent.Common.MessageBus
 This is an asynchronous .NET Standard 2.0 message bus for usage in any project where a message bus is suitable.
-All messages are dispatched through the .NET TPL (which is included in .NET Framework
+All messages are dispatched through the .NET TPL (which is included in .NET Framework).
 
 ## Example
 
@@ -16,12 +16,12 @@ All messages are dispatched through the .NET TPL (which is included in .NET Fram
     var bus = new ConcurrentMessageBus<ExampleMessage>();
 
     // Add a synchronous subscriber
-    var subscriber = bus
+    var subscription = bus
             .Subscribe()
             .Handler(message => Console.WriteLine(message.Id));
 
 	 // Add an asynchronous subscriber
-    var asynchronousSubscriber = bus
+    var asynchronousSubscription = bus
         .Subscribe()
         .Handler(async message =>
             {
@@ -36,8 +36,280 @@ All messages are dispatched through the .NET TPL (which is included in .NET Fram
                 Id = "Message 1"
             });
 
+```
 
-  // TODO: Add example
+## Subscribing to messages
+With a reference to IMessageBusSubscriber<T> you can subscribe to messages.
+
+You can have a function handling messages.
+For example:
+
+```csharp
+
+    var subscription = bus
+        .Subscribe()
+        .Handler(async message =>
+            {
+                await this.SomeMethodAsync();
+                Console.WriteLine(message.Id);
+            });
+
+```
+
+Or, implement IMessageHandler<T>:
+
+```csharp
+
+    internal class ExampleMessage
+    {
+        public string Id { get; set; }
+    }
+
+	public class HandlerClass: IMessageHandler<ExampleMessage>
+	{
+		public async Task HandleMessageAsync(ExampleMessage message)
+		{
+			Console.WriteLine(message.Id);
+		}
+	}
+
+	var handler = new HandlerClass();
+
+    var subscription = bus
+        .Subscribe()
+        .Handler(handler);
+
+```
+
+The Handler-function returns an IMessageBusSubscription. To unsubscribe, you can call Unsubscribe() or Dispose().
+
+```csharp
+
+    var subscription = bus
+        .Subscribe()
+        .Handler(async message =>
+            {
+                await this.SomeMethodAsync();
+                Console.WriteLine(message.Id);
+            });
+
+	...
+
+	subscription.Unsubscribe();
+	// or
+	subscription.Dispose();
+
+```
+
+You can also use a SubscriptionWrapper that unsubscribes when it goes out of scope.
+
+```csharp
+
+	public class HandlerClass
+	{
+		private readonly SubscriptionWrapper wrapper;
+
+		HandlerClass(IMessageSubscriber<ExampleMessage> bus)
+		{
+			this.wrapper = bus
+				.Subscribe()
+				.Handler(async message =>
+					{
+						await this.SomeMethodAsync();
+						Console.WriteLine(message.Id);
+					})
+				.Wrapper();
+		}
+	}
+
+```
+
+### Using a factory to instantiate a handler for each message:
+
+```csharp
+
+	internal class ReadmeFactoryHandler : IMessageHandler<ExampleMessage>, IDisposable
+    {
+        public void Dispose()
+        {
+        }
+
+        public async Task HandleMessageAsync(ExampleMessage message)
+        {
+        }
+    }
+
+    internal class ReadmeFactoryHandlerSetup
+    {
+        public void SetupSubscription(IMessageBusSubscriber<ExampleMessage> bus)
+        {
+            bus
+                .Subscribe()
+                .Factory(() => new ReadmeFactoryHandler());
+        }
+    }
+
+```
+
+### Subscription modifiers
+To customize your subscriptions, you can add one or many subscription modifiers. 
+The modifiers are executed in the order they are specified. Exceptions thrown in a message handler are propagated back in the reversed order they are specified.
+A modifier can be added more than once. 
+
+```csharp
+
+    var subscription = bus
+        .Subscribe()
+		.NoDuplicates(message => message.Id)
+		.FireAndForget()
+		.Delay(TimeSpan.FromSeconds(5))
+		.Retry(3, TimeSpan.FromSeconds(60))
+		.Retry(2, TimeSpan.FromSeconds(5))
+        .Handler(async message =>
+            {
+                await this.SomeMethodAsync();
+                Console.WriteLine(message.Id);
+            });
+
+```
+
+
+#### FireAndForget()
+By default, messages are dispatched directly to the handler function. You can use FireAndForget() to invoke your message handler as a new Task.
+Since a new task is started for each message, this subscription handler will introduce infinite concurrency, which means, 
+if 30 000 messages are published to the bus, 30 000 tasks are started which will (most likely) totally ruin your performance. 
+To alleviate this problem, you can stack FireAndForget() with Semaphore() or use Concurrent() instead of FireAndForget().
+
+```csharp
+
+    var subscription = bus
+        .Subscribe()
+		.FireAndForget()
+        .Handler(async message =>
+            {
+                await this.SomeMethodAsync();
+                Console.WriteLine(message.Id);
+            });
+
+```
+
+#### Concurrent()
+To have your messages handled in parallel by using Concurrent(maximumMumberOfConcurrentMessagesHandled).
+
+```csharp
+
+    var subscription = bus
+        .Subscribe()
+		// 16 concurrent messages being handled
+		.Concurrent(16)	
+        .Handler(async message =>
+            {
+                await this.SomeMethodAsync();
+                Console.WriteLine(message.Id);
+            });
+
+```
+
+#### Delay(TimeSpan delay) or Delay(delayInMilliseconds)
+Delay a specified time before handling a message.
+
+```csharp
+
+    var subscription = bus
+        .Subscribe()
+		.Delay(TimeSpan.FromSeconds(10)) // delay 10 seconds before handling the message	
+        .Handler(async message =>
+            {
+                await this.SomeMethodAsync();
+                Console.WriteLine(message.Id);
+            });
+
+```
+
+#### Exception()
+Exception() invokes a function if a message handler throws an exception. If the exception handler returns nothing or false, the modifier catches the exception and does not propagate it furthr,
+but if you want the exception to continue, for exampel to use the Retry() modifier, return true.
+
+This modifier can be useful to log unhandled exceptions or maybe to trigger something else to happen as a response.
+
+```csharp
+
+    var subscription = bus
+        .Subscribe()
+		.Exception((message, exception) => {
+				Console.WriteLine("Error! " + exception));
+				return true; // Propagate the exception up the chain
+			})
+        .Handler(async message =>
+            {
+                await this.SomeMethodAsync();
+                Console.WriteLine(message.Id);
+            });
+
+// Or the async versions
+
+    var subscription = bus
+        .Subscribe()
+		.Exception(this.ErrorHandlerAsync)async (message, exception) => {
+				Console.WriteLine("Error! " + exception));
+				await DoSomeAsyncErrorHandlingStuff();
+			})
+        .Handler(async message =>
+            {
+                await this.SomeMethodAsync();
+                Console.WriteLine(message.Id);
+            });
+
+// And of course, you can have the message handled by a method instead
+
+	public async Task ErrorHandlerAsync(ExampleMessage message, Exception exception)
+	{
+        switch (exception)
+        {
+            case ArgumentNullException argumentNullException:
+				// Handle this error
+				Console.WriteLine("Argument null!! " + exception));
+                break;
+			default:
+				// All other errors
+				Console.WriteLine("Error! " + exception));
+				await DoSomeAsyncErrorHandlingStuff();
+        }
+
+	}
+
+	public async Task HandleMessageAsync(ExampleMessage message)
+	{
+		throw new Exception("FAIL");
+	}
+	..
+
+    var subscription = bus
+        .Subscribe()
+		.Exception(this.ErrorHandlerAsync)
+        .Handler(this.HandleMessageAsync);
+
+```
+
+
+#### Filter()
+Filter() executes a function before the message handler (or the next subscription modifier) is executed. 
+The filter function can optionally return false to drop the message, or true to let it pass through.
+Filter can also execute a function after the message is handled successfully. To catch exceptions thrown, use the Exception() modifier
+
+```csharp
+
+    var subscription = bus
+        .Subscribe()
+		.Filter(
+		
+		)
+        .Handler(async message =>
+            {
+                await this.SomeMethodAsync();
+                Console.WriteLine(message.Id);
+            });
+
 ```
 
 
@@ -45,11 +317,11 @@ All messages are dispatched through the .NET TPL (which is included in .NET Fram
 
 ## Customizations
 
-### Publishing and handling messages
-You have a selection of options to customize the way messages are handled. You can customize the way messages are published to the subscribers, and you can customize the way the subscribers handle the messages.
-Customizing publishing affects all messages being published, while customizing the subscriptions affects only that subscription.
+### Publishing and subscribing to messages
+You have a selection of options to customize the way messages are delivered. You can customize the way messages are published to the subscribers, and you can customize the way the subscribers handle the messages.
+Customizing publishing affects all messages being published to a bus, while customizing a subscription only affects that subscription.
 
-My recommendation would be to use custom subscriptions before custom publishing, since it''s it will not change as much 
+Use scustom subscriptions before custom publishing, since it''s it will not change as much 
 
 ### Subscriptions
 All subscriptions except the normal subscription can be stacked/decorated to combine their functionallity.

@@ -55,6 +55,7 @@
     <Compile Include="SubscriptionTypes\BackgroundSemaphoreSubscriptionTests.cs" />
     <Compile Include="SubscriptionTypes\FireAndForgetSubscriptionTests.cs" />
     <Compile Include="SubscriptionTypes\LimitedThroughputSubscriptionTests.cs" />
+    <Compile Include="SubscriptionTypes\RetrySubscriptionTests.cs" />
     <Compile Include="SubscriptionTypes\SubscriptionBuilderTests.cs" />
   </ItemGroup>
   <ItemGroup>

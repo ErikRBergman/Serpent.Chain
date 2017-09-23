@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Concurrent;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
@@ -22,15 +23,11 @@
             this.keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
         }
 
-        public NoDuplicatesSubscription(BusSubscription<TMessageType> innerSubscription, Func<TMessageType, TKeyType> keySelector)
+        public NoDuplicatesSubscription(Func<TMessageType, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer)
         {
-            if (innerSubscription == null)
-            {
-                throw new ArgumentNullException(nameof(innerSubscription));
-            }
-
-            this.handlerFunc = innerSubscription.HandleMessageAsync;
+            this.handlerFunc = handlerFunc ?? throw new ArgumentNullException(nameof(handlerFunc));
             this.keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
+            this.keyDictionary = new ConcurrentDictionary<TKeyType, bool>(equalityComparer);
         }
 
         public override async Task HandleMessageAsync(TMessageType message)

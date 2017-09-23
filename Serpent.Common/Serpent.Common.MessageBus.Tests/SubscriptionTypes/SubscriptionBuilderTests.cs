@@ -8,6 +8,8 @@
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+    using Serpent.Common.MessageBus.SubscriptionTypes;
+
     [TestClass]
     public class SubscriptionBuilderTests
     {
@@ -32,6 +34,30 @@
                 .NoDuplicates(message => message.Id)
                 .Concurrent(16)
                 .FireAndForget()
+                .Branch(
+                    branch =>
+                        {
+                            branch
+                            .FireAndForget()
+                            .Delay(TimeSpan.FromSeconds(10))
+                            .Handler(
+                                    message =>
+                                        {
+                                            Console.WriteLine("Sub branch 1");
+                                        });
+                        },
+                    branch =>
+                        {
+                            branch
+                                .FireAndForget()
+                                .Delay(TimeSpan.FromSeconds(20))
+                                .Handler(
+                                    message =>
+                                        {
+                                            Console.WriteLine("Sub branch 1");
+                                        });
+
+                        })
                 .Retry(5, TimeSpan.FromSeconds(5))
                 .Semaphore(5)
                 .LimitedThroughput(10, TimeSpan.FromSeconds(0.1))

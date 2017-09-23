@@ -20,13 +20,12 @@
 
             int counter = 0;
 
-            using (bus.CreateConcurrentSubscription(
+            using (bus.Subscribe().Concurrent(10).Handler(
                 async message =>
                     {
                         await Task.Delay(500);
                         Interlocked.Increment(ref counter);
-                    },
-                10))
+                    }))
             {
                 await Task.Delay(100);
 
