@@ -34,6 +34,7 @@ namespace Serpent.Common.MessageBus
                         {
                             completion.SetResult(message);
                         }
+
                         return Task.CompletedTask;
                     }))
             {

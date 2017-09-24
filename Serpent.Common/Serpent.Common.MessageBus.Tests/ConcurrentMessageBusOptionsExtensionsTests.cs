@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Concurrent;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -16,7 +15,7 @@
         {
             var options = new ConcurrentMessageBusOptions<int>
             {
-                WeakReferenceGarbageCollection = new ConcurrentMessageBusOptions<int>.WeakReferenceGarbageCollectionOptions()
+                WeakReferenceGarbageCollection = new WeakReferenceGarbageCollectionOptions()
                 {
                     IsEnabled = true
                 }
@@ -35,7 +34,7 @@
             // Ensure collection is enabled and collection interval is preserved when omitting collection interval
             var options = new ConcurrentMessageBusOptions<int>
             {
-                WeakReferenceGarbageCollection = new ConcurrentMessageBusOptions<int>.WeakReferenceGarbageCollectionOptions()
+                WeakReferenceGarbageCollection = new WeakReferenceGarbageCollectionOptions()
                 {
                     IsEnabled = false,
                     CollectionInterval = TimeSpan.FromHours(20)
@@ -52,14 +51,10 @@
             // Ensure collection is enabled and collection interval overwritten 
             options = new ConcurrentMessageBusOptions<int>
             {
-                WeakReferenceGarbageCollection = new ConcurrentMessageBusOptions<int>.WeakReferenceGarbageCollectionOptions()
+                WeakReferenceGarbageCollection = new WeakReferenceGarbageCollectionOptions()
                 {
-                    IsEnabled
-                                                                           = false,
-                    CollectionInterval
-                                                                           = TimeSpan
-                                                                               .FromHours(
-                                                                                   20)
+                    IsEnabled = false,
+                    CollectionInterval = TimeSpan.FromHours(20)
                 }
             };
 
@@ -97,18 +92,18 @@
 
             var bag = new ConcurrentBag<int>();
 
-            options.UseFireAndForgetPublisher(new FuncPublisher<int>(
-                (subscriptions, message) =>
-                {
-                    bag.Add(message);
-                    return Task.CompletedTask;
-                }));
+            options.UseFireAndForgetPublisher(
+                new FuncPublisher<int>(
+                    (subscriptions, message) =>
+                        {
+                            bag.Add(message);
+                            return Task.CompletedTask;
+                        }));
 
             Assert.AreEqual(typeof(FireAndForgetPublisher<int>), options.BusPublisher.GetType());
             Assert.AreNotSame(FireAndForgetPublisher<int>.Default, options.BusPublisher);
 
             var bus = new ConcurrentMessageBus<int>(options);
-
 
             await bus.PublishAsync(1);
             await bus.PublishAsync(2);

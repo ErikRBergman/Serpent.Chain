@@ -1,6 +1,17 @@
 # Serpent.Common.MessageBus
 This is an asynchronous .NET Standard 2.0 message bus for usage in any project where a message bus is suitable.
-All messages are dispatched through the .NET TPL (which is included in .NET Framework).
+All messages are dispatched through the .NET TPL (which is included in .NET Framework, .NET Standard and .NET Core).
+Serpent.Common.MessageBus is .NET Standard 2.0, which means, you can use it on any runtime that supports .NET Standard 2.0, for example .NET Framework 4.6.1 and .NET Core 1.0. 
+
+## Why?
+Why would I use Serpent.Common.MessageBus in my application instead using normal method calls?
+Well, I can come up with a few reasons.
+
+* Loose coupling - Message publisher and the subscribers know nothing about each other. As long as they know about the bus and what the messages do, both subscribers and publishers can be changed, added or replaced witout affecting each other.
+* Concurrency made easy - By adding only 1 line of code (.Concurrent(16)), you can parallelize your work on the .NET thread pool
+* Reuse - Smaller components with a defined contract can more easily be reused
+* Flexibility and out of the box functionality. When you have created your message handler, you can add quite some out-of-the-box functionality to it without modifying the message handler. Throttling, Exception handling, Retry, Duplicate message elimination, to name a new.
+* Configurability - Adding fancy functionality like Retry(), with one line of code. See Subscription modifiers.
 
 ## Example
 
@@ -152,46 +163,64 @@ You can also use a SubscriptionWrapper that unsubscribes when it goes out of sco
 ```
 
 ### Subscription modifiers
-To customize your subscriptions, you can add one or many subscription modifiers. 
-The modifiers are executed in the order they are specified. Exceptions thrown in a message handler are propagated back in the reversed order they are specified.
+To customize your subscriptions, you can add one or many subscription modifiers.
+The modifiers are executed in the order they are specified.
+Exceptions thrown in a message handler are propagated back in the reversed order they are specified. Exceptions do not pass FireAndForget(), Concurrent(), Delay() when dontAwait:true is specified and LimitedThroughput().
 A modifier can be added more than once. 
 
 ```csharp
 
     var subscription = bus
         .Subscribe()
-		.NoDuplicates(message => message.Id)
-		.FireAndForget()
-		.Delay(TimeSpan.FromSeconds(5))
-		.Retry(3, TimeSpan.FromSeconds(60))
-		.Retry(2, TimeSpan.FromSeconds(5))
+		.NoDuplicates(message => message.Id)	// Do not allow messages with an Id matching a message already being handled
+		.FireAndForget()						// Fire and forget
+		.Delay(TimeSpan.FromSeconds(5))			// Delay the message 5 seconds
+		.Retry(3, TimeSpan.FromSeconds(60))		// If the two attempts in the next line fail, try again 2 more times (3 attempts)
+		.Retry(2, TimeSpan.FromSeconds(5))		// If the handler fails, retry once (two attempts in total if the first fails)
         .Handler(async message =>
             {
                 await this.SomeMethodAsync();
                 Console.WriteLine(message.Id);
+				throw new Exception("Fail!");
             });
-
 ```
 
+These are the available modifiers. Detailed descriptions and examples are available later in this document.
+* Branch() - Grow the subscription tree to multiple handlers.
+* Concurrent() - Parallelize and handle X concurrent messages.
+* Delay() - Delay the execution of the message handler.
+* Exception() - Handle exceptions not handled by the message handler.
+* Filter() - Execute a method before and after the execution of the message handler. Can also filter messages to stop the message from being processed further.
+* FireAndForget() - Spawn a new Task to execute each message.
+* LimitedThroughput() - Limit the throughput to X messages per period. For example, 100 messages per second. Or 10 messages per 100 ms.
+* NoDuplicates() - Drop all duplicate messages by key. Duplicate messages are dropped.
+* Retry() - Retry after TimeSpan, X times to deliver a message if the message handler fails (throws an exception)
+* Semaphore() - Limit the number of concurrent messages being handled by this subscription.
+* TaskScheduler() - Have the messages despatched to a new Task on a specified Task Scheduler. For example, to have all messages handled by the UI thread.
 
-#### FireAndForget()
-By default, messages are dispatched directly to the handler function. You can use FireAndForget() to invoke your message handler as a new Task.
-Since a new task is started for each message, this subscription handler will introduce infinite concurrency, which means, 
-if 30 000 messages are published to the bus, 30 000 tasks are started which will (most likely) totally ruin your performance. 
-To alleviate this problem, you can stack FireAndForget() with Semaphore() or use Concurrent() instead of FireAndForget().
+
+#### Branch()
+Maybe this is not the modifier you will use first, but it can come in handy. If you''re brand new to Serpent.Common.MessageBus you might want to read about the other modifiers first.
+The Branch() modifier branches the message handler to a tree. It will make your subscription act as multiple subscription branches.
+Branch() will not start a new Task for the created branch or branches unless you state it specifically.
+I think an example will make more sense :).
 
 ```csharp
 
-    var subscription = bus
-        .Subscribe()
-		.FireAndForget()
-        .Handler(async message =>
-            {
-                await this.SomeMethodAsync();
-                Console.WriteLine(message.Id);
-            });
+    bus
+    .Subscribe()
+    .NoDuplicates(message => message.Id)
+    .Branch(
+        branch => branch
+            .Delay(TimeSpan.FromSeconds(10), dontAwait: true)
+            .Filter(message => message.Id == "Message 2")
+            .Handler(message => Console.WriteLine("I only handle Message 2")))
+    .Handler(message => Console.WriteLine("I handle all messages"));
 
 ```
+The subscription will not handle any concurrent duplicates and is branched to two separate message handlers.
+Message 2 will be handled by the branched message handler 10 seconds after the subscription receives it while the normal handler will handle all messages immediately.
+Since we don''t want the Publisher to await the delayed deliver, we use Delay() with dontAwait: true. We could have used FireAndForget() on the Branch() but that would create an unnecessary Task.
 
 #### Concurrent()
 To have your messages handled in parallel by using Concurrent(maximumMumberOfConcurrentMessagesHandled).
@@ -207,11 +236,14 @@ To have your messages handled in parallel by using Concurrent(maximumMumberOfCon
                 await this.SomeMethodAsync();
                 Console.WriteLine(message.Id);
             });
-
 ```
 
 #### Delay(TimeSpan delay) or Delay(delayInMilliseconds)
 Delay a specified time before handling a message.
+There are two overloads. One that takes a TimeSpan for the time and the other an int with the number of milliseconds.
+Delay() also has a parameter named dontAwait which defaults to false. When this parameter is false, Delay() does not return control to the publisher until after the delay and the message handler is invoked.
+When the dontAwait parameter is true, Delay() will return control after starting the Delay(). This turns the Delay() to a delayed FireAndForget. 
+The difference is that using dontAwait:true will not create an unnecessary Task just to start waiting which can make your system faster.
 
 ```csharp
 
@@ -220,7 +252,20 @@ Delay a specified time before handling a message.
 		.Delay(TimeSpan.FromSeconds(10)) // delay 10 seconds before handling the message	
         .Handler(async message =>
             {
-                await this.SomeMethodAsync();
+                await this.SomeMethodAsyncInvoked10SecondsLaterAsync();
+                Console.WriteLine(message.Id);
+            });
+
+```
+
+```csharp
+
+    var subscription = bus
+        .Subscribe()
+		.Delay(TimeSpan.FromSeconds(10), dontAwait: true) // delay 10 seconds before handling the message, but return control to the publisher immediately.
+        .Handler(async message =>
+            {
+                await this.SomeMethodAsyncInvoked10SecondsLaterAsync();
                 Console.WriteLine(message.Id);
             });
 
@@ -230,7 +275,7 @@ Delay a specified time before handling a message.
 Exception() invokes a function if a message handler throws an exception. If the exception handler returns nothing or false, the modifier catches the exception and does not propagate it furthr,
 but if you want the exception to continue, for exampel to use the Retry() modifier, return true.
 
-This modifier can be useful to log unhandled exceptions or maybe to trigger something else to happen as a response.
+This modifier can be useful to log unhandled exceptions or maybe to trigger something else to happen as a response. Stack it with Filter to log before the message is handled, after the message is handled and if the message handler fails.
 
 ```csharp
 
@@ -291,6 +336,30 @@ This modifier can be useful to log unhandled exceptions or maybe to trigger some
 
 ```
 
+And if we stack it with Filter()
+```csharp
+
+ var subscription = bus
+    .Subscribe()
+    .Exception(
+    (message, exception) =>
+    {
+        Console.WriteLine("Error! " + exception);
+        return true; // Propagate the exception up the chain
+    })
+    .Filter(
+        message => Console.WriteLine("Before the message handler is invoked"),
+        message => Console.WriteLine("The message handler succeeded as far as we know"))
+            .Handler(async message =>
+                {
+                    await this.SomeMethodAsync();
+                    Console.WriteLine(message.Id);
+                });
+
+```
+
+
+
 
 #### Filter()
 Filter() executes a function before the message handler (or the next subscription modifier) is executed. 
@@ -314,10 +383,36 @@ Filter can also execute a function after the message is handled successfully. To
 
 
 
+#### FireAndForget()
+By default, messages are dispatched directly to the handler function. You can use FireAndForget() to invoke your message handler as a new Task.
+Since a new task is started for each message, this subscription handler will introduce infinite concurrency, which means, 
+if 30 000 messages are published to the bus, 30 000 tasks are started which will (most likely) totally ruin your performance. 
+To alleviate this problem, you could stack FireAndForget() with Semaphore(), but Concurrent() is likely better, since no tasks are created just to start waiting when messages are published.
 
-## Customizations
+```csharp
 
-### Publishing and subscribing to messages
+    var subscription = bus
+        .Subscribe()
+		.FireAndForget()
+        .Handler(async message =>
+            {
+                await this.SomeMethodAsync();
+                Console.WriteLine(message.Id);
+            });
+```
+
+
+#### LimitedThroughput()
+
+#### NoDuplicates()
+
+#### Retry()
+
+#### Semaphore()
+
+#### TaskScheduler()
+
+### Publishing
 You have a selection of options to customize the way messages are delivered. You can customize the way messages are published to the subscribers, and you can customize the way the subscribers handle the messages.
 Customizing publishing affects all messages being published to a bus, while customizing a subscription only affects that subscription.
 

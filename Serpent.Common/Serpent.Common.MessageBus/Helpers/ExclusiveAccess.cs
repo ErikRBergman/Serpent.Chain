@@ -1,8 +1,8 @@
-﻿namespace Serpent.Common.MessageBus
+﻿namespace Serpent.Common.MessageBus.Helpers
 {
     using System;
 
-    public class ExclusiveAccess<T>
+    internal class ExclusiveAccess<T>
     {
         private readonly object lockObject = new object();
 

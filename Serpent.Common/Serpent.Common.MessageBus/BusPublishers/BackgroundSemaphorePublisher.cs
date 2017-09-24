@@ -4,6 +4,7 @@ namespace Serpent.Common.MessageBus
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -14,6 +15,8 @@ namespace Serpent.Common.MessageBus
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(0);
 
         private readonly Func<IEnumerable<ISubscription<T>>, T, Task> publishMethod;
+
+        private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
         public BackgroundSemaphorePublisher(int concurrencyLevel = -1, BusPublisher<T> innerPublisher = null)
         {
@@ -37,14 +40,14 @@ namespace Serpent.Common.MessageBus
             this.publications.Enqueue(new MessageContainer(subscriptions, message));
             this.semaphore.Release();
             return Task.CompletedTask;
-            
         }
 
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1126:PrefixCallsCorrectly", Justification = "Reviewed. Suppression is OK here.")]
         private async Task PublishWorkerAsync()
         {
-            while (true)
+            while (this.cancellationTokenSource.IsCancellationRequested == false)
             {
-                await this.semaphore.WaitAsync().ConfigureAwait(false);
+                await this.semaphore.WaitAsync(this.cancellationTokenSource.Token).ConfigureAwait(false);
 
                 if (this.publications.TryDequeue(out var message))
                 {

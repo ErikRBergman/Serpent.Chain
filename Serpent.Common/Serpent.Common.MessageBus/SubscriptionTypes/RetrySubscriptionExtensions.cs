@@ -46,7 +46,7 @@ namespace Serpent.Common.MessageBus
         /// <param name="retryDelay">The delay between retries.</param>
         /// <param name="exceptionFunc">Optional function called for each time the message handler throws an exception.</param>
         /// <param name="successFunc">Option function called after the messgae handler has succeeded.</param>
-        /// <returns></returns>
+        /// <returns>The subscription builder</returns>
         public static SubscriptionBuilder<TMessageType> Retry<TMessageType>(
             this SubscriptionBuilder<TMessageType> subscriptionBuilder,
             int maxNumberOfAttempts,
@@ -55,13 +55,7 @@ namespace Serpent.Common.MessageBus
             Func<TMessageType, Task> successFunc = null)
         {
             return subscriptionBuilder.Add(
-                currentHandler =>
-                new RetrySubscription<TMessageType>(
-                    currentHandler, 
-                    maxNumberOfAttempts, 
-                    retryDelay, 
-                    exceptionFunc, 
-                    successFunc).HandleMessageAsync);
+                currentHandler => new RetrySubscription<TMessageType>(currentHandler, maxNumberOfAttempts, retryDelay, exceptionFunc, successFunc).HandleMessageAsync);
         }
 
         /// <summary>
@@ -71,9 +65,9 @@ namespace Serpent.Common.MessageBus
         /// <param name="subscriptionBuilder">The subscription builder.</param>
         /// <param name="maxNumberOfAttempts">The maximum number of attempts to try.</param>
         /// <param name="retryDelay">The delay between retries.</param>
-        /// <param name="exceptionFunc">Optional function called for each time the message handler throws an exception.</param>
-        /// <param name="successFunc">Option function called after the messgae handler has succeeded.</param>
-        /// <returns></returns>
+        /// <param name="exceptionAction">Optional function called for each time the message handler throws an exception.</param>
+        /// <param name="successAction">Option function called after the messgae handler has succeeded.</param>
+        /// <returns>The subscription builder</returns>
         public static SubscriptionBuilder<TMessageType> Retry<TMessageType>(
             this SubscriptionBuilder<TMessageType> subscriptionBuilder,
             int maxNumberOfAttempts,

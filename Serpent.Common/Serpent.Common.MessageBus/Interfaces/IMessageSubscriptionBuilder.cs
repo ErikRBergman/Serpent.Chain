@@ -1,4 +1,5 @@
-﻿namespace Serpent.Common.MessageBus
+﻿// ReSharper disable once CheckNamespace
+namespace Serpent.Common.MessageBus
 {
     using System;
     using System.Threading.Tasks;
@@ -7,6 +8,5 @@
     {
         IMessageSubscriptionBuilder<TBaseType> Map<T>(Func<T, Task> invocationFunc)
             where T : TBaseType;
-
     }
 }

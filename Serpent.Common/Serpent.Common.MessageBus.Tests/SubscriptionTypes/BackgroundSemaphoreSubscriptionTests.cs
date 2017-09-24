@@ -8,24 +8,21 @@
     [TestClass]
     public class BackgroundSemaphoreSubscriptionTests
     {
-        private class Message1
-        {
-
-        }
-
         [TestMethod]
         public async Task BackgroundSemaphoreSubscriptionFuncTests()
         {
             var bus = new ConcurrentMessageBus<Message1>();
 
-            int counter = 0;
+            var counter = 0;
 
-            using (bus.Subscribe().Concurrent(10).Handler(
-                async message =>
-                    {
-                        await Task.Delay(500);
-                        Interlocked.Increment(ref counter);
-                    }))
+            using (bus.Subscribe()
+                .Concurrent(10)
+                .Handler(
+                    async message =>
+                        {
+                            await Task.Delay(500);
+                            Interlocked.Increment(ref counter);
+                        }))
             {
                 await Task.Delay(100);
 
@@ -38,6 +35,10 @@
 
                 Assert.AreEqual(10, counter);
             }
+        }
+
+        private class Message1
+        {
         }
     }
 }

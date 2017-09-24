@@ -3,7 +3,7 @@
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
-    using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -11,11 +11,11 @@
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 
-        private readonly Func<TMessageType, TKeyType> keySelector;
-
         private readonly ConcurrentDictionary<TKeyType, bool> keyDictionary = new ConcurrentDictionary<TKeyType, bool>();
 
-        private int isDefaultInvoked = 0;
+        private readonly Func<TMessageType, TKeyType> keySelector;
+
+        private int isDefaultInvoked;
 
         public NoDuplicatesSubscription(Func<TMessageType, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector)
         {
@@ -30,6 +30,7 @@
             this.keyDictionary = new ConcurrentDictionary<TKeyType, bool>(equalityComparer);
         }
 
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1126:PrefixCallsCorrectly", Justification = "Reviewed. Suppression is OK here.")]
         public override async Task HandleMessageAsync(TMessageType message)
         {
             var key = this.keySelector(message);

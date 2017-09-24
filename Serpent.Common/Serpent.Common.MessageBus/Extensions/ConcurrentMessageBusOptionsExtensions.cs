@@ -10,7 +10,7 @@ namespace Serpent.Common.MessageBus
         public static ConcurrentMessageBusOptions<TMessageType> DisableWeakReferenceGarbageCollection<TMessageType>(
             this ConcurrentMessageBusOptions<TMessageType> options)
         {
-            var garbageCollectionOptions = new ConcurrentMessageBusOptions<TMessageType>.WeakReferenceGarbageCollectionOptions
+            var garbageCollectionOptions = new WeakReferenceGarbageCollectionOptions
             {
                 IsEnabled = false
             };
@@ -23,7 +23,7 @@ namespace Serpent.Common.MessageBus
             this ConcurrentMessageBusOptions<TMessageType> options,
             TimeSpan? interval = null)
         {
-            var garbageCollectionOptions = new ConcurrentMessageBusOptions<TMessageType>.WeakReferenceGarbageCollectionOptions
+            var garbageCollectionOptions = new WeakReferenceGarbageCollectionOptions
             {
                 IsEnabled = true,
                 CollectionInterval = options.WeakReferenceGarbageCollection.CollectionInterval

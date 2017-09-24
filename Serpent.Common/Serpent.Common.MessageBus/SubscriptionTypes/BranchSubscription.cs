@@ -4,15 +4,13 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    using Serpent.Common.MessageBus.Interfaces;
-
     public class BranchSubscription<TMessageType> : BusSubscription<TMessageType>, IMessageBusSubscriber<TMessageType>
     {
         private readonly List<Func<TMessageType, Task>> handlers;
 
         public BranchSubscription(Func<TMessageType, Task> handlerFunc, params Action<SubscriptionBuilder<TMessageType>>[] branches)
         {
-            int numberOfHandlers = (branches?.Length ?? 0) + 1;
+            var numberOfHandlers = (branches?.Length ?? 0) + 1;
             this.handlers = new List<Func<TMessageType, Task>>(numberOfHandlers)
                                 {
                                     handlerFunc
@@ -34,7 +32,7 @@
         {
             foreach (var branch in this.handlers)
             {
-                await branch(message);
+                await branch(message).ConfigureAwait(false);
             }
         }
 

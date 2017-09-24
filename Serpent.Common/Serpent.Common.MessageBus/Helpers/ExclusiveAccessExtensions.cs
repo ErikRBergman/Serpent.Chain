@@ -1,6 +1,6 @@
-﻿namespace Serpent.Common.MessageBus
+﻿namespace Serpent.Common.MessageBus.Helpers
 {
-    public static class ExclusiveAccessExtensions
+    internal static class ExclusiveAccessExtensions
     {
         public static int Increment(this ExclusiveAccess<int> exclusiveAccess)
         {

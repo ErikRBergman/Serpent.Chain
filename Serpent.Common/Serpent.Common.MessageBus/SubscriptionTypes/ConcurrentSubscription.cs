@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Concurrent;
+    using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -9,29 +10,11 @@
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 
-        private readonly BusSubscription<TMessageType> innerSubscription;
-
         private readonly ConcurrentQueue<TMessageType> messages = new ConcurrentQueue<TMessageType>();
 
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(0);
 
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-
-        public ConcurrentSubscription(BusSubscription<TMessageType> innerSubscription, int concurrencyLevel = -1)
-        {
-            if (concurrencyLevel < 0)
-            {
-                concurrencyLevel = Environment.ProcessorCount * 2;
-            }
-
-            this.innerSubscription = innerSubscription;
-            this.handlerFunc = innerSubscription.HandleMessageAsync;
-
-            for (var i = 0; i < concurrencyLevel; i++)
-            {
-                Task.Run(this.MessageHandlerWorkerAsync);
-            }
-        }
 
         public ConcurrentSubscription(Func<TMessageType, Task> handlerFunc, int concurrencyLevel = -1)
         {
@@ -55,6 +38,7 @@
             return Task.CompletedTask;
         }
 
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1126:PrefixCallsCorrectly", Justification = "Reviewed. Suppression is OK here.")]
         private async Task MessageHandlerWorkerAsync()
         {
             var token = this.cancellationTokenSource.Token;

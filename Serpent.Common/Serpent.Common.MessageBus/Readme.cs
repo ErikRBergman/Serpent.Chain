@@ -1,4 +1,5 @@
-﻿namespace Serpent.Common.MessageBus
+﻿#if DEBUG
+namespace Serpent.Common.MessageBus
 {
     using System;
     using System.Threading.Tasks;
@@ -15,6 +16,30 @@
         public string Sid { get; set; }
     }
 
+    internal class ReadmeBranch
+    {
+
+        /// <summary>
+        /// Branch()
+        /// </summary>
+        /// <param name="bus"></param>
+        public ReadmeBranch(IMessageBusSubscriber<ExampleMessage> bus)
+        {
+            bus
+                .Subscribe()
+                .NoDuplicates(message => message.Id)
+                .Branch(
+                    branch => branch
+                        .Delay(TimeSpan.FromSeconds(10))
+                        .Filter(message => message.Id == "Message 2")
+                        .Handler(message => Console.WriteLine("I only handle Message 2")))
+                .Handler(message => Console.WriteLine("I handle all messages"));
+
+        }
+
+
+    }
+
     internal class ReadmeFactoryHandler : IMessageHandler<ExampleMessage>, IDisposable
     {
         public void Dispose()
@@ -23,6 +48,35 @@
 
         public async Task HandleMessageAsync(ExampleMessage message)
         {
+        }
+    }
+
+
+    internal class ReadmeExceptionAndFilter
+    {
+        public ReadmeExceptionAndFilter(IMessageBusSubscriber<ExampleMessage> bus)
+        {
+            var subscription = bus
+                .Subscribe()
+                .Exception(
+                (message, exception) =>
+                {
+                    Console.WriteLine("Error! " + exception);
+                    return true; // Propagate the exception up the chain
+                })
+                .Filter(
+                    message => Console.WriteLine("Before the message handler is invoked"),
+                    message => Console.WriteLine("The message handler succeeded as far as we know"))
+                        .Handler(async message =>
+                            {
+                                await this.SomeMethodAsync();
+                                Console.WriteLine(message.Id);
+                            });
+        }
+
+        private Task SomeMethodAsync()
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -43,7 +97,7 @@
         }
 
         public async Task HandleMessageAsync(ExampleMessage2 message)
-        {   
+        {
         }
     }
 
@@ -71,9 +125,9 @@
             // Publish a message to the bus
             await bus.PublishAsync(
                 new ExampleMessage
-                    {
-                        Id = "Message 1"
-                    });
+                {
+                    Id = "Message 1"
+                });
         }
 
         public Task SomeMethodAsync()
@@ -117,3 +171,5 @@
         }
     }
 }
+
+#endif

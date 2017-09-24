@@ -9,32 +9,6 @@
     [TestClass]
     public class ConcurrentMessageBusTests
     {
-        private class MessageBase
-        {
-            
-        }
-
-        // Messages should be immutable like this one
-        private class MessageType1 : MessageBase
-        {
-            public MessageType1(string name)
-            {
-                this.Name = name;
-            }
-
-            public string Name { get; }
-        }
-
-        private class MessageType2 : MessageBase
-        {
-            public MessageType2(string name)
-            {
-                this.Name = name;
-            }
-
-            public string Name { get; set; }
-        }
-
         [TestMethod]
         public async Task TestConcurrentMessageBusNormal()
         {
@@ -49,14 +23,13 @@
                         return Task.CompletedTask;
                     });
 
-            const string text = "Test";
+            const string Text = "Test";
 
-            await messageType1Bus.PublishAsync(new MessageType1(text));
+            await messageType1Bus.PublishAsync(new MessageType1(Text));
             Assert.AreEqual(1, type1Received.Count);
 
-            Assert.AreEqual(text, type1Received.First().Name);
+            Assert.AreEqual(Text, type1Received.First().Name);
         }
-
 
         [TestMethod]
         public async Task TestConcurrentMessageBusPatternMatching()
@@ -95,5 +68,29 @@
             Assert.IsTrue(type2Received.Count == 1);
         }
 
+        private class MessageBase
+        {
+        }
+
+        // Messages should be immutable like this one
+        private class MessageType1 : MessageBase
+        {
+            public MessageType1(string name)
+            {
+                this.Name = name;
+            }
+
+            public string Name { get; }
+        }
+
+        private class MessageType2 : MessageBase
+        {
+            public MessageType2(string name)
+            {
+                this.Name = name;
+            }
+
+            public string Name { get; set; }
+        }
     }
 }

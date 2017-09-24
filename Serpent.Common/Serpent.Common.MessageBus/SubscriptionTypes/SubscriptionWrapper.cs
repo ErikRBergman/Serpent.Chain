@@ -4,7 +4,7 @@ namespace Serpent.Common.MessageBus
     using System;
     using System.Threading.Tasks;
 
-    public class SubscriptionWrapper : IDisposable, IMessageBusSubscription
+    public class SubscriptionWrapper : IMessageBusSubscription
     {
         private IMessageBusSubscription subscription;
 

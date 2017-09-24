@@ -2,35 +2,23 @@
 {
     using System;
     using System.Collections.Concurrent;
-    using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
 
     public class LimitedThroughputSubscription<TMessageType> : BusSubscription<TMessageType>
     {
-        private readonly Func<TMessageType, Task> handlerFunc;
+        private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-        private readonly BusSubscription<TMessageType> innerSubscription;
+        private readonly Func<TMessageType, Task> handlerFunc;
 
         private readonly int maxMessagesPerPeriod;
 
-        private readonly TimeSpan periodSpan;
-
         private readonly ConcurrentQueue<TMessageType> messages = new ConcurrentQueue<TMessageType>();
 
+        private readonly TimeSpan periodSpan;
+
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(0);
-
-        private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-
-        public LimitedThroughputSubscription(BusSubscription<TMessageType> innerSubscription, int maxMessagesPerPeriod, TimeSpan periodSpan)
-        {
-            this.innerSubscription = innerSubscription;
-            this.maxMessagesPerPeriod = maxMessagesPerPeriod;
-            this.periodSpan = periodSpan;
-            this.handlerFunc = innerSubscription.HandleMessageAsync;
-
-            Task.Run(this.MessageHandlerWorkerAsync);
-        }
 
         public LimitedThroughputSubscription(Func<TMessageType, Task> handlerFunc, int maxMessagesPerPeriod, TimeSpan periodSpan)
         {
@@ -48,11 +36,12 @@
             return Task.CompletedTask;
         }
 
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1126:PrefixCallsCorrectly", Justification = "Reviewed. Suppression is OK here.")]
         private async Task MessageHandlerWorkerAsync()
         {
             var token = this.cancellationTokenSource.Token;
 
-            DateTime periodStart = DateTime.UtcNow;
+            var periodStart = DateTime.UtcNow;
             var periodMessageCount = 0;
             var periodTimeSpan = this.periodSpan;
 

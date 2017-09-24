@@ -39,10 +39,7 @@ namespace Serpent.Common.MessageBus
             return subscriptionBuilder.Add(
                 currentHandler => new ExceptionSubscription<TMessageType>(
                     currentHandler,
-                    async (message, exception) =>
-                        {
-                            return exceptionHandlerFunc(message, exception);
-                        }));
+                    (message, exception) => Task.FromResult(exceptionHandlerFunc(message, exception))));
         }
 
         public static SubscriptionBuilder<TMessageType> Exception<TMessageType>(

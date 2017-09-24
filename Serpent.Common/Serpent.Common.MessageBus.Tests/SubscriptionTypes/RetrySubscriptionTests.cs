@@ -1,13 +1,11 @@
-﻿using System;
-
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Serpent.Common.MessageBus.Tests.SubscriptionTypes
+﻿namespace Serpent.Common.MessageBus.Tests.SubscriptionTypes
 {
+    using System;
     using System.Diagnostics;
     using System.Globalization;
-    using System.Threading;
     using System.Threading.Tasks;
+
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class RetrySubscriptionTests
@@ -17,28 +15,26 @@ namespace Serpent.Common.MessageBus.Tests.SubscriptionTypes
         {
             var bus = new ConcurrentMessageBus<int>();
 
-            int attemptsCount = 0;
+            var attemptsCount = 0;
 
-            var sub = bus.Subscribe()
+            using (bus.Subscribe()
                 .FireAndForget()
                 .Retry(
-                5,
-                TimeSpan.FromMilliseconds(100),
+                    5,
+                    TimeSpan.FromMilliseconds(100),
                     (message, exception, attempt, maxNumberOfAttempts) =>
                         {
                             Debug.WriteLine(DateTime.Now + $" attempt {attempt} / {maxNumberOfAttempts}");
                             attemptsCount++;
                         })
-                .Handler(
-                    async message => { throw new Exception(DateTime.Now.ToString(CultureInfo.CurrentCulture)); });
+                .Handler(message => throw new Exception(DateTime.Now.ToString(CultureInfo.CurrentCulture))))
+            {
+                await bus.PublishAsync();
 
+                await Task.Delay(900);
 
-            await bus.PublishAsync();
-
-            await Task.Delay(900);
-
-            Assert.AreEqual(5, attemptsCount);
-
+                Assert.AreEqual(5, attemptsCount);
+            }
         }
     }
 }

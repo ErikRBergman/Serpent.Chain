@@ -5,6 +5,8 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
+    using Serpent.Common.MessageBus.Helpers;
+
     public class ConcurrentMessageBus<TMessageType> : IMessageBus<TMessageType>
     {
         private readonly ConcurrentMessageBusOptions<TMessageType> options = ConcurrentMessageBusOptions<TMessageType>.Default;
@@ -25,9 +27,9 @@
 
         public ConcurrentMessageBus(Action<ConcurrentMessageBusOptions<TMessageType>> optionsFunc)
         {
-            var options = new ConcurrentMessageBusOptions<TMessageType>();
-            optionsFunc(options);
-            this.options = options;
+            var newOptions = new ConcurrentMessageBusOptions<TMessageType>();
+            optionsFunc(newOptions);
+            this.options = newOptions;
             this.publishAsyncFunc = this.options.BusPublisher.PublishAsync;
         }
 
@@ -113,8 +115,6 @@
 
         private struct ConcurrentMessageBusSubscription : IMessageBusSubscription
         {
-            private static readonly Action DoNothing = () => { };
-
             private Action unsubscribeAction;
 
             public ConcurrentMessageBusSubscription(Action unsubscribeAction)
@@ -125,7 +125,7 @@
             public void Unsubscribe()
             {
                 this.unsubscribeAction.Invoke();
-                this.unsubscribeAction = DoNothing;
+                this.unsubscribeAction = ActionHelpers.NoAction;
             }
 
             public void Dispose()
