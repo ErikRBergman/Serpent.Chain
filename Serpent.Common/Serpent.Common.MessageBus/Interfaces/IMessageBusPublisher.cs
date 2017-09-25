@@ -3,8 +3,8 @@ namespace Serpent.Common.MessageBus
 {
     using System.Threading.Tasks;
 
-    public interface IMessageBusPublisher<TMessage>
+    public interface IMessageBusPublisher<in TMessageType>
     {
-        Task PublishAsync(TMessage message);
+        Task PublishAsync(TMessageType message);
     }
 }

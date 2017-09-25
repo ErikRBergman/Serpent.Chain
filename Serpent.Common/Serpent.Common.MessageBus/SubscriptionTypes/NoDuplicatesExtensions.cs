@@ -8,14 +8,14 @@ namespace Serpent.Common.MessageBus
 
     public static class NoDuplicatesExtensions
     {
-        public static SubscriptionBuilder<TMessageType> NoDuplicates<TMessageType, TKeyType>(this SubscriptionBuilder<TMessageType> subscriptionBuilder, Func<TMessageType, TKeyType> keySelector)
+        public static IMessageHandlerChainBuilder<TMessageType> NoDuplicates<TMessageType, TKeyType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, Func<TMessageType, TKeyType> keySelector)
         {
-            return subscriptionBuilder.Add(currentHandler => new NoDuplicatesSubscription<TMessageType, TKeyType>(currentHandler, keySelector));
+            return messageHandlerChainBuilder.Add(currentHandler => new NoDuplicatesSubscription<TMessageType, TKeyType>(currentHandler, keySelector));
         }
 
-        public static SubscriptionBuilder<TMessageType> NoDuplicates<TMessageType, TKeyType>(this SubscriptionBuilder<TMessageType> subscriptionBuilder, Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer)
+        public static IMessageHandlerChainBuilder<TMessageType> NoDuplicates<TMessageType, TKeyType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer)
         {
-            return subscriptionBuilder.Add(currentHandler => new NoDuplicatesSubscription<TMessageType, TKeyType>(currentHandler, keySelector, equalityComparer));
+            return messageHandlerChainBuilder.Add(currentHandler => new NoDuplicatesSubscription<TMessageType, TKeyType>(currentHandler, keySelector, equalityComparer));
         }
     }
 }

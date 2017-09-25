@@ -8,7 +8,7 @@
     {
         private readonly List<Func<TMessageType, Task>> handlers;
 
-        public BranchSubscription(Func<TMessageType, Task> handlerFunc, params Action<SubscriptionBuilder<TMessageType>>[] branches)
+        public BranchSubscription(Func<TMessageType, Task> handlerFunc, params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches)
         {
             var numberOfHandlers = (branches?.Length ?? 0) + 1;
             this.handlers = new List<Func<TMessageType, Task>>(numberOfHandlers)
@@ -23,7 +23,7 @@
 
             foreach (var branch in branches)
             {
-                var builder = new SubscriptionBuilder<TMessageType>(this);
+                var builder = new MessageHandlerChainBuilder<TMessageType>(this);
                 branch(builder);
             }
         }

@@ -8,12 +8,12 @@ namespace Serpent.Common.MessageBus
 
     public static class LimitedThroughputExtensions
     {
-        public static SubscriptionBuilder<TMessageType> LimitedThroughput<TMessageType>(
-            this SubscriptionBuilder<TMessageType> subscriptionBuilder,
+        public static IMessageHandlerChainBuilder<TMessageType> LimitedThroughput<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             int maxMessagesPerPeriod,
             TimeSpan? periodSpan = null)
         {
-            return subscriptionBuilder.Add(
+            return messageHandlerChainBuilder.Add(
                 currentHandler => new LimitedThroughputSubscription<TMessageType>(currentHandler, maxMessagesPerPeriod, periodSpan ?? TimeSpan.FromSeconds(1)).HandleMessageAsync);
         }
     }

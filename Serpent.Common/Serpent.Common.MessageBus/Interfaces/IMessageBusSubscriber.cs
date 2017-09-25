@@ -4,8 +4,8 @@ namespace Serpent.Common.MessageBus
     using System;
     using System.Threading.Tasks;
 
-    public interface IMessageBusSubscriber<TMessage>
+    public interface IMessageBusSubscriber<out TMessageType>
     {
-        IMessageBusSubscription Subscribe(Func<TMessage, Task> invocationFunc);
+        IMessageBusSubscription Subscribe(Func<TMessageType, Task> invocationFunc);
     }
 }

@@ -18,13 +18,6 @@
             this.afterInvoke = afterInvoke;
         }
 
-        public FilterSubscription(BusSubscription<TMessageType> innerSubscription, Func<TMessageType, Task<bool>> beforeInvoke = null, Func<TMessageType, Task> afterInvoke = null)
-        {
-            this.beforeInvoke = beforeInvoke;
-            this.afterInvoke = afterInvoke;
-            this.handlerFunc = innerSubscription.HandleMessageAsync;
-        }
-
         public override async Task HandleMessageAsync(TMessageType message)
         {
             bool invoke = false;

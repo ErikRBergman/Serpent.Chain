@@ -9,42 +9,29 @@ namespace Serpent.Common.MessageBus
 
     using Serpent.Common.MessageBus.Interfaces;
 
-    public struct SubscriptionBuilder<TMessageType>
+    public struct MessageHandlerChainBuilder<TMessageType> : IMessageHandlerChainBuilder<TMessageType>
     {
         private readonly IMessageBusSubscriber<TMessageType> subscriber;
 
         private Stack<Func<Func<TMessageType, Task>, Func<TMessageType, Task>>> handlerSetupFuncs;
 
-        public SubscriptionBuilder(IMessageBusSubscriber<TMessageType> subscriber)
+        public MessageHandlerChainBuilder(IMessageBusSubscriber<TMessageType> subscriber)
         {
             this.subscriber = subscriber;
             this.handlerSetupFuncs = new Stack<Func<Func<TMessageType, Task>, Func<TMessageType, Task>>>();
         }
 
-        public SubscriptionBuilder<TMessageType> Add(Func<Func<TMessageType, Task>, Func<TMessageType, Task>> addFunc)
+        public int Count => this.handlerSetupFuncs?.Count ?? 0;
+
+        public IMessageHandlerChainBuilder<TMessageType> Add(Func<Func<TMessageType, Task>, Func<TMessageType, Task>> addFunc)
         {
+            if (this.handlerSetupFuncs == null)
+            {
+                this.handlerSetupFuncs = new Stack<Func<Func<TMessageType, Task>, Func<TMessageType, Task>>>();
+            }
+
             this.handlerSetupFuncs.Push(addFunc);
             return this;
-        }
-
-        public IMessageBusSubscription Handler(Func<TMessageType, Task> handlerFunc)
-        {
-            return this.subscriber.Subscribe(this.Build(handlerFunc));
-        }
-
-        public IMessageBusSubscription Handler(Action<TMessageType> handlerAction)
-        {
-            return this.subscriber.Subscribe(this.Build(
-                message =>
-                    {
-                        handlerAction(message);
-                        return Task.CompletedTask;
-                    }));
-        }
-
-        public IMessageBusSubscription Handler(IMessageHandler<TMessageType> handler)
-        {
-            return this.subscriber.Subscribe(this.Build(handler.HandleMessageAsync));
         }
 
         public IMessageBusSubscription Factory<THandler>(Func<THandler> handlerFactory)
@@ -77,8 +64,18 @@ namespace Serpent.Common.MessageBus
                         }));
         }
 
+        public IMessageBusSubscription Handler(Func<TMessageType, Task> handlerFunc)
+        {
+            return this.subscriber.Subscribe(this.Build(handlerFunc));
+        }
+
         internal Func<TMessageType, Task> Build(Func<TMessageType, Task> handlerFunc)
         {
+            if (this.handlerSetupFuncs == null || this.handlerSetupFuncs.Count == 0)
+            {
+                return handlerFunc;
+            }
+
             return this.handlerSetupFuncs.Aggregate(handlerFunc, (current, handlerSetupFunc) => handlerSetupFunc(current));
         }
     }

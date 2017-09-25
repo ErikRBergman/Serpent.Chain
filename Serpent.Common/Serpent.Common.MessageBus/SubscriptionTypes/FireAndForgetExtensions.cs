@@ -10,30 +10,9 @@ namespace Serpent.Common.MessageBus
 
     public static class FireAndForgetExtensions
     {
-        public static IMessageBusSubscription CreateFireAndForgetSubscription<TMessageType>(
-            this IMessageBusSubscriber<TMessageType> messageBus,
-            Func<TMessageType, Task> handlerFunc)
+        public static IMessageHandlerChainBuilder<TMessageType> FireAndForget<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder)
         {
-            return messageBus.Subscribe(new FireAndForgetSubscription<TMessageType>(handlerFunc).HandleMessageAsync);
-        }
-
-        public static IMessageBusSubscription CreateFireAndForgetSubscription<TMessageType>(
-            this IMessageBusSubscriber<TMessageType> messageBus,
-            IMessageHandler<TMessageType> handler)
-        {
-            return messageBus.Subscribe(new FireAndForgetSubscription<TMessageType>(handler.HandleMessageAsync).HandleMessageAsync);
-        }
-
-        public static IMessageBusSubscription CreateFireAndForgetSubscription<TMessageType>(
-            this IMessageBusSubscriber<TMessageType> messageBus,
-            BusSubscription<TMessageType> innerSubscription)
-        {
-            return messageBus.Subscribe(new FireAndForgetSubscription<TMessageType>(innerSubscription).HandleMessageAsync);
-        }
-
-        public static SubscriptionBuilder<TMessageType> FireAndForget<TMessageType>(this SubscriptionBuilder<TMessageType> subscriptionBuilder)
-        {
-            return subscriptionBuilder.Add(currentHandler => new FireAndForgetSubscription<TMessageType>(currentHandler).HandleMessageAsync);
+            return messageHandlerChainBuilder.Add(currentHandler => new FireAndForgetSubscription<TMessageType>(currentHandler).HandleMessageAsync);
         }
     }
 }

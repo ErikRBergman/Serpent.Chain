@@ -9,30 +9,30 @@ namespace Serpent.Common.MessageBus
 
     public static class FilterExtensions
     {
-        public static SubscriptionBuilder<TMessageType> Filter<TMessageType>(
-            this SubscriptionBuilder<TMessageType> subscriptionBuilder,
+        public static IMessageHandlerChainBuilder<TMessageType> Filter<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Task<bool>> beforeInvoke = null,
             Func<TMessageType, Task> afterInvoke = null)
         {
             if (beforeInvoke == null && afterInvoke == null)
             {
-                return subscriptionBuilder;
+                return messageHandlerChainBuilder;
             }
 
-            return subscriptionBuilder.Add(currentHandler => new FilterSubscription<TMessageType>(currentHandler, beforeInvoke, afterInvoke));
+            return messageHandlerChainBuilder.Add(currentHandler => new FilterSubscription<TMessageType>(currentHandler, beforeInvoke, afterInvoke));
         }
 
-        public static SubscriptionBuilder<TMessageType> Filter<TMessageType>(
-            this SubscriptionBuilder<TMessageType> subscriptionBuilder,
+        public static IMessageHandlerChainBuilder<TMessageType> Filter<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, bool> beforeInvoke = null,
             Action<TMessageType> afterInvoke = null)
         {
             if (beforeInvoke == null && afterInvoke == null)
             {
-                return subscriptionBuilder;
+                return messageHandlerChainBuilder;
             }
 
-            return subscriptionBuilder.Add(
+            return messageHandlerChainBuilder.Add(
                 currentHandler => new FilterSubscription<TMessageType>(
                     currentHandler,
                     message =>
@@ -47,17 +47,17 @@ namespace Serpent.Common.MessageBus
                         }));
         }
 
-        public static SubscriptionBuilder<TMessageType> Filter<TMessageType>(
-            this SubscriptionBuilder<TMessageType> subscriptionBuilder,
+        public static IMessageHandlerChainBuilder<TMessageType> Filter<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Action<TMessageType> beforeInvoke = null,
             Action<TMessageType> afterInvoke = null)
         {
             if (beforeInvoke == null && afterInvoke == null)
             {
-                return subscriptionBuilder;
+                return messageHandlerChainBuilder;
             }
 
-            return subscriptionBuilder.Add(
+            return messageHandlerChainBuilder.Add(
                 currentHandler => new FilterSubscription<TMessageType>(
                     currentHandler,
                     message =>

@@ -2,8 +2,8 @@
 {
     using System.Threading.Tasks;
 
-    public interface IMessageHandler<TMessage>
+    public interface IMessageHandler<TMessageType>
     {
-        Task HandleMessageAsync(TMessage message);
+        Task HandleMessageAsync(TMessageType message);
     }
 }

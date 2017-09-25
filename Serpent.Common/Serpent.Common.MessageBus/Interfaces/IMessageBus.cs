@@ -1,7 +1,7 @@
 ﻿// ReSharper disable once CheckNamespace
 namespace Serpent.Common.MessageBus
 {
-    public interface IMessageBus<TMessage> : IMessageBusPublisher<TMessage>, IMessageBusSubscriber<TMessage>
+    public interface IMessageBus<TMessageType> : IMessageBusPublisher<TMessageType>, IMessageBusSubscriber<TMessageType>
     {
     }
 }

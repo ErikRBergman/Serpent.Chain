@@ -8,16 +8,16 @@ namespace Serpent.Common.MessageBus
 
     public static class TaskSchedulerSubscriptionExtensions
     {
-        public static SubscriptionBuilder<TMessageType> DispatchOnCurrentContext<TMessageType>(this SubscriptionBuilder<TMessageType> subscriptionBuilder)
+        public static IMessageHandlerChainBuilder<TMessageType> DispatchOnCurrentContext<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder)
         {
-            return subscriptionBuilder.Add(currentHandler => new TaskSchedulerSubscription<TMessageType>(currentHandler, TaskScheduler.FromCurrentSynchronizationContext()));
+            return messageHandlerChainBuilder.Add(currentHandler => new TaskSchedulerSubscription<TMessageType>(currentHandler, TaskScheduler.FromCurrentSynchronizationContext()));
         }
 
-        public static SubscriptionBuilder<TMessageType> DispatchOnTaskScheduler<TMessageType>(
-            this SubscriptionBuilder<TMessageType> subscriptionBuilder,
+        public static IMessageHandlerChainBuilder<TMessageType> DispatchOnTaskScheduler<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             TaskScheduler taskScheduler)
         {
-            return subscriptionBuilder.Add(currentHandler => new TaskSchedulerSubscription<TMessageType>(currentHandler, taskScheduler).HandleMessageAsync);
+            return messageHandlerChainBuilder.Add(currentHandler => new TaskSchedulerSubscription<TMessageType>(currentHandler, taskScheduler).HandleMessageAsync);
         }
     }
 }

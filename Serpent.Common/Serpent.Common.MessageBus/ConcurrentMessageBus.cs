@@ -17,7 +17,11 @@
 
         private readonly ConcurrentQueue<int> recycledSubscriptionIds = new ConcurrentQueue<int>();
 
-        private readonly ConcurrentDictionary<int, ISubscription<TMessageType>> subscribers = new ConcurrentDictionary<int, ISubscription<TMessageType>>();
+        private readonly ConcurrentDictionary<int, ISubscription<TMessageType>> subscriptions = new ConcurrentDictionary<int, ISubscription<TMessageType>>();
+
+        private readonly object lockObject = new object();
+
+        private IEnumerable<ISubscription<TMessageType>> subscriptionCache = Array.Empty<ISubscription<TMessageType>>();
 
         public ConcurrentMessageBus(ConcurrentMessageBusOptions<TMessageType> options)
         {
@@ -55,9 +59,9 @@
             this.publishAsyncFunc = publisher.PublishAsync;
         }
 
-        public int SubscriberCount => this.subscribers.Count;
+        public int SubscriberCount => this.subscriptions.Count;
 
-        public Task PublishAsync(TMessageType message) => this.publishAsyncFunc(this.subscribers.Values, message);
+        public Task PublishAsync(TMessageType message) => this.publishAsyncFunc(this.subscriptionCache, message);
 
         public IMessageBusSubscription Subscribe(Func<TMessageType, Task> invocationFunc)
         {
@@ -65,7 +69,12 @@
 
             var newSubscriptionId = this.GetNewSubscriptionId();
 
-            this.subscribers.TryAdd(newSubscriptionId, subscription);
+            this.subscriptions.TryAdd(newSubscriptionId, subscription);
+
+            lock (this.lockObject)
+            {
+                this.subscriptionCache = this.subscriptions.Values;
+            }
 
             return this.CreateMessageBusSubscription(newSubscriptionId);
         }
@@ -97,7 +106,7 @@
             this.currentSubscriptionId.Update(
                 v =>
                     {
-                        if (this.subscribers.TryRemove(subscriptionId, out _))
+                        if (this.subscriptions.TryRemove(subscriptionId, out _))
                         {
                             if (subscriptionId == v)
                             {
@@ -106,6 +115,11 @@
                             else
                             {
                                 this.recycledSubscriptionIds.Enqueue(subscriptionId);
+                            }
+
+                            lock (this.lockObject)
+                            {
+                                this.subscriptionCache = this.subscriptions.Values;
                             }
                         }
 

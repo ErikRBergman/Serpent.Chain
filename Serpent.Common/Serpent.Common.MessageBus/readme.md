@@ -3,15 +3,20 @@ This is an asynchronous .NET Standard 2.0 message bus for usage in any project w
 All messages are dispatched through the .NET TPL (which is included in .NET Framework, .NET Standard and .NET Core).
 Serpent.Common.MessageBus is .NET Standard 2.0, which means, you can use it on any runtime that supports .NET Standard 2.0, for example .NET Framework 4.6.1 and .NET Core 1.0. 
 
+The message bus is implemeted `by` `ConcurrentMessageBus<TMessageType>` and has 3 interfaces:
+* `IMessageBus<TMessageType>` which in turn has two interfaces:
+* `IMessageBusPublisher<TMessageType>` used to publish messages to the bus
+* `IMessageBusSubscriber<TMessageType>` used to subscribe to messages
+
 ## Why?
 Why would I use Serpent.Common.MessageBus in my application instead using normal method calls?
 Well, I can come up with a few reasons.
 
 * Loose coupling - Message publisher and the subscribers know nothing about each other. As long as they know about the bus and what the messages do, both subscribers and publishers can be changed, added or replaced witout affecting each other.
-* Concurrency made easy - By adding only 1 line of code (.Concurrent(16)), you can parallelize your work on the .NET thread pool
+* Concurrency made easy - By adding only 1 line of code (`.Concurrent(16)`), you can parallelize your work on the .NET thread pool
 * Reuse - Smaller components with a defined contract can more easily be reused
 * Flexibility and out of the box functionality. When you have created your message handler, you can add quite some out-of-the-box functionality to it without modifying the message handler. Throttling, Exception handling, Retry, Duplicate message elimination, to name a new.
-* Configurability - Adding fancy functionality like Retry(), with one line of code. See Subscription modifiers.
+* Configurability - Adding fancy functionality like `Retry()`, with one line of code. See Subscription modifiers.
 
 ## Example
 
@@ -20,8 +25,6 @@ Well, I can come up with a few reasons.
     {
         public string Id { get; set; }
     }
-
-	...
 
     // Create a message bus
     var bus = new ConcurrentMessageBus<ExampleMessage>();
@@ -50,13 +53,19 @@ Well, I can come up with a few reasons.
 ```
 
 ## Subscribing to messages
-With a reference to IMessageBusSubscriber<T> you can subscribe to messages.
+With a reference to `IMessageBusSubscriber<T>` you can subscribe to messages.
 
-You can have a function handling messages.
-For example:
+````csharp
+public interface IMessageBusSubscriber<out TMessageType>
+{
+    IMessageBusSubscription Subscribe(Func<TMessageType, Task> invocationFunc);
+}
+````
 
+You can have an inline function handling messages, a function of your choice, a type that implements `IMessageHandler<TMessageType>` or a factory instantiating a type that implements `IMessageHandler<TMessageType>`.
+
+Example:
 ```csharp
-
     var subscription = bus
         .Subscribe()
         .Handler(async message =>
@@ -64,13 +73,25 @@ For example:
                 await this.SomeMethodAsync();
                 Console.WriteLine(message.Id);
             });
-
 ```
-
-Or, implement IMessageHandler<T>:
+The message bus works internally full with TPL, but if you do not have a need for any async operations, like I/O, you can use one of the handler extensions to make the code more readable.
 
 ```csharp
+    var subscription = bus
+        .Subscribe()
+        .Handler(message =>
+            {
+                Console.WriteLine(message.Id);
+            });
+```
 
+You can have the handler call the method of your choice, as long as it signature is supported:
+
+
+
+You can implement IMessageHandler<T>:
+
+```csharp
     internal class ExampleMessage
     {
         public string Id { get; set; }
@@ -89,7 +110,6 @@ Or, implement IMessageHandler<T>:
     var subscription = bus
         .Subscribe()
         .Handler(handler);
-
 ```
 
 The Handler-function returns an IMessageBusSubscription. To unsubscribe, you can call Unsubscribe() or Dispose().
@@ -109,11 +129,9 @@ The Handler-function returns an IMessageBusSubscription. To unsubscribe, you can
 	subscription.Unsubscribe();
 	// or
 	subscription.Dispose();
-
 ```
 
 You can also use a SubscriptionWrapper that unsubscribes when it goes out of scope.
-
 ```csharp
 
 	public class HandlerClass
@@ -132,10 +150,10 @@ You can also use a SubscriptionWrapper that unsubscribes when it goes out of sco
 				.Wrapper();
 		}
 	}
-
 ```
 
-### Using a factory to instantiate a handler for each message:
+### Using a factory to instantiate a handler for each message
+Note that this handler implements IDisposable, which is not a requirement. When using a factory to instantiate an IDisposable type, the type is automatically disposed when the message has been handled.
 
 ```csharp
 
@@ -143,10 +161,12 @@ You can also use a SubscriptionWrapper that unsubscribes when it goes out of sco
     {
         public void Dispose()
         {
+            // And if the type implements IDisposable, the Dispose method is called secondly
         }
 
         public async Task HandleMessageAsync(ExampleMessage message)
         {
+            // The HandleMessageAsync method is called first
         }
     }
 
@@ -159,7 +179,6 @@ You can also use a SubscriptionWrapper that unsubscribes when it goes out of sco
                 .Factory(() => new ReadmeFactoryHandler());
         }
     }
-
 ```
 
 ### Subscription modifiers
@@ -357,9 +376,6 @@ And if we stack it with Filter()
                 });
 
 ```
-
-
-
 
 #### Filter()
 Filter() executes a function before the message handler (or the next subscription modifier) is executed. 

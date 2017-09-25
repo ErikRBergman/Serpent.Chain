@@ -11,18 +11,18 @@ namespace Serpent.Common.MessageBus
     {
         private static readonly Task<bool> FalseTask = Task.FromResult(false);
 
-        public static SubscriptionBuilder<TMessageType> Exception<TMessageType>(
-            this SubscriptionBuilder<TMessageType> subscriptionBuilder,
+        public static IMessageHandlerChainBuilder<TMessageType> Exception<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Exception, Task<bool>> exceptionHandlerFunc)
         {
-            return subscriptionBuilder.Add(currentHandler => new ExceptionSubscription<TMessageType>(currentHandler, exceptionHandlerFunc));
+            return messageHandlerChainBuilder.Add(currentHandler => new ExceptionSubscription<TMessageType>(currentHandler, exceptionHandlerFunc));
         }
 
-        public static SubscriptionBuilder<TMessageType> Exception<TMessageType>(
-            this SubscriptionBuilder<TMessageType> subscriptionBuilder,
+        public static IMessageHandlerChainBuilder<TMessageType> Exception<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Exception, Task> exceptionHandlerFunc)
         {
-            return subscriptionBuilder.Add(
+            return messageHandlerChainBuilder.Add(
                 currentHandler => new ExceptionSubscription<TMessageType>(
                     currentHandler,
                     async (message, exception) =>
@@ -32,21 +32,21 @@ namespace Serpent.Common.MessageBus
                         }));
         }
 
-        public static SubscriptionBuilder<TMessageType> Exception<TMessageType>(
-            this SubscriptionBuilder<TMessageType> subscriptionBuilder,
+        public static IMessageHandlerChainBuilder<TMessageType> Exception<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Exception, bool> exceptionHandlerFunc)
         {
-            return subscriptionBuilder.Add(
+            return messageHandlerChainBuilder.Add(
                 currentHandler => new ExceptionSubscription<TMessageType>(
                     currentHandler,
                     (message, exception) => Task.FromResult(exceptionHandlerFunc(message, exception))));
         }
 
-        public static SubscriptionBuilder<TMessageType> Exception<TMessageType>(
-            this SubscriptionBuilder<TMessageType> subscriptionBuilder,
+        public static IMessageHandlerChainBuilder<TMessageType> Exception<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Action<TMessageType, Exception> exceptionHandlerAction)
         {
-            return subscriptionBuilder.Add(
+            return messageHandlerChainBuilder.Add(
                 currentHandler => new ExceptionSubscription<TMessageType>(
                     currentHandler,
                     (message, exception) =>

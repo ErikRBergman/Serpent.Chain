@@ -8,11 +8,11 @@ namespace Serpent.Common.MessageBus
 
     public static class BranchExtensions
     {
-        public static SubscriptionBuilder<TMessageType> Branch<TMessageType>(
-            this SubscriptionBuilder<TMessageType> subscriptionBuilder,
-            params Action<SubscriptionBuilder<TMessageType>>[] branches)
+        public static IMessageHandlerChainBuilder<TMessageType> Branch<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+            params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches)
         {
-            return subscriptionBuilder.Add(currentHandler => new BranchSubscription<TMessageType>(currentHandler, branches));
+            return messageHandlerChainBuilder.Add(currentHandler => new BranchSubscription<TMessageType>(currentHandler, branches));
         }
     }
 }

@@ -5,9 +5,9 @@ namespace Serpent.Common.MessageBus
 
     public static class SemapshoreExtensions
     {
-        public static SubscriptionBuilder<TMessageType> Semaphore<TMessageType>(this SubscriptionBuilder<TMessageType> subscriptionBuilder, int maxNumberOfConcurrentMessages)
+        public static IMessageHandlerChainBuilder<TMessageType> Semaphore<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, int maxNumberOfConcurrentMessages)
         {
-            return subscriptionBuilder.Add(currentHandler => new SemaphoreSubscription<TMessageType>(currentHandler, maxNumberOfConcurrentMessages));
+            return messageHandlerChainBuilder.Add(currentHandler => new SemaphoreSubscription<TMessageType>(currentHandler, maxNumberOfConcurrentMessages));
         }
     }
 }

@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Concurrent;
+    using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -27,6 +28,67 @@
 
             Assert.AreEqual(false, options.WeakReferenceGarbageCollection.IsEnabled);
         }
+
+        private class TestMessage
+        {
+            public ConcurrentDictionary<string, DateTime> Log { get; set; } = new ConcurrentDictionary<string, DateTime>();
+        }
+
+        [TestMethod]
+        public async Task PublisherTests()
+        {
+            // Test having message handler decorators both in the publish dispatch and the Subscription
+            var bus = new ConcurrentMessageBus<TestMessage>(
+                options =>
+                    options
+                        .Dispatch().Parallel(
+                            builder =>
+                            builder
+                                .Filter(
+                                    message =>
+                                    {
+                                        message.Message.Log.TryAdd("Before", DateTime.Now);
+                                    },
+                                    message =>
+                                    {
+                                        message.Message.Log.TryAdd("After", DateTime.Now);
+                                    })));
+
+            bus.Subscribe()
+                .Handler(
+                    async message =>
+                        {
+                            await Task.Delay(100);
+                            message.Log.TryAdd("Handler", DateTime.Now);
+                            await Task.Delay(100);
+                        });
+
+
+            var msg = new TestMessage();
+            bus.Publish(msg);
+
+            await Task.Delay(50);
+
+            Assert.AreEqual(1, msg.Log.Count);
+            Assert.IsTrue(msg.Log.ContainsKey("Before"));
+
+            await Task.Delay(100);
+
+            Assert.AreEqual(2, msg.Log.Count);
+            Assert.IsTrue(msg.Log.ContainsKey("Before"));
+            Assert.IsTrue(msg.Log.ContainsKey("Handler"));
+
+            await Task.Delay(100);
+
+            Assert.AreEqual(3, msg.Log.Count);
+            Assert.IsTrue(msg.Log.ContainsKey("Before"));
+            Assert.IsTrue(msg.Log.ContainsKey("Handler"));
+            Assert.IsTrue(msg.Log.ContainsKey("After"));
+
+
+
+        }
+
 
         [TestMethod]
         public void EnableWeakReferenceGarbageCollectionTests()
@@ -67,53 +129,11 @@
         }
 
         [TestMethod]
-        public void UseBackgroundSemaphorePublisherTests()
-        {
-            var options = new ConcurrentMessageBusOptions<int>();
-            options.UseBackgroundSemaphorePublisher();
-            Assert.AreEqual(typeof(BackgroundSemaphorePublisher<int>), options.BusPublisher.GetType());
-        }
-
-        [TestMethod]
         public void UseCustomPublisherTests()
         {
             var options = new ConcurrentMessageBusOptions<int>();
             options.UseCustomPublisher(SerialPublisher<int>.Default);
             Assert.AreSame(SerialPublisher<int>.Default, options.BusPublisher);
-        }
-
-        [TestMethod]
-        public async Task UseFireAndForgetPublisherTests()
-        {
-            var options = new ConcurrentMessageBusOptions<int>();
-            options.UseFireAndForgetPublisher();
-            Assert.AreEqual(typeof(FireAndForgetPublisher<int>), options.BusPublisher.GetType());
-            Assert.AreSame(FireAndForgetPublisher<int>.Default, options.BusPublisher);
-
-            var bag = new ConcurrentBag<int>();
-
-            options.UseFireAndForgetPublisher(
-                new FuncPublisher<int>(
-                    (subscriptions, message) =>
-                        {
-                            bag.Add(message);
-                            return Task.CompletedTask;
-                        }));
-
-            Assert.AreEqual(typeof(FireAndForgetPublisher<int>), options.BusPublisher.GetType());
-            Assert.AreNotSame(FireAndForgetPublisher<int>.Default, options.BusPublisher);
-
-            var bus = new ConcurrentMessageBus<int>(options);
-
-            await bus.PublishAsync(1);
-            await bus.PublishAsync(2);
-            await bus.PublishAsync(3);
-
-            await Task.Delay(50);
-
-            Assert.IsTrue(bag.Any(m => m == 1));
-            Assert.IsTrue(bag.Any(m => m == 2));
-            Assert.IsTrue(bag.Any(m => m == 3));
         }
 
         [TestMethod]
@@ -130,14 +150,6 @@
             var options = new ConcurrentMessageBusOptions<int>();
             options.UseParallelPublisher();
             Assert.AreEqual(typeof(ParallelPublisher<int>), options.BusPublisher.GetType());
-        }
-
-        [TestMethod]
-        public void UseSemaphorePublisherTests()
-        {
-            var options = new ConcurrentMessageBusOptions<int>();
-            options.UseSemaphorePublisher();
-            Assert.AreEqual(typeof(SemaphorePublisher<int>), options.BusPublisher.GetType());
         }
 
         [TestMethod]

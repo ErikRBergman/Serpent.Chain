@@ -12,11 +12,11 @@
         {
             var bus = new ConcurrentMessageBus<Message1>();
 
-            bus.CreateFireAndForgetSubscription(
+            bus.Subscribe().FireAndForget()
+                .Handler(
                 msgz =>
                     {
                         msgz.Status = "Got it!";
-                        return Task.CompletedTask;
                     });
 
             var msg = new Message1();

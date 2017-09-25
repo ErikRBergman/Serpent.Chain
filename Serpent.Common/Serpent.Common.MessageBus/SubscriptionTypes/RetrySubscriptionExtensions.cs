@@ -41,20 +41,20 @@ namespace Serpent.Common.MessageBus
         /// Retry the message dispatch
         /// </summary>
         /// <typeparam name="TMessageType">Message type</typeparam>
-        /// <param name="subscriptionBuilder">The subscription builder.</param>
+        /// <param name="messageHandlerChainBuilder">The subscription builder.</param>
         /// <param name="maxNumberOfAttempts">The maximum number of attempts to try.</param>
         /// <param name="retryDelay">The delay between retries.</param>
         /// <param name="exceptionFunc">Optional function called for each time the message handler throws an exception.</param>
         /// <param name="successFunc">Option function called after the messgae handler has succeeded.</param>
         /// <returns>The subscription builder</returns>
-        public static SubscriptionBuilder<TMessageType> Retry<TMessageType>(
-            this SubscriptionBuilder<TMessageType> subscriptionBuilder,
+        public static IMessageHandlerChainBuilder<TMessageType> Retry<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             int maxNumberOfAttempts,
             TimeSpan retryDelay,
             Func<TMessageType, Exception, int, int, Task> exceptionFunc = null,
             Func<TMessageType, Task> successFunc = null)
         {
-            return subscriptionBuilder.Add(
+            return messageHandlerChainBuilder.Add(
                 currentHandler => new RetrySubscription<TMessageType>(currentHandler, maxNumberOfAttempts, retryDelay, exceptionFunc, successFunc).HandleMessageAsync);
         }
 
@@ -62,14 +62,14 @@ namespace Serpent.Common.MessageBus
         /// Retry the message dispatch
         /// </summary>
         /// <typeparam name="TMessageType">Message type</typeparam>
-        /// <param name="subscriptionBuilder">The subscription builder.</param>
+        /// <param name="messageHandlerChainBuilder">The subscription builder.</param>
         /// <param name="maxNumberOfAttempts">The maximum number of attempts to try.</param>
         /// <param name="retryDelay">The delay between retries.</param>
         /// <param name="exceptionAction">Optional function called for each time the message handler throws an exception.</param>
         /// <param name="successAction">Option function called after the messgae handler has succeeded.</param>
         /// <returns>The subscription builder</returns>
-        public static SubscriptionBuilder<TMessageType> Retry<TMessageType>(
-            this SubscriptionBuilder<TMessageType> subscriptionBuilder,
+        public static IMessageHandlerChainBuilder<TMessageType> Retry<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             int maxNumberOfAttempts,
             TimeSpan retryDelay,
             Action<TMessageType, Exception, int, int> exceptionAction,
@@ -96,7 +96,7 @@ namespace Serpent.Common.MessageBus
                     };
             }
 
-            return subscriptionBuilder.Add(
+            return messageHandlerChainBuilder.Add(
                 currentHandler => new RetrySubscription<TMessageType>(currentHandler, maxNumberOfAttempts, retryDelay, exceptionFunc, successFunc).HandleMessageAsync);
         }
     }

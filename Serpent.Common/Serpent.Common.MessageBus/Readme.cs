@@ -16,9 +16,32 @@ namespace Serpent.Common.MessageBus
         public string Sid { get; set; }
     }
 
+    internal class ReadmeHandlerSignatures
+    {
+        public ReadmeHandlerSignatures(IMessageBusSubscriber<ExampleMessage> bus)
+        {
+            // Normal method handler
+            var subscription = bus
+                .Subscribe()
+                .Handler(this.HandleTheMessageAsync);
+
+
+        }
+
+        private async Task HandleTheMessageAsync(ExampleMessage message)
+        {
+        }
+
+        private static async Task HandleTheMessageStaticAsync(ExampleMessage message)
+        {
+        }
+
+
+
+    }
+
     internal class ReadmeBranch
     {
-
         /// <summary>
         /// Branch()
         /// </summary>
@@ -34,10 +57,7 @@ namespace Serpent.Common.MessageBus
                         .Filter(message => message.Id == "Message 2")
                         .Handler(message => Console.WriteLine("I only handle Message 2")))
                 .Handler(message => Console.WriteLine("I handle all messages"));
-
         }
-
-
     }
 
     internal class ReadmeFactoryHandler : IMessageHandler<ExampleMessage>, IDisposable
@@ -144,30 +164,6 @@ namespace Serpent.Common.MessageBus
             var bus = new ConcurrentMessageBus<int>();
 
             bus.CreateRetrySubscription(message => { throw new Exception("Handler failed"); }, 10, TimeSpan.FromMilliseconds(500));
-        }
-
-        private void FireAndForgetNew()
-        {
-            // Instantiate a new FireAndForgetPublisher
-            var bus = new ConcurrentMessageBus<int>(options => { options.BusPublisher = new FireAndForgetPublisher<int>(); });
-        }
-
-        private void FireAndForgetDefault()
-        {
-            // Using the default FireAndForgetPublisher
-            var bus = new ConcurrentMessageBus<int>(options => { options.BusPublisher = FireAndForgetPublisher<int>.Default; });
-        }
-
-        private void FireAndForgetExtension()
-        {
-            // Using the options extension method
-            var bus = new ConcurrentMessageBus<int>(options => { options.UseFireAndForgetPublisher(); });
-        }
-
-        private void FireAndForgetExtensionDecorate()
-        {
-            // Using the options extension method to decorate ParallelPublisher with FireAndForgetPublisher
-            var bus = new ConcurrentMessageBus<int>(options => { options.UseFireAndForgetPublisher(ParallelPublisher<int>.Default); });
         }
     }
 }

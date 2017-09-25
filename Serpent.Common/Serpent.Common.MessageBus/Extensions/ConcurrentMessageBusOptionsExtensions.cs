@@ -38,58 +38,12 @@ namespace Serpent.Common.MessageBus
             return options;
         }
 
-        public static ConcurrentMessageBusOptions<TMessageType> UseBackgroundSemaphorePublisher<TMessageType>(
-            this ConcurrentMessageBusOptions<TMessageType> options,
-            int concurrencyLevel = -1,
-            BusPublisher<TMessageType> innerPublisher = null)
-        {
-            options.UseCustomPublisher(new BackgroundSemaphorePublisher<TMessageType>(concurrencyLevel, innerPublisher));
-            return options;
-        }
-
         public static ConcurrentMessageBusOptions<TMessageType> UseCustomPublisher<TMessageType>(
             this ConcurrentMessageBusOptions<TMessageType> options,
             BusPublisher<TMessageType> customBusPublisher)
         {
             options.BusPublisher = customBusPublisher;
             return options;
-        }
-
-        public static ConcurrentMessageBusOptions<TMessageType> UseFireAndForgetPublisher<TMessageType>(
-            this ConcurrentMessageBusOptions<TMessageType> options,
-            BusPublisher<TMessageType> innerPublisher)
-        {
-            return options.UseCustomPublisher(new FireAndForgetPublisher<TMessageType>(innerPublisher));
-        }
-
-        public static ConcurrentMessageBusOptions<TMessageType> UseFireAndForgetPublisher<TMessageType>(
-            this ConcurrentMessageBusOptions<TMessageType> options)
-        {
-            return options.UseCustomPublisher(FireAndForgetPublisher<TMessageType>.Default);
-        }
-
-        public static ConcurrentMessageBusOptions<TMessageType> UseLoggingPublisher<TMessageType>(
-            this ConcurrentMessageBusOptions<TMessageType> options,
-            BusPublisher<TMessageType> busPublisher,
-            Action<TMessageType> logAction)
-        {
-            return options.UseCustomPublisher(new LoggingPublisher<TMessageType>(busPublisher, logAction));
-        }
-
-        public static ConcurrentMessageBusOptions<TMessageType> UseLoggingPublisher<TMessageType>(
-            this ConcurrentMessageBusOptions<TMessageType> options,
-            BusPublisher<TMessageType> busPublisher,
-            Func<IEnumerable<ISubscription<TMessageType>>, TMessageType, BusPublisher<TMessageType>, Task> publishFunc)
-        {
-            return options.UseCustomPublisher(new LoggingPublisher<TMessageType>(busPublisher, publishFunc));
-        }
-
-        public static ConcurrentMessageBusOptions<TMessageType> UseLoggingPublisher<TMessageType>(
-            this ConcurrentMessageBusOptions<TMessageType> options,
-            BusPublisher<TMessageType> busPublisher,
-            Func<TMessageType, BusPublisher<TMessageType>, Task> publishFunc)
-        {
-            return options.UseCustomPublisher(new LoggingPublisher<TMessageType>(busPublisher, publishFunc));
         }
 
         public static ConcurrentMessageBusOptions<TMessageType> UseForcedParallelPublisher<TMessageType>(
@@ -104,14 +58,6 @@ namespace Serpent.Common.MessageBus
         {
             options.BusPublisher = ParallelPublisher<TMessageType>.Default;
             return options;
-        }
-
-        public static ConcurrentMessageBusOptions<TMessageType> UseSemaphorePublisher<TMessageType>(
-            this ConcurrentMessageBusOptions<TMessageType> options,
-            int concurrencyLevel = -1,
-            BusPublisher<TMessageType> innerPublisher = null)
-        {
-            return options.UseCustomPublisher(new SemaphorePublisher<TMessageType>(concurrencyLevel, innerPublisher));
         }
 
         public static ConcurrentMessageBusOptions<TMessageType> UseFuncPublisher<TMessageType>(
