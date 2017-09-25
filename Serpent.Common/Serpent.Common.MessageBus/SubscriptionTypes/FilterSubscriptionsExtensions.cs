@@ -19,7 +19,7 @@ namespace Serpent.Common.MessageBus
                 return messageHandlerChainBuilder;
             }
 
-            return messageHandlerChainBuilder.Add(currentHandler => new FilterSubscription<TMessageType>(currentHandler, beforeInvoke, afterInvoke));
+            return messageHandlerChainBuilder.Add(currentHandler => new FilterDecorator<TMessageType>(currentHandler, beforeInvoke, afterInvoke));
         }
 
         public static IMessageHandlerChainBuilder<TMessageType> Filter<TMessageType>(
@@ -33,7 +33,7 @@ namespace Serpent.Common.MessageBus
             }
 
             return messageHandlerChainBuilder.Add(
-                currentHandler => new FilterSubscription<TMessageType>(
+                currentHandler => new FilterDecorator<TMessageType>(
                     currentHandler,
                     message =>
                         {
@@ -58,7 +58,7 @@ namespace Serpent.Common.MessageBus
             }
 
             return messageHandlerChainBuilder.Add(
-                currentHandler => new FilterSubscription<TMessageType>(
+                currentHandler => new FilterDecorator<TMessageType>(
                     currentHandler,
                     message =>
                         {
@@ -74,17 +74,17 @@ namespace Serpent.Common.MessageBus
 
         // public static IMessageBusSubscription CreateFireAndForgetSubscription<TMessageType>(this IMessageBusSubscriber<TMessageType> messageBus, Func<TMessageType, Task> handlerFunc)
         // {
-        // return messageBus.Subscribe(new FireAndForgetSubscription<TMessageType>(handlerFunc).HandleMessageAsync);
+        // return messageBus.Subscribe(new FireAndForgetDecorator<TMessageType>(handlerFunc).HandleMessageAsync);
         // }
 
         // public static IMessageBusSubscription CreateFireAndForgetSubscription<TMessageType>(this IMessageBusSubscriber<TMessageType> messageBus, IMessageHandler<TMessageType> handler)
         // {
-        // return messageBus.Subscribe(new FireAndForgetSubscription<TMessageType>(handler.HandleMessageAsync).HandleMessageAsync);
+        // return messageBus.Subscribe(new FireAndForgetDecorator<TMessageType>(handler.HandleMessageAsync).HandleMessageAsync);
         // }
 
         // public static IMessageBusSubscription CreateFireAndForgetSubscription<TMessageType>(this IMessageBusSubscriber<TMessageType> messageBus, BusSubscription<TMessageType> innerSubscription)
         // {
-        // return messageBus.Subscribe(new FireAndForgetSubscription<TMessageType>(innerSubscription).HandleMessageAsync);
+        // return messageBus.Subscribe(new FireAndForgetDecorator<TMessageType>(innerSubscription).HandleMessageAsync);
         // }
     }
 }

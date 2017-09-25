@@ -3,7 +3,7 @@
     using System;
     using System.Threading.Tasks;
 
-    public class FilterSubscription<TMessageType> : BusSubscription<TMessageType>
+    public class FilterDecorator<TMessageType> : MessageHandlerDecorator<TMessageType>
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 
@@ -11,7 +11,7 @@
 
         private readonly Func<TMessageType, Task> afterInvoke;
 
-        public FilterSubscription(Func<TMessageType, Task> handlerFunc, Func<TMessageType, Task<bool>> beforeInvoke = null, Func<TMessageType, Task> afterInvoke = null)
+        public FilterDecorator(Func<TMessageType, Task> handlerFunc, Func<TMessageType, Task<bool>> beforeInvoke = null, Func<TMessageType, Task> afterInvoke = null)
         {
             this.handlerFunc = handlerFunc;
             this.beforeInvoke = beforeInvoke;

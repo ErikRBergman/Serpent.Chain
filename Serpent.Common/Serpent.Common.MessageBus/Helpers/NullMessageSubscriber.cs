@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Serpent.Common.MessageBus.Helpers
+﻿namespace Serpent.Common.MessageBus.Helpers
 {
+    using System;
     using System.Threading.Tasks;
 
     internal class NullMessageSubscriber<TMessageType> : IMessageBusSubscriber<TMessageType>

@@ -3,7 +3,7 @@
     using System;
     using System.Threading.Tasks;
 
-    public class RetrySubscription<TMessageType> : BusSubscription<TMessageType>
+    public class RetryDecorator<TMessageType> : MessageHandlerDecorator<TMessageType>
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 
@@ -15,7 +15,7 @@
 
         private readonly Func<TMessageType, Task> successFunc;
 
-        public RetrySubscription(Func<TMessageType, Task> handlerFunc, int maxNumberOfAttempts, TimeSpan retryDelay, Func<TMessageType, Exception, int, int, Task> exceptionFunc = null, Func<TMessageType, Task> successFunc = null)
+        public RetryDecorator(Func<TMessageType, Task> handlerFunc, int maxNumberOfAttempts, TimeSpan retryDelay, Func<TMessageType, Exception, int, int, Task> exceptionFunc = null, Func<TMessageType, Task> successFunc = null)
         {
             this.handlerFunc = handlerFunc;
             this.maxNumberOfAttempts = maxNumberOfAttempts;
@@ -29,7 +29,7 @@
             this.successFunc = successFunc;
         }
 
-        public RetrySubscription(BusSubscription<TMessageType> innerSubscription, int maxNumberOfAttempts, TimeSpan retryDelay, Func<TMessageType, Exception, int, int, Task> exceptionFunc = null, Func<TMessageType, Task> successFunc = null)
+        public RetryDecorator(MessageHandlerDecorator<TMessageType> innerSubscription, int maxNumberOfAttempts, TimeSpan retryDelay, Func<TMessageType, Exception, int, int, Task> exceptionFunc = null, Func<TMessageType, Task> successFunc = null)
         {
             this.maxNumberOfAttempts = maxNumberOfAttempts;
             if (this.maxNumberOfAttempts < 1)

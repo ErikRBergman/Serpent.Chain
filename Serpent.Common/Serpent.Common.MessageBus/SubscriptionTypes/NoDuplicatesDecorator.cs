@@ -7,7 +7,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class NoDuplicatesSubscription<TMessageType, TKeyType> : BusSubscription<TMessageType>
+    public class NoDuplicatesDecorator<TMessageType, TKeyType> : MessageHandlerDecorator<TMessageType>
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 
@@ -17,13 +17,13 @@
 
         private int isDefaultInvoked;
 
-        public NoDuplicatesSubscription(Func<TMessageType, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector)
+        public NoDuplicatesDecorator(Func<TMessageType, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector)
         {
             this.handlerFunc = handlerFunc ?? throw new ArgumentNullException(nameof(handlerFunc));
             this.keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
         }
 
-        public NoDuplicatesSubscription(Func<TMessageType, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer)
+        public NoDuplicatesDecorator(Func<TMessageType, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer)
         {
             this.handlerFunc = handlerFunc ?? throw new ArgumentNullException(nameof(handlerFunc));
             this.keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));

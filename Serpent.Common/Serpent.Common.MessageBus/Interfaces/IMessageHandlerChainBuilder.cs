@@ -1,4 +1,5 @@
 ﻿// ReSharper disable once CheckNamespace
+
 namespace Serpent.Common.MessageBus
 {
     using System;
@@ -10,10 +11,9 @@ namespace Serpent.Common.MessageBus
     {
         IMessageHandlerChainBuilder<TMessageType> Add(Func<Func<TMessageType, Task>, Func<TMessageType, Task>> addFunc);
 
-        IMessageBusSubscription Handler(Func<TMessageType, Task> handlerFunc);
-
         IMessageBusSubscription Factory<THandler>(Func<THandler> handlerFactory)
             where THandler : IMessageHandler<TMessageType>;
 
+        IMessageBusSubscription Handler(Func<TMessageType, Task> handlerFunc);
     }
 }

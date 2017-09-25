@@ -6,7 +6,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class ConcurrentSubscription<TMessageType> : BusSubscription<TMessageType>
+    public class ConcurrentDecorator<TMessageType> : MessageHandlerDecorator<TMessageType>
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 
@@ -16,7 +16,7 @@
 
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-        public ConcurrentSubscription(Func<TMessageType, Task> handlerFunc, int concurrencyLevel = -1)
+        public ConcurrentDecorator(Func<TMessageType, Task> handlerFunc, int concurrencyLevel = -1)
         {
             if (concurrencyLevel < 0)
             {

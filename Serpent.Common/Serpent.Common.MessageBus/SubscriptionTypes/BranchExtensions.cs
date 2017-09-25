@@ -12,7 +12,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new BranchSubscription<TMessageType>(currentHandler, branches));
+            return messageHandlerChainBuilder.Add(currentHandler => new BranchDecorator<TMessageType>(currentHandler, branches));
         }
     }
 }

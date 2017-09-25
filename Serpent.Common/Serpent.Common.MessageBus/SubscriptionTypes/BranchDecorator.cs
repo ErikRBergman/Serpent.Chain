@@ -4,11 +4,11 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    public class BranchSubscription<TMessageType> : BusSubscription<TMessageType>, IMessageBusSubscriber<TMessageType>
+    public class BranchDecorator<TMessageType> : MessageHandlerDecorator<TMessageType>, IMessageBusSubscriber<TMessageType>
     {
         private readonly List<Func<TMessageType, Task>> handlers;
 
-        public BranchSubscription(Func<TMessageType, Task> handlerFunc, params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches)
+        public BranchDecorator(Func<TMessageType, Task> handlerFunc, params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches)
         {
             var numberOfHandlers = (branches?.Length ?? 0) + 1;
             this.handlers = new List<Func<TMessageType, Task>>(numberOfHandlers)

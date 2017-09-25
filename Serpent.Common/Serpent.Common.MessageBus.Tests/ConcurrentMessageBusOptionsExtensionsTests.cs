@@ -2,8 +2,6 @@
 {
     using System;
     using System.Collections.Concurrent;
-    using System.Diagnostics;
-    using System.Linq;
     using System.Threading.Tasks;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -15,12 +13,12 @@
         public void DisableWeakReferenceGarbageCollectionTests()
         {
             var options = new ConcurrentMessageBusOptions<int>
-            {
-                WeakReferenceGarbageCollection = new WeakReferenceGarbageCollectionOptions()
-                {
-                    IsEnabled = true
-                }
-            };
+                              {
+                                  WeakReferenceGarbageCollection = new WeakReferenceGarbageCollectionOptions()
+                                                                       {
+                                                                           IsEnabled = true
+                                                                       }
+                              };
 
             Assert.AreEqual(true, options.WeakReferenceGarbageCollection.IsEnabled);
 
@@ -29,9 +27,45 @@
             Assert.AreEqual(false, options.WeakReferenceGarbageCollection.IsEnabled);
         }
 
-        private class TestMessage
+        [TestMethod]
+        public void EnableWeakReferenceGarbageCollectionTests()
         {
-            public ConcurrentDictionary<string, DateTime> Log { get; set; } = new ConcurrentDictionary<string, DateTime>();
+            // Ensure collection is enabled and collection interval is preserved when omitting collection interval
+            var options = new ConcurrentMessageBusOptions<int>
+                              {
+                                  WeakReferenceGarbageCollection = new WeakReferenceGarbageCollectionOptions()
+                                                                       {
+                                                                           IsEnabled = false,
+                                                                           CollectionInterval =
+                                                                               TimeSpan.FromHours(
+                                                                                   20)
+                                                                       }
+                              };
+
+            Assert.AreEqual(false, options.WeakReferenceGarbageCollection.IsEnabled);
+
+            options.EnableWeakReferenceGarbageCollection();
+
+            Assert.AreEqual(true, options.WeakReferenceGarbageCollection.IsEnabled);
+            Assert.AreEqual(TimeSpan.FromHours(20), options.WeakReferenceGarbageCollection.CollectionInterval);
+
+            // Ensure collection is enabled and collection interval overwritten 
+            options = new ConcurrentMessageBusOptions<int>
+                          {
+                              WeakReferenceGarbageCollection = new WeakReferenceGarbageCollectionOptions()
+                                                                   {
+                                                                       IsEnabled = false,
+                                                                       CollectionInterval =
+                                                                           TimeSpan.FromHours(20)
+                                                                   }
+                          };
+
+            Assert.AreEqual(false, options.WeakReferenceGarbageCollection.IsEnabled);
+
+            options.EnableWeakReferenceGarbageCollection(TimeSpan.FromSeconds(20));
+
+            Assert.AreEqual(true, options.WeakReferenceGarbageCollection.IsEnabled);
+            Assert.AreEqual(TimeSpan.FromSeconds(20), options.WeakReferenceGarbageCollection.CollectionInterval);
         }
 
         [TestMethod]
@@ -39,20 +73,11 @@
         {
             // Test having message handler decorators both in the publish dispatch and the Subscription
             var bus = new ConcurrentMessageBus<TestMessage>(
-                options =>
-                    options
-                        .Dispatch().Parallel(
-                            builder =>
-                            builder
-                                .Filter(
-                                    message =>
-                                    {
-                                        message.Message.Log.TryAdd("Before", DateTime.Now);
-                                    },
-                                    message =>
-                                    {
-                                        message.Message.Log.TryAdd("After", DateTime.Now);
-                                    })));
+                options => options.Dispatch()
+                    .Parallel(
+                        builder => builder.Filter(
+                            message => { message.Message.Log.TryAdd("Before", DateTime.Now); },
+                            message => { message.Message.Log.TryAdd("After", DateTime.Now); })));
 
             bus.Subscribe()
                 .Handler(
@@ -62,7 +87,6 @@
                             message.Log.TryAdd("Handler", DateTime.Now);
                             await Task.Delay(100);
                         });
-
 
             var msg = new TestMessage();
             bus.Publish(msg);
@@ -84,48 +108,6 @@
             Assert.IsTrue(msg.Log.ContainsKey("Before"));
             Assert.IsTrue(msg.Log.ContainsKey("Handler"));
             Assert.IsTrue(msg.Log.ContainsKey("After"));
-
-
-
-        }
-
-
-        [TestMethod]
-        public void EnableWeakReferenceGarbageCollectionTests()
-        {
-            // Ensure collection is enabled and collection interval is preserved when omitting collection interval
-            var options = new ConcurrentMessageBusOptions<int>
-            {
-                WeakReferenceGarbageCollection = new WeakReferenceGarbageCollectionOptions()
-                {
-                    IsEnabled = false,
-                    CollectionInterval = TimeSpan.FromHours(20)
-                }
-            };
-
-            Assert.AreEqual(false, options.WeakReferenceGarbageCollection.IsEnabled);
-
-            options.EnableWeakReferenceGarbageCollection();
-
-            Assert.AreEqual(true, options.WeakReferenceGarbageCollection.IsEnabled);
-            Assert.AreEqual(TimeSpan.FromHours(20), options.WeakReferenceGarbageCollection.CollectionInterval);
-
-            // Ensure collection is enabled and collection interval overwritten 
-            options = new ConcurrentMessageBusOptions<int>
-            {
-                WeakReferenceGarbageCollection = new WeakReferenceGarbageCollectionOptions()
-                {
-                    IsEnabled = false,
-                    CollectionInterval = TimeSpan.FromHours(20)
-                }
-            };
-
-            Assert.AreEqual(false, options.WeakReferenceGarbageCollection.IsEnabled);
-
-            options.EnableWeakReferenceGarbageCollection(TimeSpan.FromSeconds(20));
-
-            Assert.AreEqual(true, options.WeakReferenceGarbageCollection.IsEnabled);
-            Assert.AreEqual(TimeSpan.FromSeconds(20), options.WeakReferenceGarbageCollection.CollectionInterval);
         }
 
         [TestMethod]
@@ -172,9 +154,9 @@
         public void UseStrongReferencesTests()
         {
             var options = new ConcurrentMessageBusOptions<int>
-            {
-                SubscriptionReferenceType = SubscriptionReferenceTypeType.WeakReferences
-            };
+                              {
+                                  SubscriptionReferenceType = SubscriptionReferenceTypeType.WeakReferences
+                              };
 
             Assert.AreEqual(SubscriptionReferenceTypeType.WeakReferences, options.SubscriptionReferenceType);
             options.UseStrongReferences();
@@ -185,13 +167,18 @@
         public void UseWeakReferencesTests()
         {
             var options = new ConcurrentMessageBusOptions<int>
-            {
-                SubscriptionReferenceType = SubscriptionReferenceTypeType.StrongReferences
-            };
+                              {
+                                  SubscriptionReferenceType = SubscriptionReferenceTypeType.StrongReferences
+                              };
 
             Assert.AreEqual(SubscriptionReferenceTypeType.StrongReferences, options.SubscriptionReferenceType);
             options.UseWeakReferences();
             Assert.AreEqual(SubscriptionReferenceTypeType.WeakReferences, options.SubscriptionReferenceType);
+        }
+
+        private class TestMessage
+        {
+            public ConcurrentDictionary<string, DateTime> Log { get; set; } = new ConcurrentDictionary<string, DateTime>();
         }
     }
 }

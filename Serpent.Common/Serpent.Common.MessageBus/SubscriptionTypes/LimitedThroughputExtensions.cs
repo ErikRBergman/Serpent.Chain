@@ -3,7 +3,6 @@
 namespace Serpent.Common.MessageBus
 {
     using System;
-
     using Serpent.Common.MessageBus.SubscriptionTypes;
 
     public static class LimitedThroughputExtensions

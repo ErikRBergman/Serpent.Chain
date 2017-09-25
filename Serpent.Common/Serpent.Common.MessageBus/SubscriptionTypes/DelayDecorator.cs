@@ -4,7 +4,7 @@ namespace Serpent.Common.MessageBus.SubscriptionTypes
     using System;
     using System.Threading.Tasks;
 
-    public class DelaySubscription<TMessageType> : BusSubscription<TMessageType>
+    public class DelayDecorator<TMessageType> : MessageHandlerDecorator<TMessageType>
     {
         private readonly bool dontAwait;
 
@@ -12,7 +12,7 @@ namespace Serpent.Common.MessageBus.SubscriptionTypes
 
         private readonly TimeSpan timeToWait;
 
-        public DelaySubscription(Func<TMessageType, Task> handlerFunc, TimeSpan timeToWait, bool dontAwait = false)
+        public DelayDecorator(Func<TMessageType, Task> handlerFunc, TimeSpan timeToWait, bool dontAwait = false)
         {
             this.handlerFunc = handlerFunc;
             this.timeToWait = timeToWait;

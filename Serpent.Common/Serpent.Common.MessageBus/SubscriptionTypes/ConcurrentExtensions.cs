@@ -8,7 +8,7 @@ namespace Serpent.Common.MessageBus
     {
         public static IMessageHandlerChainBuilder<TMessageType> Concurrent<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, int maxNumberOfConcurrentMessages)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new ConcurrentSubscription<TMessageType>(currentHandler, maxNumberOfConcurrentMessages));
+            return messageHandlerChainBuilder.Add(currentHandler => new ConcurrentDecorator<TMessageType>(currentHandler, maxNumberOfConcurrentMessages));
         }
     }
 }

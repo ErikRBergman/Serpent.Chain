@@ -15,7 +15,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Exception, Task<bool>> exceptionHandlerFunc)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new ExceptionSubscription<TMessageType>(currentHandler, exceptionHandlerFunc));
+            return messageHandlerChainBuilder.Add(currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, exceptionHandlerFunc));
         }
 
         public static IMessageHandlerChainBuilder<TMessageType> Exception<TMessageType>(
@@ -23,7 +23,7 @@ namespace Serpent.Common.MessageBus
             Func<TMessageType, Exception, Task> exceptionHandlerFunc)
         {
             return messageHandlerChainBuilder.Add(
-                currentHandler => new ExceptionSubscription<TMessageType>(
+                currentHandler => new ExceptionDecorator<TMessageType>(
                     currentHandler,
                     async (message, exception) =>
                         {
@@ -37,7 +37,7 @@ namespace Serpent.Common.MessageBus
             Func<TMessageType, Exception, bool> exceptionHandlerFunc)
         {
             return messageHandlerChainBuilder.Add(
-                currentHandler => new ExceptionSubscription<TMessageType>(
+                currentHandler => new ExceptionDecorator<TMessageType>(
                     currentHandler,
                     (message, exception) => Task.FromResult(exceptionHandlerFunc(message, exception))));
         }
@@ -47,7 +47,7 @@ namespace Serpent.Common.MessageBus
             Action<TMessageType, Exception> exceptionHandlerAction)
         {
             return messageHandlerChainBuilder.Add(
-                currentHandler => new ExceptionSubscription<TMessageType>(
+                currentHandler => new ExceptionDecorator<TMessageType>(
                     currentHandler,
                     (message, exception) =>
                         {

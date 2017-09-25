@@ -10,7 +10,7 @@ namespace Serpent.Common.MessageBus
     {
         public static IMessageHandlerChainBuilder<TMessageType> Delay<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, TimeSpan timeToWait, bool dontAwait = false)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new DelaySubscription<TMessageType>(currentHandler, timeToWait, dontAwait).HandleMessageAsync);
+            return messageHandlerChainBuilder.Add(currentHandler => new DelayDecorator<TMessageType>(currentHandler, timeToWait, dontAwait).HandleMessageAsync);
         }
 
         public static IMessageHandlerChainBuilder<TMessageType> Delay<TMessageType>(
@@ -19,7 +19,7 @@ namespace Serpent.Common.MessageBus
             bool dontAwait = false)
         {
             return messageHandlerChainBuilder.Add(
-                currentHandler => new DelaySubscription<TMessageType>(currentHandler, TimeSpan.FromMilliseconds(timeInMilliseconds), dontAwait).HandleMessageAsync);
+                currentHandler => new DelayDecorator<TMessageType>(currentHandler, TimeSpan.FromMilliseconds(timeInMilliseconds), dontAwait).HandleMessageAsync);
         }
     }
 }

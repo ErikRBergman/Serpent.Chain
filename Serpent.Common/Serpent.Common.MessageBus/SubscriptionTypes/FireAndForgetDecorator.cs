@@ -3,16 +3,16 @@
     using System;
     using System.Threading.Tasks;
 
-    public class FireAndForgetSubscription<TMessageType> : BusSubscription<TMessageType>
+    public class FireAndForgetDecorator<TMessageType> : MessageHandlerDecorator<TMessageType>
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 
-        public FireAndForgetSubscription(Func<TMessageType, Task> handlerFunc)
+        public FireAndForgetDecorator(Func<TMessageType, Task> handlerFunc)
         {
             this.handlerFunc = handlerFunc;
         }
 
-        public FireAndForgetSubscription(BusSubscription<TMessageType> innerSubscription)
+        public FireAndForgetDecorator(MessageHandlerDecorator<TMessageType> innerSubscription)
         {
             this.handlerFunc = innerSubscription.HandleMessageAsync;
         }

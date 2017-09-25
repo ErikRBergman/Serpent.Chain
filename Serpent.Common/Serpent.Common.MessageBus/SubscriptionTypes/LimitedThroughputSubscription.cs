@@ -6,7 +6,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class LimitedThroughputSubscription<TMessageType> : BusSubscription<TMessageType>
+    public class LimitedThroughputSubscription<TMessageType> : MessageHandlerDecorator<TMessageType>
     {
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 

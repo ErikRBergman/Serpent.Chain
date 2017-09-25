@@ -2,7 +2,7 @@
 {
     using System.Threading.Tasks;
 
-    public abstract class BusSubscription<T>
+    public abstract class MessageHandlerDecorator<T>
     {
         public abstract Task HandleMessageAsync(T message);
     }

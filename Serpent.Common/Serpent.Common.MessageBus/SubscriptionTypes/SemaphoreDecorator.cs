@@ -4,20 +4,20 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class SemaphoreSubscription<TMessageType> : BusSubscription<TMessageType>
+    public class SemaphoreDecorator<TMessageType> : MessageHandlerDecorator<TMessageType>
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 
         private readonly SemaphoreSlim semaphore;
 
-        public SemaphoreSubscription(Func<TMessageType, Task> handlerFunc, int maxNumberOfConcurrentMessages)
+        public SemaphoreDecorator(Func<TMessageType, Task> handlerFunc, int maxNumberOfConcurrentMessages)
         {
             this.handlerFunc = handlerFunc;
             this.MaxNumberOfConcurrentMessages = maxNumberOfConcurrentMessages;
             this.semaphore = new SemaphoreSlim(maxNumberOfConcurrentMessages);
         }
 
-        public SemaphoreSubscription(BusSubscription<TMessageType> innerSubscription, int maxNumberOfConcurrentMessages)
+        public SemaphoreDecorator(MessageHandlerDecorator<TMessageType> innerSubscription, int maxNumberOfConcurrentMessages)
         {
             this.MaxNumberOfConcurrentMessages = maxNumberOfConcurrentMessages;
             this.handlerFunc = innerSubscription.HandleMessageAsync;

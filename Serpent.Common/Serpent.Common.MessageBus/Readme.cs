@@ -1,5 +1,4 @@
-﻿#if DEBUG
-namespace Serpent.Common.MessageBus
+﻿namespace Serpent.Common.MessageBus
 {
     using System;
     using System.Threading.Tasks;
@@ -155,17 +154,5 @@ namespace Serpent.Common.MessageBus
             return Task.CompletedTask;
         }
     }
-
-
-    internal class Readme
-    {
-        private void RetrySubscriptionExample()
-        {
-            var bus = new ConcurrentMessageBus<int>();
-
-            bus.CreateRetrySubscription(message => { throw new Exception("Handler failed"); }, 10, TimeSpan.FromMilliseconds(500));
-        }
-    }
 }
 
-#endif
