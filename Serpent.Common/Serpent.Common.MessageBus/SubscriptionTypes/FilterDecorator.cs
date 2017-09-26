@@ -3,7 +3,7 @@
     using System;
     using System.Threading.Tasks;
 
-    public class FilterDecorator<TMessageType> : MessageHandlerDecorator<TMessageType>
+    public class FilterDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 

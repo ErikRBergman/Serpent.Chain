@@ -4,39 +4,22 @@ namespace Serpent.Common.MessageBus.SubscriptionTypes
     using System;
     using System.Threading.Tasks;
 
-    public class DelayDecorator<TMessageType> : MessageHandlerDecorator<TMessageType>
+    public class DelayDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
-        private readonly bool dontAwait;
-
         private readonly Func<TMessageType, Task> handlerFunc;
 
         private readonly TimeSpan timeToWait;
 
-        public DelayDecorator(Func<TMessageType, Task> handlerFunc, TimeSpan timeToWait, bool dontAwait = false)
+        public DelayDecorator(Func<TMessageType, Task> handlerFunc, TimeSpan timeToWait)
         {
             this.handlerFunc = handlerFunc;
             this.timeToWait = timeToWait;
-            this.dontAwait = dontAwait;
         }
 
         public override async Task HandleMessageAsync(TMessageType message)
         {
-            if (this.dontAwait)
-            {
-                // DONT AWAIT
-                this.HandleMessageInternalAsync(message);
-            }
-            else
-            {
                 await Task.Delay(this.timeToWait).ConfigureAwait(true);
                 await this.handlerFunc(message).ConfigureAwait(true);
-            }
-        }
-
-        private async Task HandleMessageInternalAsync(TMessageType message)
-        {
-            await Task.Delay(this.timeToWait).ConfigureAwait(true);
-            await this.handlerFunc(message).ConfigureAwait(true);
         }
     }
 }

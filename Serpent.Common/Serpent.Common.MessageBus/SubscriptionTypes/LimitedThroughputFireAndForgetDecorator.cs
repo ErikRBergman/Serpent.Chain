@@ -6,7 +6,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class LimitedThroughputSubscription<TMessageType> : MessageHandlerDecorator<TMessageType>
+    public class LimitedThroughputFireAndForgetDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
@@ -20,7 +20,7 @@
 
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(0);
 
-        public LimitedThroughputSubscription(Func<TMessageType, Task> handlerFunc, int maxMessagesPerPeriod, TimeSpan periodSpan)
+        public LimitedThroughputFireAndForgetDecorator(Func<TMessageType, Task> handlerFunc, int maxMessagesPerPeriod, TimeSpan periodSpan)
         {
             this.handlerFunc = handlerFunc;
             this.maxMessagesPerPeriod = maxMessagesPerPeriod;

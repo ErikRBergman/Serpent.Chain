@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    public class BranchDecorator<TMessageType> : MessageHandlerDecorator<TMessageType>, IMessageBusSubscriber<TMessageType>
+    public class BranchDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>, IMessageBusSubscriber<TMessageType>
     {
         private readonly List<Func<TMessageType, Task>> handlers;
 

@@ -13,7 +13,16 @@ namespace Serpent.Common.MessageBus
             TimeSpan? periodSpan = null)
         {
             return messageHandlerChainBuilder.Add(
-                currentHandler => new LimitedThroughputSubscription<TMessageType>(currentHandler, maxMessagesPerPeriod, periodSpan ?? TimeSpan.FromSeconds(1)).HandleMessageAsync);
+                currentHandler => new LimitedThroughputDecorator<TMessageType>(currentHandler, maxMessagesPerPeriod, periodSpan ?? TimeSpan.FromSeconds(1)).HandleMessageAsync);
+        }
+
+        public static IMessageHandlerChainBuilder<TMessageType> LimitedThroughputFireAndForget<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+            int maxMessagesPerPeriod,
+            TimeSpan? periodSpan = null)
+        {
+            return messageHandlerChainBuilder.Add(
+                currentHandler => new LimitedThroughputFireAndForgetDecorator<TMessageType>(currentHandler, maxMessagesPerPeriod, periodSpan ?? TimeSpan.FromSeconds(1)).HandleMessageAsync);
         }
     }
 }

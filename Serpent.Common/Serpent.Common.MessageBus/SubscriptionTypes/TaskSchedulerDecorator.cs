@@ -4,7 +4,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class TaskSchedulerDecorator<TMessageType> : MessageHandlerDecorator<TMessageType>
+    public class TaskSchedulerDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 
@@ -16,7 +16,7 @@
             this.taskScheduler = taskScheduler;
         }
 
-        public TaskSchedulerDecorator(MessageHandlerDecorator<TMessageType> innerSubscription, TaskScheduler taskScheduler)
+        public TaskSchedulerDecorator(MessageHandlerChainDecorator<TMessageType> innerSubscription, TaskScheduler taskScheduler)
         {
             this.taskScheduler = taskScheduler;
             this.handlerFunc = innerSubscription.HandleMessageAsync;

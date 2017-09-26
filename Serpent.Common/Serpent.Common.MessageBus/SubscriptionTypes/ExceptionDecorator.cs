@@ -3,7 +3,7 @@
     using System;
     using System.Threading.Tasks;
 
-    public class ExceptionDecorator<TMessageType> : MessageHandlerDecorator<TMessageType>
+    public class ExceptionDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 
@@ -15,7 +15,7 @@
             this.exceptionHandlerFunc = exceptionHandlerFunc;
         }
 
-        public ExceptionDecorator(MessageHandlerDecorator<TMessageType> innerSubscription, Func<TMessageType, Exception, Task<bool>> exceptionHandlerFunc)
+        public ExceptionDecorator(MessageHandlerChainDecorator<TMessageType> innerSubscription, Func<TMessageType, Exception, Task<bool>> exceptionHandlerFunc)
         {
             this.handlerFunc = innerSubscription.HandleMessageAsync;
             this.exceptionHandlerFunc = exceptionHandlerFunc;

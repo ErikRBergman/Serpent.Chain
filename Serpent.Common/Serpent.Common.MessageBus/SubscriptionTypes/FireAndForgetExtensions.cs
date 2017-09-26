@@ -10,5 +10,10 @@ namespace Serpent.Common.MessageBus
         {
             return messageHandlerChainBuilder.Add(currentHandler => new FireAndForgetDecorator<TMessageType>(currentHandler).HandleMessageAsync);
         }
+
+        public static IMessageHandlerChainBuilder<TMessageType> SoftFireAndForget<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder)
+        {
+            return messageHandlerChainBuilder.Add(currentHandler => new FireAndForgetSoftDecorator<TMessageType>(currentHandler).HandleMessageAsync);
+        }
     }
 }

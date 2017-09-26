@@ -6,19 +6,17 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Serpent.Common.MessageBus.Models;
-
-    public class ConcurrentDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
+    public class ConcurrentFireAndForgetDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
-        private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-
         private readonly Func<TMessageType, Task> handlerFunc;
 
-        private readonly ConcurrentQueue<MessageAndCompletionContainer<TMessageType>> messages = new ConcurrentQueue<MessageAndCompletionContainer<TMessageType>>();
+        private readonly ConcurrentQueue<TMessageType> messages = new ConcurrentQueue<TMessageType>();
 
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(0);
 
-        public ConcurrentDecorator(Func<TMessageType, Task> handlerFunc, int concurrencyLevel = -1)
+        private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+
+        public ConcurrentFireAndForgetDecorator(Func<TMessageType, Task> handlerFunc, int concurrencyLevel = -1)
         {
             if (concurrencyLevel < 0)
             {
@@ -35,11 +33,9 @@
 
         public override Task HandleMessageAsync(TMessageType message)
         {
-            var taskCompletionSource = new TaskCompletionSource<TMessageType>();
-
-            this.messages.Enqueue(new MessageAndCompletionContainer<TMessageType>(message, taskCompletionSource));
+            this.messages.Enqueue(message);
             this.semaphore.Release();
-            return taskCompletionSource.Task;
+            return Task.CompletedTask;
         }
 
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1126:PrefixCallsCorrectly", Justification = "Reviewed. Suppression is OK here.")]
@@ -55,12 +51,11 @@
                 {
                     try
                     {
-                        await this.handlerFunc(message.Message).ConfigureAwait(false);
-                        message.TaskCompletionSource.SetResult(message.Message);
+                        await this.handlerFunc(message).ConfigureAwait(false);
                     }
-                    catch (Exception exception)
+                    catch (Exception)
                     {
-                        message.TaskCompletionSource.SetException(exception);
+                        // don't ruin the subscription when the user has not caught an exception
                     }
                 }
             }

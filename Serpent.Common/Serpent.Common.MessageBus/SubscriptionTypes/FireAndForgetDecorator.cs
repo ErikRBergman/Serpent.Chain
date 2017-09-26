@@ -3,7 +3,7 @@
     using System;
     using System.Threading.Tasks;
 
-    public class FireAndForgetDecorator<TMessageType> : MessageHandlerDecorator<TMessageType>
+    public class FireAndForgetDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 
@@ -12,7 +12,7 @@
             this.handlerFunc = handlerFunc;
         }
 
-        public FireAndForgetDecorator(MessageHandlerDecorator<TMessageType> innerSubscription)
+        public FireAndForgetDecorator(MessageHandlerChainDecorator<TMessageType> innerSubscription)
         {
             this.handlerFunc = innerSubscription.HandleMessageAsync;
         }

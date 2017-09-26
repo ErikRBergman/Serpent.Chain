@@ -12,7 +12,7 @@ namespace Serpent.Common.MessageBus
     {
         public static IMessageHandlerChainBuilder<TMessageType> Add<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
-            Func<Func<TMessageType, Task>, MessageHandlerDecorator<TMessageType>> addFunc)
+            Func<Func<TMessageType, Task>, MessageHandlerChainDecorator<TMessageType>> addFunc)
         {
             return messageHandlerChainBuilder.Add(previousHandler => addFunc(previousHandler).HandleMessageAsync);
         }

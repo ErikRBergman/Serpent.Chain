@@ -2,7 +2,7 @@
 {
     using System.Threading.Tasks;
 
-    public abstract class MessageHandlerDecorator<T>
+    public abstract class MessageHandlerChainDecorator<T>
     {
         public abstract Task HandleMessageAsync(T message);
     }

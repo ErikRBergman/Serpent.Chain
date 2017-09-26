@@ -8,18 +8,28 @@ namespace Serpent.Common.MessageBus
 
     public static class DelayExtensions
     {
-        public static IMessageHandlerChainBuilder<TMessageType> Delay<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, TimeSpan timeToWait, bool dontAwait = false)
+        public static IMessageHandlerChainBuilder<TMessageType> Delay<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, TimeSpan timeToWait)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new DelayDecorator<TMessageType>(currentHandler, timeToWait, dontAwait).HandleMessageAsync);
+            return messageHandlerChainBuilder.Add(currentHandler => new DelayDecorator<TMessageType>(currentHandler, timeToWait).HandleMessageAsync);
         }
 
         public static IMessageHandlerChainBuilder<TMessageType> Delay<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
-            int timeInMilliseconds,
-            bool dontAwait = false)
+            int timeInMilliseconds)
         {
             return messageHandlerChainBuilder.Add(
-                currentHandler => new DelayDecorator<TMessageType>(currentHandler, TimeSpan.FromMilliseconds(timeInMilliseconds), dontAwait).HandleMessageAsync);
+                currentHandler => new DelayDecorator<TMessageType>(currentHandler, TimeSpan.FromMilliseconds(timeInMilliseconds)).HandleMessageAsync);
         }
     }
+
+
+// #define README
+#if README
+    internal interface IDelayExtensionsForReadme
+    {
+        IMessageHandlerChainBuilder<TMessageType> Delay<TMessageType>(TimeSpan timeToWait);
+
+        IMessageHandlerChainBuilder<TMessageType> Delay<TMessageType>(int timeInMilliseconds);
+    }
+#endif
 }

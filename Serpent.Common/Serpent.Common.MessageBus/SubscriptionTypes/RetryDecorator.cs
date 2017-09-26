@@ -3,7 +3,7 @@
     using System;
     using System.Threading.Tasks;
 
-    public class RetryDecorator<TMessageType> : MessageHandlerDecorator<TMessageType>
+    public class RetryDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 
@@ -29,7 +29,7 @@
             this.successFunc = successFunc;
         }
 
-        public RetryDecorator(MessageHandlerDecorator<TMessageType> innerSubscription, int maxNumberOfAttempts, TimeSpan retryDelay, Func<TMessageType, Exception, int, int, Task> exceptionFunc = null, Func<TMessageType, Task> successFunc = null)
+        public RetryDecorator(MessageHandlerChainDecorator<TMessageType> innerSubscription, int maxNumberOfAttempts, TimeSpan retryDelay, Func<TMessageType, Exception, int, int, Task> exceptionFunc = null, Func<TMessageType, Task> successFunc = null)
         {
             this.maxNumberOfAttempts = maxNumberOfAttempts;
             if (this.maxNumberOfAttempts < 1)
