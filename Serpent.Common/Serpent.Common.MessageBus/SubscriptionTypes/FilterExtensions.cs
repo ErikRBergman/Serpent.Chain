@@ -71,20 +71,5 @@ namespace Serpent.Common.MessageBus
                             return Task.CompletedTask;
                         }));
         }
-
-        // public static IMessageBusSubscription CreateFireAndForgetSubscription<TMessageType>(this IMessageBusSubscriber<TMessageType> messageBus, Func<TMessageType, Task> handlerFunc)
-        // {
-        // return messageBus.Subscribe(new FireAndForgetDecorator<TMessageType>(handlerFunc).HandleMessageAsync);
-        // }
-
-        // public static IMessageBusSubscription CreateFireAndForgetSubscription<TMessageType>(this IMessageBusSubscriber<TMessageType> messageBus, IMessageHandler<TMessageType> handler)
-        // {
-        // return messageBus.Subscribe(new FireAndForgetDecorator<TMessageType>(handler.HandleMessageAsync).HandleMessageAsync);
-        // }
-
-        // public static IMessageBusSubscription CreateFireAndForgetSubscription<TMessageType>(this IMessageBusSubscriber<TMessageType> messageBus, BusSubscription<TMessageType> innerSubscription)
-        // {
-        // return messageBus.Subscribe(new FireAndForgetDecorator<TMessageType>(innerSubscription).HandleMessageAsync);
-        // }
     }
 }

@@ -6,6 +6,8 @@
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.Common.MessageBus.Models;
+
     public class LimitedThroughputDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
@@ -14,7 +16,7 @@
 
         private readonly int maxMessagesPerPeriod;
 
-        private readonly ConcurrentQueue<TMessageType> messages = new ConcurrentQueue<TMessageType>();
+        private readonly ConcurrentQueue<MessageAndCompletionContainer<TMessageType>> messages = new ConcurrentQueue<MessageAndCompletionContainer<TMessageType>>();
 
         private readonly TimeSpan periodSpan;
 
@@ -31,9 +33,10 @@
 
         public override Task HandleMessageAsync(TMessageType message)
         {
-            this.messages.Enqueue(message);
+            var taskCompletionSource = new TaskCompletionSource<TMessageType>();
+            this.messages.Enqueue(new MessageAndCompletionContainer<TMessageType>(message, taskCompletionSource));
             this.semaphore.Release();
-            return Task.CompletedTask;
+            return taskCompletionSource.Task;
         }
 
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1126:PrefixCallsCorrectly", Justification = "Reviewed. Suppression is OK here.")]
@@ -71,15 +74,26 @@
                 {
                     periodMessageCount++;
 
-                    try
-                    {
-                        await this.handlerFunc(message).ConfigureAwait(false);
-                    }
-                    catch (Exception)
-                    {
-                        // don't ruin the subscription when the user has not caught an exception
-                    }
+                    // Do not await this call. If we did, a single slow call could ruin the throughput
+#pragma warning disable 4014
+                    this.DispatchMessageAsync(message);
+#pragma warning restore 4014
                 }
+            }
+        }
+
+        private async Task DispatchMessageAsync(MessageAndCompletionContainer<TMessageType> message)
+        {
+            await Task.Yield();
+
+            try
+            {
+                await this.handlerFunc(message.Message).ConfigureAwait(false);
+                message.TaskCompletionSource.SetResult(message.Message);
+            }
+            catch (Exception exception)
+            {
+                message.TaskCompletionSource.SetException(exception);
             }
         }
     }

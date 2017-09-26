@@ -73,7 +73,9 @@
 
                     try
                     {
-                        await this.handlerFunc(message).ConfigureAwait(false);
+#pragma warning disable 4014
+                        Task.Run(() => this.handlerFunc(message));
+#pragma warning restore 4014
                     }
                     catch (Exception)
                     {

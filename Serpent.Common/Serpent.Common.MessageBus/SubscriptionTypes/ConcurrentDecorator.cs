@@ -36,7 +36,6 @@
         public override Task HandleMessageAsync(TMessageType message)
         {
             var taskCompletionSource = new TaskCompletionSource<TMessageType>();
-
             this.messages.Enqueue(new MessageAndCompletionContainer<TMessageType>(message, taskCompletionSource));
             this.semaphore.Release();
             return taskCompletionSource.Task;

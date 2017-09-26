@@ -56,4 +56,19 @@ namespace Serpent.Common.MessageBus
                         }));
         }
     }
+
+//#define README
+#if README
+    internal class ExceptionReadme
+    {
+        public IMessageHandlerChainBuilder<TMessageType> Exception<TMessageType>(Func<TMessageType, Exception, Task<bool>> exceptionHandlerFunc);
+
+        public static IMessageHandlerChainBuilder<TMessageType> Exception<TMessageType>(Func<TMessageType, Exception, Task> exceptionHandlerFunc);
+
+        public static IMessageHandlerChainBuilder<TMessageType> Exception<TMessageType>(Func<TMessageType, Exception, bool> exceptionHandlerFunc);
+
+        public static IMessageHandlerChainBuilder<TMessageType> Exception<TMessageType>(Action<TMessageType, Exception> exceptionHandlerAction);
+    }
+
+#endif
 }

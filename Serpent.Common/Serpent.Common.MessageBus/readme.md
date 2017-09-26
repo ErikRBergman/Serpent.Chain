@@ -219,8 +219,8 @@ var subscription = bus
     // Inserted decorators
     .NoDuplicates(message => message.Id)
     .Delay(TimeSpan.FromSeconds(5))
-    .Concurrent(16)
     .Retry(5, TimeSpan.FromSeconds(30))
+    .Concurrent(16)
     .LimitedThroughput(100, TimeSpan.FromMilliseconds(100))
     // The handler
     .Handler(async message =>
@@ -251,7 +251,7 @@ Let's break down what happens here
 
 * The decorators are executed in the order they are specified.
 * Exceptions thrown in a message handler are propagated back in the reverse order they are specified. 
-* Exceptions do not pass `.FireAndForget()`, `.ConcurrentFireAndForget()`, `.Delay()` when `dontAwait:true` is specified and `.LimitedThroughputFireAndForget()`.
+* Exceptions and feedback do not pass `.FireAndForget()`, `.SoftFireAndForget()`, `.ConcurrentFireAndForget()`, and `.LimitedThroughputFireAndForget()`.
 * A decorator can be added more than once to further customize functionality. 
 * Some decorators break the feedback chain which prevents exceptions and awaitability to pass through. For example if you first add `.Retry()` and then `.FireAndForget()`, Retry will not be invoked if the handler throws an exception. They are usually called `.*FireAndForget`
 
@@ -292,6 +292,29 @@ These are the available modifiers. Detailed descriptions and examples are availa
 * `.SoftFireAndForget()` - Executes the synchronous parts of the next MHCD or Handler, synchronous but everything asynchronous is executed without feedback. 
 * `.TaskScheduler()` - Have the messages despatched to a new Task on a specified Task Scheduler. For example, to have all messages handled by the UI thread.
 
+Stacking these allow you to configure in a lot of advanced functionality, for example:
+```csharp
+bus
+    .Subscribe()
+    .SoftFireAndForget()                 // Don't let the publisher await no more
+    .NoDuplicates(message => message.Id) // Drop all messages already in the message chain based on key
+    .Exception(message => Console.WriteLine("All 10 attempts failed"))
+    .Retry(2, TimeSpan.FromSeconds(60)) // If the first 5 attempts fail, wait 60 seconds and try 5 more times
+    .Exception(message => Console.WriteLine("First 5 attempts failed. Retrying in 50 seconds"))
+    .Retry(5, TimeSpan.FromSeconds(10)) // Try 5 times, with a 10 second delay between failures
+    .Concurrent(16) // 16 concurrent handlers
+    .Handler(message => Console.WriteLine("I handle all messages"));
+```
+
+Some stacking combinations are not so useful, for example:
+```csharp
+bus
+    .Subscribe()
+    .Concurrent(16)
+    .FireAndForget()
+    .Handler(message => Console.WriteLine("I handle all messages"));
+```
+
 #### `.Branch()`
 Maybe this is not the modifier you will use first, but it can come in handy. If you''re brand new to Serpent.Common.MessageBus you might want to read about the other modifiers first.
 The Branch() modifier branches the message handler to a tree. It will make your subscription act as multiple subscription branches.
@@ -299,25 +322,78 @@ Branch() will not start a new Task for the created branch or branches unless you
 I think an example will make more sense :).
 
 ```csharp
-
 bus
-.Subscribe()
-.NoDuplicates(message => message.Id)
-.Branch(
-    branch => branch
-        .FireAndForgetSoft()
-        .Delay(TimeSpan.FromSeconds(10))
-        .Filter(message => message.Id == "Message 2")
-        .Handler(message => Console.WriteLine("I only handle Message 2")))
-.Handler(message => Console.WriteLine("I handle all messages"));
+    .Subscribe()
+    .NoDuplicates(message => message.Id)
+    .Branch(
+        branch => branch
+            .FireAndForgetSoft()
+            .Delay(TimeSpan.FromSeconds(10))
+            .Filter(message => message.Id == "Message 2")
+            .Handler(message => Console.WriteLine("I only handle Message 2")))
+    .Handler(message => Console.WriteLine("I handle all messages"));
 ```
 The subscription will not handle any concurrent duplicates and is branched to two separate message handlers.
 Message 2 will be handled by the branched message handler 10 seconds after the subscription receives it while the normal handler will handle all messages immediately.
 Since we don''t want the Publisher to await the delayed delivery, we stack `.FireAndForgetSoft()` and `.Delay()`.
 
-#### Concurrent()
-To have your messages handled in parallel by using Concurrent(maximumMumberOfConcurrentMessagesHandled).
+#### `.Concurrent()`
+Handles up to X messages in parallel. This decorator is as much a limiting as a parallelizing. The decorator will handle X concurrent messages, queueing (FIFO) those not being handled.
+For instance, you usually get a lot higher throughput, handling multiple concurrent messages when the handlers do I/O (read/write to disk, network calls etc.).
+`.Concurrent()` will keep the feedback chain which will make the caller await until the message is handled, and exceptions thrown pass right back to the caller. 
+This makes `.Retry()` work properly both before and after `.Concurrent()`. See examples.
+If you do not need the feedback to pass through `.Concurrent()`, you can use `.ConcurrentFireAndForget()`, which is a little bit quicker.
+You usually stack `.Concurrent()` with `.SoftFireAndForget()` to prevent message publishers to wait if there are a lot of messages in the queue.
 
+##### Overloads
+```csharp
+.Concurrent(int maxNumberOfConcurrentMessages);
+```
+
+##### Examples
+```csharp
+var subscription = bus
+    .Subscribe()
+    // .SoftFireAndForget() is usually wise to have somewhere before .Concurrent()
+    .SoftFireAndForget()
+	// 16 concurrent messages being handled
+    .Concurrent(16)	
+    .Handler(async message =>
+        {
+            await this.SomeMethodAsync();
+            Console.WriteLine(message.Id);
+        });
+```
+
+##### `.Retry()` stacked with `.Concurrent()`
+```csharp
+var subscription = bus
+    .Subscribe()
+    // .SoftFireAndForget() is usually wise to have somewhere before .Concurrent()
+    .SoftFireAndForget()
+    // Handle errors from last attempt
+    .Exception(message => Console.WriteLine("Message id:" + message.Id + " failed all attempts"))
+    // Try 5 times. First retry (out of 4) after 1 minute
+    .Retry(5, TimeSpan.FromMinutes(1))
+    // 16 concurrent messages being handled
+    .Concurrent(16)	
+    .Handler(async message =>
+        {
+            await this.SomeMethodAsync();
+            Console.WriteLine(message.Id);
+        });
+```
+The reason we have `.Retry()` before `.Concurrent()`, is to prevent locking one of the concurrent message handler slots when a message handler fails. 
+
+#### `.ConcurrentFireAndForget()`
+`.ConcurrentFireAndForget()` is roughly the same as `.SoftFireAndForget().Concurrent()` - feedback can't pass through, but for scenarios where performance is very important, `.ConcurrentFireAndForget()` has smaller overhead.
+
+##### Overloads
+```csharp
+.ConcurrentFireAndForget(int maxNumberOfConcurrentMessages);
+```
+
+##### Example
 ```csharp
 
 var subscription = bus
@@ -334,14 +410,14 @@ var subscription = bus
 #### `.Delay()`
 Delay the message chain a specified time.
 
-*Overloads*
+##### Overloads
 ```csharp
 .Delay(TimeSpan timeToWait);
 .Delay(int timeInMillisecondsToWait);
 ```
 Delay (await) the specified number of milliseconds
 
-*Example*
+##### Example
 ```csharp
 var subscription = bus
     .Subscribe()
@@ -373,8 +449,15 @@ If you want the exception to continue it's journey up the chain, for exampel to 
 
 This decorator for example can be useful for logging exceptions or trigger something else to happen as a response. 
 
+##### Overloads
 ```csharp
+.Exception<TMessageType>(Func<TMessageType, Exception, Task<bool>> exceptionHandlerFunc);
+.Exception<TMessageType>(Func<TMessageType, Exception, Task> exceptionHandlerFunc);
+.Exception<TMessageType>(Func<TMessageType, Exception, bool> exceptionHandlerFunc);
+.Exception<TMessageType>(Action<TMessageType, Exception> exceptionHandlerAction);
+```
 
+```csharp
 var subscription = bus
     .Subscribe()
 	.Exception((message, exception) => {
@@ -387,21 +470,16 @@ var subscription = bus
             Console.WriteLine(message.Id);
         });
 
-
+// And of course, you can have the message handled by a method instead
 
 var subscription = bus
     .Subscribe()
-	.Exception(this.ErrorHandlerAsync)async (message, exception) => {
-			Console.WriteLine("Error! " + exception));
-			await DoSomeAsyncErrorHandlingStuff();
-		})
+    .Exception(this.ErrorHandlerAsync)
     .Handler(async message =>
         {
             await this.SomeMethodAsync();
             Console.WriteLine(message.Id);
         });
-
-// And of course, you can have the message handled by a method instead
 
 public async Task ErrorHandlerAsync(ExampleMessage message, Exception exception)
 {
@@ -432,9 +510,8 @@ var subscription = bus
 
 ```
 
-And if we stack it with Filter()
+Stack it with .`Filter()`
 ```csharp
-
  var subscription = bus
     .Subscribe()
     .Exception(
@@ -451,53 +528,137 @@ And if we stack it with Filter()
                     await this.SomeMethodAsync();
                     Console.WriteLine(message.Id);
                 });
-
 ```
 
 #### `.Filter()`
-Filter() executes a function before the message handler (or the next subscription modifier) is executed. 
+`.Filter()` executes a function before the message handler (or the next subscription modifier) is executed. 
 The filter function can optionally return false to drop the message, or true to let it pass through.
-Filter can also execute a function after the message is handled successfully. To catch exceptions thrown, use the Exception() modifier
+`.Filter()` can also execute a function after the message is handled successfully. To catch exceptions thrown, use `.Exception()`.
+`.Filter()` can be a sweet way to add logging, together with `.Exception()`.
 
+##### Overloads
 ```csharp
-
-    var subscription = bus
-        .Subscribe()
-		.Filter(
-		
-		)
-        .Handler(async message =>
-            {
-                await this.SomeMethodAsync();
-                Console.WriteLine(message.Id);
-            });
-
+.Filter(Func<TMessageType, Task<bool>> beforeInvoke = null, Func<TMessageType, Task> afterInvoke = null);
+.Filter(Func<TMessageType, bool> beforeInvoke = null, Action<TMessageType> afterInvoke = null);
+.Filter(Action<TMessageType> beforeInvoke = null, Action<TMessageType> afterInvoke = null);
 ```
 
+##### Examples
+```csharp
+var subscription = bus
+    .Subscribe()
+    .Filter(message => message.Id == "One") // only keep messages with Id == "One"
+    .Handler(async message =>
+        {
+            await this.SomeMethodAsync();
+            Console.WriteLine(message.Id);
+        });
+```
 
+Before and after
+```csharp
+var subscription = bus
+    .Subscribe()
+    .Filter(
+        message => Console.WriteLine("Before the message handler is invoked"),
+        message => Console.WriteLine("The message handler succeeded as far as we know"))
+    .Handler(async message =>
+        {
+            await this.SomeMethodAsync();
+            Console.WriteLine(message.Id);
+        });
+```
+
+Async
+```csharp
+var subscription = bus
+    .Subscribe()
+    .Filter(
+        async message => 
+        {
+            Console.WriteLine("Before the message handler is invoked");
+            return false; // Stop the message here
+        },
+        message => Console.WriteLine("The message handler succeeded as far as we know"))
+    .Handler(async message =>
+        {
+            await this.SomeMethodAsync();
+            Console.WriteLine(message.Id);
+        });
+```
 
 #### `.FireAndForget()`
-By default, messages are dispatched directly to the handler function. You can use FireAndForget() to invoke your message handler as a new Task.
+NOTE! `.FireAndForget` should most be avoided if possible. 
+By default, messages are dispatched through the MHC to the handler function. If a decorator or the message handler take 10 seconds to complete, control is not returned to the decorators and ultimately the publisher for 10 seconds. 
+You can use `.FireAndForget()` to invoke the next MHC decorator or the message handler as a new Task.
 Since a new task is started for each message, this subscription handler will introduce infinite concurrency, which means, 
-if 30 000 messages are published to the bus, 30 000 tasks are started which will (most likely) totally ruin your performance. 
-To alleviate this problem, you could stack FireAndForget() with Semaphore(), but Concurrent() is likely better, since no tasks are created just to start waiting when messages are published.
+if 30 000 messages are published to the bus, 30 000 tasks are started which will (most likely) totally ruin your applications performance. 
+*Using* `.SoftFireAndForget()` *is often a better option* if you just want to break the feedback of the message handler chain.
+Another option would be `.ConcurrentFireAndForget()` or `.SoftFireAndForget()` together with `.Concurrent()`.
 
 ```csharp
+var subscription = bus
+    .Subscribe()
+    .FireAndForget()
+    .Handler(async message =>
+        {
+            Console.WriteLine("Invoked - Fired and forgotten: " + message.Id);
+        });
+```
+#### `.LimitedThroughput()`
+Limits the number of messages passing through the decorator during a specified period.
+A new period starts as soon as the last period ends. Messages not allowed to pass through are queued. The queue is FIFO (first in, first out).
+Messages are not evenly throttled within the period, which means, if you use `.LimitedThroughput(1000, TimeSpan.FromSeconds(1))` all 1000 messages allowed to pass through can come the periods first millisecond.
+To throttle messages more evenly, you can make the period smaller - `.LimitedThroughput(100, TimeSpan.FromSeconds(0.1))`. 
 
-    var subscription = bus
-        .Subscribe()
-		.FireAndForget()
-        .Handler(async message =>
-            {
-                await this.SomeMethodAsync();
-                Console.WriteLine(message.Id);
-            });
+`.LimitedThroughput()` count messages at the arrival time, which means only X message handlers can be started per period.
+
+##### Overloads
+```csharp
+.LimitedThroughput(int maxMessagesPerPeriod, TimeSpan? periodSpan = null);
+```
+##### Examples
+```csharp
+var subscription = bus
+    .Subscribe()
+    .LimitedThroughput(100, TimeSpan.FromSeconds(0.5))
+    .Handler(message =>
+        {
+            Console.WriteLine("Throttled!");
+        });
+
+var subscription = bus
+    .Subscribe()
+    .LimitedThroughput(200, TimeSpan.FromMilliseconds(1000))
+    .Handler(message =>
+        {
+            Console.WriteLine("Throttled!");
+        });
+```
+#### `.LimitedThroughputFireAndForget()`
+This is roughly the same functionality as `SoftFireAndForget().LimitedThroughput()` but since `.LimitedThroughputFireAndForget()` does not keep the feedback chain, it's has a little less overhead.
+
+##### Overloads
+```csharp
+.LimitedThroughputFireAndForget(int maxMessagesPerPeriod, TimeSpan? periodSpan = null)
 ```
 
-
-#### `.LimitedThroughput()`
-
 #### `.NoDuplicates()`
+Make all messages waiting to be handled to be unique, based on a key.
+This means if a message enters `.NoDuplicates()` with the same key as another message that has already entered but not exited the same `.NoDuplicates()`, it is dropped.
+
+If you for instance have a message handler that is responsible for deleting a file from disk, the file can only be deleted once, and therefore having duplicate messages in the chain, based on full path and filename is unnecessary.
+Another example would be a handler responsible for loading a project from a database. As long as the data is not fully loaded, it would be better to just wait for the first load request to finish.
+
+##### Overloads
+```csharp
+.NoDuplicates(Func<TMessageType, TKeyType> keySelector);
+.NoDuplicates(Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer);
+```
+
+##### Examples
+
+
 
 #### `.Retry()`
 
@@ -641,7 +802,7 @@ Publishing is implemented by Publishers, types deriving from BusPublisher<TMessa
 
 To change publisher, change the BusPublisher property on the ConcurrentMessageBusOptions<TMessageType>, either directly or by using one of the extension methods.
 
-3 examples to use FireAndForgetPublisher:
+3 examples of how to use FireAndForgetPublisher:
 
 ```csharp
 
