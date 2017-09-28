@@ -7,7 +7,7 @@
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
-    public class LimitedThroughputSubscriptionTests
+    public class LimitedThroughputDecoratorTests
     {
         [TestMethod]
         public async Task TestLimitedThroughputSubscription()

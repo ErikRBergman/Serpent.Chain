@@ -6,12 +6,26 @@ namespace Serpent.Common.MessageBus
 
     public static class ConcurrentExtensions
     {
+        /// <summary>
+        /// Parallelize the message throughput to X concurrent messages.
+        /// </summary>
+        /// <typeparam name="TMessageType">The message bus message type</typeparam>
+        /// <param name="messageHandlerChainBuilder">The message handler chain builder</param>
+        /// <param name="maxNumberOfConcurrentMessages">The maximum number of concurrent messages being handled (the level of parallelism)</param>
+        /// <returns>The message handler chain builder used to stack more decorators</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Concurrent<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, int maxNumberOfConcurrentMessages)
         {
             return messageHandlerChainBuilder.Add(currentHandler => new ConcurrentDecorator<TMessageType>(currentHandler, maxNumberOfConcurrentMessages));
         }
 
-        public static IMessageHandlerChainBuilder<TMessageType> ConcurrentFireAndForget<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, int maxNumberOfConcurrentMessages, bool fireAndForget = false)
+        /// <summary>
+        /// Parallelize the message throughput to X concurrent messages, dropping/breaking the feedback chain.
+        /// </summary>
+        /// <typeparam name="TMessageType">The message bus message type</typeparam>
+        /// <param name="messageHandlerChainBuilder">The message handler chain builder</param>
+        /// <param name="maxNumberOfConcurrentMessages">The maximum number of concurrent messages being handled (the level of parallelism)</param>
+        /// <returns>The message handler chain builder used to stack more decorators</returns>
+        public static IMessageHandlerChainBuilder<TMessageType> ConcurrentFireAndForget<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, int maxNumberOfConcurrentMessages)
         {
             return messageHandlerChainBuilder.Add(currentHandler => new ConcurrentFireAndForgetDecorator<TMessageType>(currentHandler, maxNumberOfConcurrentMessages));
         }
@@ -19,8 +33,8 @@ namespace Serpent.Common.MessageBus
 
     //#define README
 #if README
-        public static IMessageHandlerChainBuilder<TMessageType> Concurrent<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, int maxNumberOfConcurrentMessages)
-        public static IMessageHandlerChainBuilder<TMessageType> ConcurrentFireAndForget<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, int maxNumberOfConcurrentMessages, bool fireAndForget = false)
+        .Concurrent<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, int maxNumberOfConcurrentMessages)
+        .ConcurrentFireAndForget<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, int maxNumberOfConcurrentMessages)
 
 #endif
 }

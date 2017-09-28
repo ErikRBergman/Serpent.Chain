@@ -9,18 +9,23 @@
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
-    public class SubscriptionBuilderTests
+    public class MessageHandlerChainBuilderTests
     {
         [TestMethod]
-        public async Task SubscriptionBuilderStackAllTests()
+        public async Task MessageHandlerChainStackAllTest()
         {
             var bus = new ConcurrentMessageBus<Message>();
 
             var count = 0;
 
             using (bus.Subscribe()
+                .FireAndForget()
+                .SoftFireAndForget()
                 .NoDuplicates(message => message.Id)
                 .Concurrent(16)
+                .ConcurrentFireAndForget(16)
+                .Exception((msg, e) => Console.WriteLine(e))
+                .Filter(null, null)
                 .FireAndForget()
                 .Branch(
                     branch => { branch.FireAndForget().Delay(TimeSpan.FromSeconds(10)).Handler(message => { Console.WriteLine("Sub branch 1"); }); },
@@ -29,12 +34,13 @@
                 .Semaphore(5)
                 .LimitedThroughput(10, TimeSpan.FromSeconds(0.1))
                 .Delay(TimeSpan.FromMilliseconds(50))
+                .Select(message => new OuterMessage { Message = message, Token = CancellationToken.None })
                 .Handler(
                     async message =>
                         {
                             Debug.WriteLine(DateTime.Now);
                             await Task.Delay(200);
-                            message.HandlerInvoked = "Sure was";
+                            message.Message.HandlerInvoked = "Sure was";
                             Interlocked.Increment(ref count);
                         }))
             {
@@ -104,6 +110,13 @@
             public string Id { get; set; }
 
             public List<string> Steps { get; } = new List<string>();
+        }
+
+        private class OuterMessage
+        {
+            public CancellationToken Token { get; set; }
+
+            public Message Message { get; set; }
         }
     }
 }

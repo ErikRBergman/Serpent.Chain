@@ -5,7 +5,7 @@
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
-    public class FireAndForgetSubscriptionTests
+    public class FireAndForgetDecoratorTests
     {
         [TestMethod]
         public async Task TestFireAndForgetSubscription()

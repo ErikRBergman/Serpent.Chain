@@ -52,11 +52,12 @@
     <Compile Include="ConcurrentMessageBusTests.cs" />
     <Compile Include="MessageBusExtensionsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SubscriptionTypes\BackgroundSemaphoreSubscriptionTests.cs" />
-    <Compile Include="SubscriptionTypes\FireAndForgetSubscriptionTests.cs" />
-    <Compile Include="SubscriptionTypes\LimitedThroughputSubscriptionTests.cs" />
-    <Compile Include="SubscriptionTypes\RetrySubscriptionTests.cs" />
-    <Compile Include="SubscriptionTypes\SubscriptionBuilderTests.cs" />
+    <Compile Include="SubscriptionTypes\ConcurrentDecoratorTests.cs" />
+    <Compile Include="SubscriptionTypes\FireAndForgetDecoratorTests.cs" />
+    <Compile Include="SubscriptionTypes\LimitedThroughputDecoratorTests.cs" />
+    <Compile Include="SubscriptionTypes\RetryDecoratorTests.cs" />
+    <Compile Include="SubscriptionTypes\MessageHandlerChainBuilderTests.cs" />
+    <Compile Include="SubscriptionTypes\SelectDecoratorTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

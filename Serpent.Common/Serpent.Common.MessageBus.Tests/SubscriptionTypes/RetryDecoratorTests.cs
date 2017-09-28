@@ -8,7 +8,7 @@
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
-    public class RetrySubscriptionTests
+    public class RetryDecoratorTests
     {
         [TestMethod]
         public async Task RetryTests()

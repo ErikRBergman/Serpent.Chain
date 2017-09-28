@@ -71,5 +71,12 @@ namespace Serpent.Common.MessageBus
                             return Task.CompletedTask;
                         }));
         }
+
+        public static IMessageHandlerChainBuilder<TMessageType> Filter<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+            Func<TMessageType, Func<TMessageType, Task>, Task> filterFunc)
+        {
+            return messageHandlerChainBuilder.Add(innerMessageHandler => { return message => filterFunc(message, innerMessageHandler); });
+        }
     }
 }

@@ -6,16 +6,17 @@
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
-    public class BackgroundSemaphoreSubscriptionTests
+    public class ConcurrentDecoratorTests
     {
         [TestMethod]
-        public async Task BackgroundSemaphoreSubscriptionFuncTests()
+        public async Task ConcurrentDecoratorHandlerTests()
         {
             var bus = new ConcurrentMessageBus<Message1>();
 
             var counter = 0;
 
             using (bus.Subscribe()
+                .SoftFireAndForget()
                 .Concurrent(10)
                 .Handler(
                     async message =>
