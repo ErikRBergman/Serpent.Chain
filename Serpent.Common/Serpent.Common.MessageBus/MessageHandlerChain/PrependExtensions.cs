@@ -5,20 +5,20 @@ namespace Serpent.Common.MessageBus
     using System;
     using System.Threading.Tasks;
 
-    public static class AppendExtensions
+    public static class PrependExtensions
     {
         /// <summary>
-        /// Append a second message for each message passed through
+        /// Prepend a message for each message passed through
         /// </summary>
         /// <typeparam name="TMessageType">The chain message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The mch builder</param>
-        /// <param name="messageAppendFunc">The function used to create the new message</param>
+        /// <param name="messagePrependFunc">The function used to create the new message</param>
         /// <returns>The same mch builder</returns>
-        public static IMessageHandlerChainBuilder<TMessageType> Append<TMessageType>(
+        public static IMessageHandlerChainBuilder<TMessageType> Prepend<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
-            Func<TMessageType, Task<TMessageType>> messageAppendFunc)
+            Func<TMessageType, Task<TMessageType>> messagePrependFunc)
         {
-            if (messageAppendFunc == null)
+            if (messagePrependFunc == null)
             {
                 return messageHandlerChainBuilder;
             }
@@ -28,20 +28,21 @@ namespace Serpent.Common.MessageBus
                     {
                         return async message =>
                             {
+                                var prependMessageTask = InnerMessageHandlerAsync(innerMessageHandler, messagePrependFunc, message);
                                 var chainedMessageTask = innerMessageHandler(message);
-                                await Task.WhenAll(chainedMessageTask, InnerMessageHandlerAsync(innerMessageHandler, messageAppendFunc, message));
+                                await Task.WhenAll(chainedMessageTask, prependMessageTask);
                             };
                     });
         }
 
         /// <summary>
-        /// Append a second message for each message passed through
+        /// Prepend a message for each message passed through
         /// </summary>
         /// <typeparam name="TMessageType">The chain message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The mch builder</param>
         /// <param name="messageAppendFunc">The function used to create the new message</param>
         /// <returns>The same mch builder</returns>
-        public static IMessageHandlerChainBuilder<TMessageType> Append<TMessageType>(
+        public static IMessageHandlerChainBuilder<TMessageType> Prepend<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, TMessageType> messageAppendFunc)
         {
@@ -55,8 +56,8 @@ namespace Serpent.Common.MessageBus
                     {
                         return async message =>
                             {
-                                var originalMessageTask = innerMessageHandler(message);
                                 var newMessageTask = innerMessageHandler(messageAppendFunc(message));
+                                var originalMessageTask = innerMessageHandler(message);
                                 await Task.WhenAll(originalMessageTask, newMessageTask);
                             };
                     });
@@ -64,10 +65,10 @@ namespace Serpent.Common.MessageBus
 
         private static async Task InnerMessageHandlerAsync<TMessageType>(
             Func<TMessageType, Task> messageHandler,
-            Func<TMessageType, Task<TMessageType>> messageAppendFunc,
+            Func<TMessageType, Task<TMessageType>> prependMessageFunc,
             TMessageType originalMessage)
         {
-            var newMessage = await messageAppendFunc(originalMessage);
+            var newMessage = await prependMessageFunc(originalMessage);
             await messageHandler(newMessage);
         }
     }

@@ -281,23 +281,30 @@ Using the decorators when configuring a subscription
 To customize the way your subscription is handled, you can add one or many subscription decorators. 
 
 Here's a summary of the currently available decorators
+
+* `.Append()` - Append a message for each message. Like LINQ `.Append()`.
 * `.Branch()` - Branch the MHC tree.
 * `.Concurrent()` - Parallelize and handle X concurrent messages.
 * `.ConcurrentFireAndForget()` - Parallelize and handle X concurrent messages but does not provide delivery feedback and does not pass through exceptions.
 * `.Delay()` - Delay the execution of the message handler.
+* `.Distinct()` - Only pass through unique messages based on key.
 * `.Exception()` - Handle exceptions not handled by the message handler.
 * `.Filter()` - Execute a method before and after the execution of the message handler. Can also filter messages to stop the message from being processed further.
-* `.First()` - Only let 1 message pass through. Optionally by a predicate.
-* `.FirstAsync()` - Only let 1 message pass through, based on an async predicate.
 * `.FireAndForget()` - Spawn a new Task to execute each message.
+* `.First()` - Only let 1 message pass through. Optionally based by a predicate (which is the same as `.Where().First()`).
 * `.LimitedThroughput()` - Limit the throughput to X messages per period. For example, 100 messages per second. Or 10 messages per 100 ms.
 * `.LimitedThroughputFireAndForget()` - Same as `.LimitedThroughput()` but break the feedback chain.
 * `.NoDuplicates()` - Drop all duplicate messages by key. Duplicate messages are dropped.
+* `.Prepend()` - Prepend a message for each message handled. Like LINQ `.Prepend()`.
 * `.Retry()` - Retry after TimeSpan, X times to deliver a message if the message handler fails (throws an exception)
 * `.Select()` - Change message message type for the remaining message handler chain. Like LINQ `.Select()`.
+* `.SelectMany()` - Change message message type for the remaining message handler chain and extract messages from an enumerable. Like LINQ `.SelectMany()`.
 * `.Semaphore()` - Limit the number of concurrent messages being handled by this subscription.
 * `.SoftFireAndForget()` - Executes the synchronous parts of the next MHCD or Handler, synchronous but everything asynchronous is executed without feedback. 
-* `.Take()` - Only let X messages pass through
+* `.Skip()` - Skip the first X messages. Like LINQ `.Skip()`.
+* `.SkipWhile()` - Skip messages as long as the predicate succeeds. Like LINQ `.SkipWhile()`.
+* `.Take()` - Only let X messages pass through. Like LINQ `.Take()`.
+* `.TakeWhile()` - Only let messages pass through as long as a predicate succeeds. The same as `.Where().Take()`. Like LINQ `.TakeWhere()`.
 * `.TaskScheduler()` - Have the messages despatched to a new Task on a specified Task Scheduler. For example, to have all messages handled by the UI thread.
 * `.Where()` - Filter messages based on predicate. Like LINQ `.Where()`
 

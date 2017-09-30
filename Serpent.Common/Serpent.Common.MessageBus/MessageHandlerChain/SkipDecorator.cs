@@ -4,13 +4,13 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class TakeDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
+    public class SkipDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 
         private int count;
 
-        public TakeDecorator(Func<TMessageType, Task> handlerFunc, int numberOfMessages)
+        public SkipDecorator(Func<TMessageType, Task> handlerFunc, int numberOfMessages)
         {
             this.handlerFunc = handlerFunc;
             this.count = numberOfMessages;
@@ -24,11 +24,11 @@
 
                 if (ourCount >= 0)
                 {
-                    return this.handlerFunc(message);
+                    return Task.CompletedTask;
                 }
             }
 
-            return Task.CompletedTask;
+            return this.handlerFunc(message);
         }
     }
 }

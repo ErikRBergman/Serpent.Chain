@@ -1,4 +1,4 @@
-﻿namespace Serpent.Common.MessageBus.Tests.SubscriptionTypes
+﻿namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
 {
     using System.Threading;
     using System.Threading.Tasks;

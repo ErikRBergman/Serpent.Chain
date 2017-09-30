@@ -3,11 +3,11 @@
     using System;
     using System.Threading.Tasks;
 
-    public class FireAndForgetSoftDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
+    public class SoftFireAndForgetDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 
-        public FireAndForgetSoftDecorator(Func<TMessageType, Task> handlerFunc)
+        public SoftFireAndForgetDecorator(Func<TMessageType, Task> handlerFunc)
         {
             this.handlerFunc = handlerFunc;
         }

@@ -1,4 +1,4 @@
-﻿namespace Serpent.Common.MessageBus.Tests.SubscriptionTypes
+﻿namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
 {
     using System.Threading.Tasks;
 
@@ -14,15 +14,17 @@
 
             bus.Subscribe().FireAndForget()
                 .Handler(
-                msgz =>
+                async msgz =>
                     {
+                        await Task.Delay(100);
                         msgz.Status = "Got it!";
                     });
 
             var msg = new Message1();
 
             await bus.PublishAsync(msg);
-
+            Assert.AreNotEqual("Got it!", msg.Status);
+            
             await Task.Delay(200);
 
             Assert.AreEqual("Got it!", msg.Status);

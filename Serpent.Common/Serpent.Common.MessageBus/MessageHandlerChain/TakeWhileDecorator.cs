@@ -4,28 +4,30 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class TakeDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
+    public class TakeWhileDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly Func<TMessageType, Task> handlerFunc;
 
-        private int count;
+        private readonly Func<TMessageType, bool> predicate;
 
-        public TakeDecorator(Func<TMessageType, Task> handlerFunc, int numberOfMessages)
+        private int isActive = 1;
+
+        public TakeWhileDecorator(Func<TMessageType, Task> handlerFunc, Func<TMessageType, bool> predicate)
         {
             this.handlerFunc = handlerFunc;
-            this.count = numberOfMessages;
+            this.predicate = predicate;
         }
 
         public override Task HandleMessageAsync(TMessageType message)
         {
-            if (this.count > 0)
+            if (this.isActive == 1)
             {
-                var ourCount = Interlocked.Decrement(ref this.count);
-
-                if (ourCount >= 0)
+                if (this.predicate(message))
                 {
                     return this.handlerFunc(message);
                 }
+
+                this.isActive = 0;
             }
 
             return Task.CompletedTask;

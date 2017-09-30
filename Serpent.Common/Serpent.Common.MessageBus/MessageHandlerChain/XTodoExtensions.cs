@@ -13,16 +13,14 @@ namespace Serpent.Common.MessageBus
         //// .Collect(int maxMessages, TimeSpan? maxTime)  / .Collect(TimeSpan time) - queue messages and release a read only collection of the messages queued when the threshold is reached
 
         //// LINQ TODO
+
         ////  Cast - Cast messages to specified type
-        ////  Distinct - Only a single message may only pass through once based on key selector
         ////  OfType - Only messages of a specified type
-        ////  Prepend - Insert message before the current message
+
         ////  Repeat - Repeat a message X times (maybe after a TimeSpan)
-        ////  SelectMany - Interesting bus.Subscribe().SelectMany(message => message.InnerMessages).SoftFireAndForget().Concurrent(16)...
-        ////  Skip - Skip the first X messages (based on predicate or not)
         ////  SkipWhile - Cool
-        ////  Take - First X messages
-        ////  TakeWhile - Subscribe while the predicate is fullilled
+
+        //// LINQ low prio
 
         //// LINQ  maybe
         ////  Aggregate - Maybe with TimeSpan and/or number of messagse
@@ -33,8 +31,14 @@ namespace Serpent.Common.MessageBus
 
         //// LINQ Done
         ////  Append - Add a secondary message when a message is received
+        ////  Distinct - Only a single message may only pass through once based on key selector
         ////  First - Only a single message, either by itself or based on a predicate
+        ////  Prepend - Insert message before the every message
         ////  Select - Done
+        ////  SelectMany - Interesting bus.Subscribe().SelectMany(message => message.InnerMessages).SoftFireAndForget().Concurrent(16)...
+        ////  Skip - Skip the first X messages (based on predicate or not)
+        ////  Take - First X messages
+        ////  TakeWhile - Subscribe while the predicate is fullilled
         ////  Where - Done
 
         //// LINQ N/A
