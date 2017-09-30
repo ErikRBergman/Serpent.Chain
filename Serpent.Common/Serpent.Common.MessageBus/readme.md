@@ -26,6 +26,7 @@ If you use Visual Studio, open the NuGet client for your project and find `Serpe
 or
 
 Open the `Package Manager Console` and type:
+
 `install-package Serpent.Common.MessageBus`
 
 ## Example
@@ -89,13 +90,14 @@ var subscription = bus
         });
 ```
 
-The `.Handler()` method returns a subscription that you can call to unsubscribe.
+`.Handler()` returns a subscription that you call to unsubscribe.
 
 #### `.Subscribe().SoftFireAndForget()`
 Most often, you do not want the bus to track execution of your message handlers. The most common and best way to do this is by using `.SoftFireAndForget()`.
 ```csharp
 var subscription = bus
     .Subscribe()
+    .SoftFireAndForget()
     .Handler(async message =>
         {
             await this.SomeMethodAsync();
