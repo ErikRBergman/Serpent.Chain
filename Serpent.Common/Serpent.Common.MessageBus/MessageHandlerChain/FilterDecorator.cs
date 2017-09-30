@@ -24,17 +24,17 @@
 
             if (this.beforeInvoke != null)
             {
-                invoke = await this.beforeInvoke(message);
+                invoke = await this.beforeInvoke(message).ConfigureAwait(false);
             }
 
             if (invoke)
             {
-                await this.handlerFunc(message);
+                await this.handlerFunc(message).ConfigureAwait(false);
             }
 
             if (this.afterInvoke != null)
             {
-                await this.afterInvoke(message);
+                await this.afterInvoke(message).ConfigureAwait(false);
             }
         }
     }

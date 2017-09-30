@@ -31,7 +31,7 @@
         }
 
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1126:PrefixCallsCorrectly", Justification = "Reviewed. Suppression is OK here.")]
-        public override async Task HandleMessageAsync(TMessageType message)
+        public override Task HandleMessageAsync(TMessageType message)
         {
             var key = this.keySelector(message);
 
@@ -39,16 +39,18 @@
             {
                 if (Interlocked.CompareExchange(ref this.isDefaultInvoked, 1, 0) == 0)
                 {
-                    await this.handlerFunc(message);
+                    return this.handlerFunc(message);
                 }
 
-                return;
+                return Task.CompletedTask;
             }
 
             if (this.keyDictionary.TryAdd(key, true))
             {
-                await this.handlerFunc(message);
+                return this.handlerFunc(message);
             }
+
+            return Task.CompletedTask;
         }
     }
 }

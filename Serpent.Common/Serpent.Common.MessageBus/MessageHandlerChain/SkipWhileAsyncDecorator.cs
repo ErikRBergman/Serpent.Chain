@@ -21,7 +21,7 @@
         {
             if (this.isSkipping == 1)
             {
-                if (await this.predicate(message))
+                if (await this.predicate(message).ConfigureAwait(false))
                 {
                     return;
                 }
@@ -29,7 +29,7 @@
                 this.isSkipping = 0;
             }
 
-            await this.handlerFunc(message);
+            await this.handlerFunc(message).ConfigureAwait(false);
         }
     }
 }

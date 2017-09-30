@@ -143,7 +143,7 @@ public class HandlerClass
 }
 ```
 
-### Using a factory to instantiate a handler for each message
+### Using a `.Factory()` to instantiate a handler for each message
 Note that this handler implements IDisposable, which is not a requirement. When using a factory to instantiate an IDisposable type, the type is automatically disposed when the message has been handled.
 This approach can come in handy and simplify your code if, for example, your handler class use resources that can can only be used for a short period of time.
 
@@ -283,7 +283,8 @@ To customize the way your subscription is handled, you can add one or many subsc
 Here's a summary of the currently available decorators
 
 * `.Append()` - Append a message for each message. Like LINQ `.Append()`.
-* `.Branch()` - Branch the MHC tree.
+* `.Branch()` - Split the MHC into two or more parallel trees. 
+* `.BranchOut()` - Branch the MHC tree into one or more MHC trees parallel to the normal MHC tree.
 * `.Concurrent()` - Parallelize and handle X concurrent messages.
 * `.ConcurrentFireAndForget()` - Parallelize and handle X concurrent messages but does not provide delivery feedback and does not pass through exceptions.
 * `.Delay()` - Delay the execution of the message handler.
@@ -340,7 +341,35 @@ bus
     .Handler(message => Console.WriteLine("I handle all messages"));
 ```
 
+#### `.Append()`
+Appends another message to the subscription right after the current message is handled.
+
+##### Overloads
+```csharp
+.Append(Func<TMessageType, TMessageType> appendMessageFunc);
+.Append(Func<TMessageType, Task<TMessageType>> appendMessageFunc);
+```
+
+##### Examples
+```csharp
+
+IMessageSubscriber<MyMessage> bus = GetSubscriber();
+
+var subscription = bus
+    .Subscribe()
+    .Append(message => new MyMessage { Text = "Appended" })
+    .Handler(async message =>
+        {
+            await this.SomeMethodAsync();
+            Console.WriteLine(message.Id);
+        });
+```
+
 #### `.Branch()`
+This is actually not a decorator, like `.BranchOut()` but instead a handler that splits the message handler chain into two ore more message handler chains.
+
+
+#### `.BranchOut()`
 Maybe this is not the modifier you will use first, but it can come in handy. If you''re brand new to Serpent.Common.MessageBus you might want to read about the other modifiers first.
 The Branch() modifier branches the message handler to a tree. It will make your subscription act as multiple subscription branches.
 Branch() will not start a new Task for the created branch or branches unless you state it specifically.
@@ -468,6 +497,9 @@ var subscription = bus
 
 ```
 
+#### `.Distinct()`
+
+
 #### `.Exception()`
 `Exception()` invokes a method if the message handler (or a MHC Decorator below in the chain) throws an exception. If the exception handler returns nothing or false, the exception is caught and it does not propagate further up the chain.
 If you want the exception to continue it's journey up the chain, for exampel to use the `Retry()` decorator, return true.
@@ -482,6 +514,7 @@ This decorator for example can be useful for logging exceptions or trigger somet
 .Exception<TMessageType>(Action<TMessageType, Exception> exceptionHandlerAction);
 ```
 
+##### Examples
 ```csharp
 var subscription = bus
     .Subscribe()
@@ -615,7 +648,7 @@ var subscription = bus
 ```
 
 #### `.FireAndForget()`
-NOTE! `.FireAndForget` should most be avoided if possible. 
+NOTE! `.FireAndForget` should be avoided if possible. 
 By default, messages are dispatched through the MHC to the handler function. If a decorator or the message handler take 10 seconds to complete, control is not returned to the decorators and ultimately the publisher for 10 seconds. 
 You can use `.FireAndForget()` to invoke the next MHC decorator or the message handler as a new Task.
 Since a new task is started for each message, this subscription handler will introduce infinite concurrency, which means, 
@@ -623,6 +656,12 @@ if 30 000 messages are published to the bus, 30 000 tasks are started which will
 *Using* `.SoftFireAndForget()` *is often a better option* if you just want to break the feedback of the message handler chain.
 Another option would be `.ConcurrentFireAndForget()` or `.SoftFireAndForget()` together with `.Concurrent()`.
 
+##### Overloads
+```csharp
+.FireAndForget();
+```
+
+##### Example
 ```csharp
 var subscription = bus
     .Subscribe()
@@ -632,6 +671,53 @@ var subscription = bus
             Console.WriteLine("Invoked - Fired and forgotten: " + message.Id);
         });
 ```
+
+#### `.First()`
+Pass only a single message through the chain, optionally based on a predicate.
+
+##### Overloads
+```csharp
+.First();
+.First(Func<TMessageType, bool> predicate);
+.First(Func<TMessageType, Task<bool> predicate);
+```
+
+##### Examples
+```csharp
+var subscription = bus
+    .Subscribe()
+    .First()
+    .Handler(async message =>
+        {
+            Console.WriteLine("Invoked only once");
+        });
+```
+
+`.First()` with a predicate
+```csharp
+var subscription = bus
+    .Subscribe()
+    .First(message => message.Id == "2")
+    .Handler(async message =>
+        {
+            Console.WriteLine("Invoked only once, when the first message with Id = 2 comes.");
+        });
+```
+
+`.First()` with an async predicate
+```csharp
+var subscription = bus
+    .Subscribe()
+    .First(async message => 
+        {
+            return await ValidateMessageAsync(message);
+        })
+    .Handler(async message =>
+        {
+            Console.WriteLine("Invoked only once, when ValidateMessagesAsync(message) returns true.");
+        });
+```
+
 #### `.LimitedThroughput()`
 Limits the number of messages passing through the decorator during a specified period.
 A new period starts as soon as the last period ends. Messages not allowed to pass through are queued. The queue is FIFO (first in, first out).

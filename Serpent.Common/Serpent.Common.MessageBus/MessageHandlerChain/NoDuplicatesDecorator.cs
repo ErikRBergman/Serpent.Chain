@@ -41,7 +41,7 @@
                 {
                     try
                     {
-                        await this.handlerFunc(message);
+                        await this.handlerFunc(message).ConfigureAwait(false);
                     }
                     finally
                     {
@@ -56,7 +56,7 @@
             {
                 try
                 {
-                    await this.handlerFunc(message);
+                    await this.handlerFunc(message).ConfigureAwait(false);
                 }
                 finally
                 {

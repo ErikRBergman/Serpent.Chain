@@ -22,11 +22,11 @@
         {
             if (this.wasReceived == 0)
             {
-                if (await this.asyncPredicate(message))
+                if (await this.asyncPredicate(message).ConfigureAwait(false))
                 {
                     if (Interlocked.CompareExchange(ref this.wasReceived, 1, 0) == 0)
                     {
-                        await this.handlerFunc(message);
+                        await this.handlerFunc(message).ConfigureAwait(false);
                     }
                 }
             }

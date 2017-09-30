@@ -23,10 +23,10 @@
         {
             return this.outerMessageHandlerChainBuilder.Handler(async message =>
                 {
-                    var messages = await this.selector(message);
+                    var messages = await this.selector(message).ConfigureAwait(false);
                     foreach (var msg in messages)
                     {
-                        await invocationFunc(msg);
+                        await invocationFunc(msg).ConfigureAwait(false);
                     }
                 });
         }

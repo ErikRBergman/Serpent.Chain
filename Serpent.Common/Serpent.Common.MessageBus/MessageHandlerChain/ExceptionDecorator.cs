@@ -25,11 +25,11 @@
         {
             try
             {
-                await this.handlerFunc(message);
+                await this.handlerFunc(message).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
-                if (await this.exceptionHandlerFunc(message, exception))
+                if (await this.exceptionHandlerFunc(message, exception).ConfigureAwait(false))
                 {
                     throw;
                 }

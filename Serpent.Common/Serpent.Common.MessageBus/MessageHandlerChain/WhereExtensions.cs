@@ -22,9 +22,9 @@ namespace Serpent.Common.MessageBus
                 {
                     return async message =>
                         {
-                            if (await asyncPredicate(message))
+                            if (await asyncPredicate(message).ConfigureAwait(false))
                             {
-                                await innerMessageHandler(message);
+                                await innerMessageHandler(message).ConfigureAwait(false);
                             }
                         };
                 });

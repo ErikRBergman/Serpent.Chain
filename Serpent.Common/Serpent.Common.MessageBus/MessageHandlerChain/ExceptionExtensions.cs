@@ -27,7 +27,7 @@ namespace Serpent.Common.MessageBus
                     currentHandler,
                     async (message, exception) =>
                         {
-                            await exceptionHandlerFunc(message, exception);
+                            await exceptionHandlerFunc(message, exception).ConfigureAwait(false);
                             return false;
                         }));
         }

@@ -22,9 +22,9 @@
         {
             if (this.isActive == 1)
             {
-                if (await this.predicate(message))
+                if (await this.predicate(message).ConfigureAwait(false))
                 {
-                    await this.handlerFunc(message);
+                    await this.handlerFunc(message).ConfigureAwait(false);
                 }
 
                 this.isActive = 0;

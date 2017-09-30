@@ -57,7 +57,7 @@ namespace Serpent.Common.MessageBus
                             {
                                 var originalMessageTask = innerMessageHandler(message);
                                 var newMessageTask = innerMessageHandler(messageAppendFunc(message));
-                                await Task.WhenAll(originalMessageTask, newMessageTask);
+                                await Task.WhenAll(originalMessageTask, newMessageTask).ConfigureAwait(false);
                             };
                     });
         }
@@ -67,8 +67,8 @@ namespace Serpent.Common.MessageBus
             Func<TMessageType, Task<TMessageType>> messageAppendFunc,
             TMessageType originalMessage)
         {
-            var newMessage = await messageAppendFunc(originalMessage);
-            await messageHandler(newMessage);
+            var newMessage = await messageAppendFunc(originalMessage).ConfigureAwait(false);
+            await messageHandler(newMessage).ConfigureAwait(false);
         }
     }
 }

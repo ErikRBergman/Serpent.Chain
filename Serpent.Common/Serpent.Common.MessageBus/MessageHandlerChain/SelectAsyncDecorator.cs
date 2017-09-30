@@ -22,7 +22,7 @@
         {
             return this.outerMessageHandlerChainBuilder.Handler(async message =>
                 {
-                    await invocationFunc(await this.selector(message));
+                    await invocationFunc(await this.selector(message).ConfigureAwait(false)).ConfigureAwait(false);
                 });
         }
     }

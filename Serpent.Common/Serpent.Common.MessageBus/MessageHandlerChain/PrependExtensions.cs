@@ -30,7 +30,7 @@ namespace Serpent.Common.MessageBus
                             {
                                 var prependMessageTask = InnerMessageHandlerAsync(innerMessageHandler, messagePrependFunc, message);
                                 var chainedMessageTask = innerMessageHandler(message);
-                                await Task.WhenAll(chainedMessageTask, prependMessageTask);
+                                await Task.WhenAll(chainedMessageTask, prependMessageTask).ConfigureAwait(false);
                             };
                     });
         }
@@ -54,11 +54,11 @@ namespace Serpent.Common.MessageBus
             return messageHandlerChainBuilder.Add(
                 innerMessageHandler =>
                     {
-                        return async message =>
+                        return message =>
                             {
                                 var newMessageTask = innerMessageHandler(messageAppendFunc(message));
                                 var originalMessageTask = innerMessageHandler(message);
-                                await Task.WhenAll(originalMessageTask, newMessageTask);
+                                return Task.WhenAll(originalMessageTask, newMessageTask);
                             };
                     });
         }
@@ -68,8 +68,8 @@ namespace Serpent.Common.MessageBus
             Func<TMessageType, Task<TMessageType>> prependMessageFunc,
             TMessageType originalMessage)
         {
-            var newMessage = await prependMessageFunc(originalMessage);
-            await messageHandler(newMessage);
+            var newMessage = await prependMessageFunc(originalMessage).ConfigureAwait(false);
+            await messageHandler(newMessage).ConfigureAwait(false);
         }
     }
 }
