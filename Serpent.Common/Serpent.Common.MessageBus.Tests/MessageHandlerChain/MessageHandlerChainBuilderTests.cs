@@ -27,7 +27,7 @@
                 .Exception((msg, e) => Console.WriteLine(e))
                 .Filter(null, null)
                 .FireAndForget()
-                .Branch(
+                .BranchOut(
                     branch => { branch.FireAndForget().Delay(TimeSpan.FromSeconds(10)).Handler(message => { Console.WriteLine("Sub branch 1"); }); },
                     branch => { branch.FireAndForget().Delay(TimeSpan.FromSeconds(20)).Handler(message => { Console.WriteLine("Sub branch 1"); }); })
                 .Retry(5, TimeSpan.FromSeconds(5))

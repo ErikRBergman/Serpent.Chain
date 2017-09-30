@@ -1,5 +1,4 @@
 ﻿// ReSharper disable once CheckNamespace
-
 namespace Serpent.Common.MessageBus
 {
     using System;
@@ -8,11 +7,11 @@ namespace Serpent.Common.MessageBus
 
     public static class BranchExtensions
     {
-        public static IMessageHandlerChainBuilder<TMessageType> Branch<TMessageType>(
-            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
-            params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches)
+        public static IMessageBusSubscription Branch<TMessageType>(
+        this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+        params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new BranchDecorator<TMessageType>(currentHandler, branches));
+            return messageHandlerChainBuilder.Handler(new BranchHandler<TMessageType>(branches).HandleMessageAsync);
         }
     }
 }

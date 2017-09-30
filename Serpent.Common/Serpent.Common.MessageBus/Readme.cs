@@ -50,7 +50,7 @@
             bus
                 .Subscribe()
                 .NoDuplicates(message => message.Id)
-                .Branch(
+                .BranchOut(
                     branch => branch
                         .Delay(TimeSpan.FromSeconds(10))
                         .Filter(message => message.Id == "Message 2")

@@ -52,6 +52,7 @@
     <Compile Include="ConcurrentMessageBusTests.cs" />
     <Compile Include="MessageBusExtensionsTests.cs" />
     <Compile Include="MessageHandlerChain\AppendDecoratorTests.cs" />
+    <Compile Include="MessageHandlerChain\BranchDecoratorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MessageHandlerChain\ConcurrentDecoratorTests.cs" />
     <Compile Include="MessageHandlerChain\FireAndForgetDecoratorTests.cs" />
