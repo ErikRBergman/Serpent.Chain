@@ -13,7 +13,7 @@ namespace Serpent.Common.MessageBus
             return messageHandlerChainBuilder.Add(currentHandler => new DistinctDecorator<TMessageType, TKeyType>(currentHandler, keySelector));
         }
 
-        public static IMessageHandlerChainBuilder<TMessageType> NoDuplicates<TMessageType, TKeyType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer)
+        public static IMessageHandlerChainBuilder<TMessageType> Distinct<TMessageType, TKeyType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer)
         {
             return messageHandlerChainBuilder.Add(currentHandler => new DistinctDecorator<TMessageType, TKeyType>(currentHandler, keySelector, equalityComparer));
         }

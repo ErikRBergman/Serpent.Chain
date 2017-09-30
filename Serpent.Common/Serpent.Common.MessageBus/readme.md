@@ -8,6 +8,8 @@ The message bus is implemeted `by` `ConcurrentMessageBus<TMessageType>` and has 
 * `IMessageBusPublisher<TMessageType>` used to publish messages to the bus
 * `IMessageBusSubscriber<TMessageType>` used to subscribe to messages
 
+Feel free to fork the project, make changes and send pull requests, report errors, suggestions, ideas, ask questions etc.
+
 ## Why?
 Why would I use Serpent.Common.MessageBus or any message bus in my application instead using normal method calls?
 Well, I can come up with a few reasons.
@@ -60,7 +62,6 @@ await bus.PublishAsync(
         {
             Id = "Message 1"
         });
-
 ```
 
 ## Subscribing to messages
@@ -103,8 +104,6 @@ var subscription = bus
 ```
 
 The `.Handler()` method returns a subscription that you can call to unsubscribe.
-
-
 
 #### Subscribe and handle with IMessageHandler
 
@@ -314,7 +313,7 @@ Using the decorators when configuring a subscription
 #### Message handler chain decorators list
 To customize the way your subscription is handled, you can add one or many subscription decorators. 
 
-Here's a summary of the currently available decorators
+Here's a summary of the currently available decorators. If you have requirements that these decorators does not support, you can write your own decorators (see the chapter Custom MHC Decorators). 
 
 * `.Append()` - Append a message for each message. Like LINQ `.Append()`.
 * `.Branch()` - Split the MHC into two or more parallel trees. 
@@ -376,6 +375,7 @@ bus
 #### `.Append()`
 Appends a message to the subscription right after the current message is handled.
 The overloads with the `predicate` parameter are used to conditionally append a message. 
+`.Append()` can be used to traverse a single node relation, like a parent node.
 
 ##### Overloads
 ```csharp
@@ -384,9 +384,9 @@ The overloads with the `predicate` parameter are used to conditionally append a 
 .Append(Func<TMessageType, Task<TMessageType>> messageSelector);
 .Append(Func<TMessageType, Task<TMessageType>> messageSelector, Func<TMessageType, Task<bool>> predicate, bool isRecursive = false);
 ```
-`messageSelector` is the selector that returns the appended message.
-`predicate` only append the message if predicate returns true.
-`isRecursive` passes the appended message through the append mechanism, which allows recursion. 
+* `messageSelector` is the selector that returns the message to append.
+* `predicate` only append the message if predicate returns true.
+* `isRecursive` passes the appended message through the append mechanism, which allows recursion. 
 
 ##### Examples
 ```csharp
@@ -403,10 +403,10 @@ var subscription = bus
     .Append(message => new MyMessage { Text = "Appended" })
     .Handler(async message =>
         {
-            Console.WriteLine(message.Id);
+            Console.WriteLine(message.Text);
         });
 ```
-Using `.Append()` to unwrapp and handle a messages tree recursively.
+Using `.Append()` to unwrapp and handle a message tree recursively.
 ```csharp
 public class MyMessage
 {
@@ -425,28 +425,79 @@ var subscription = bus
         true)
     .Handler(async message =>
         {
-            Console.WriteLine(message.Id);
+            Console.WriteLine("Handled: " + message.Id);
         });
 ```
 
 #### `.AppendMany()`
+Appends several messages to the subscription right after the current message is handled.
+The overloads with the `predicate` parameter are used to conditionally append messages. 
+`.AppendMany()` can be used to iterate through a tree of messages, handling each of them.
+
 ##### Overloads
 ```csharp
-.Branch(params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches);
+.AppendMany(Func<TMessageType, IEnumerable<TMessageType>> messageSelector);
+.AppendMany(Func<TMessageType, IEnumerable<TMessageType>> messageSelector, Func<TMessageType, bool> predicate, bool isRecursive = false);
+.AppendMany(Func<TMessageType, Task<IEnumerable<TMessageType>>> messageSelector);
+.AppendMany(Func<TMessageType, Task<IEnumerable<TMessageType>>> messageSelector, Func<TMessageType, Task<bool>> predicate, bool isRecursive = false);
 ```
+* `messageSelector` is the selector that returns the messages to append.
+* `predicate` only append the message if predicate returns true.
+* `isRecursive` passes the appended messages through the append mechanism, which allows recursion. 
+
 ##### Examples
+```csharp
+public class MyMessage
+{
+    public string Text { get; set; }
+    public IEnumerable<MyMessage> ChildMessages { get; set; }
+}
 
+IMessageSubscriber<MyMessage> bus = new ConcurrentMessageBus<MyMessage>();
 
+var subscription = bus
+    .Subscribe()
+    // Always append a message
+    .AppendMany(
+        message => message.ChildMessages != null,
+        message => message.ChildMessages)   // only 1 level, no recursion
+    .Handler(async message =>
+        {
+            Console.WriteLine(message.Text);
+        });
+```
+Using `.AppendMany()` to unwrapp and handle a message tree recursively.
+```csharp
+public class MyMessage
+{
+    public int Id { get; set; }
+    public IEnumerable<MyMessage> ChildMessages { get; set; }
+}
+
+IMessageSubscriber<MyMessage> bus = new ConcurrentMessageBus<MyMessage>();
+
+var subscription = bus
+    .Subscribe()
+    // Unwrapp the inner message, and do it recursively
+    .AppendMany(
+        message => message.ChildMessages != null, 
+        message => message.ChildMessages,
+        true)   // recursion - unwrapp the entire tree and handle each node
+    .Handler(async message =>
+        {
+            Console.WriteLine(message.Id);
+        });
+```
 #### `.Branch()`
 `.Branch()` is not actually a decorator, like `.BranchOut()`, but a handler that splits the message handler chain into two ore more message handler chains.
 The branches are invoked "softly parallel", which means that if the first branch does only CPU intensive work for seconds, the other branches will not get their message delivered until the first branch is done. If the first branch awaits I/O, the next branch will start, and so on.
-The feedback chain is intact through Branch, so if one of the branches throw an exception, it is passed up the chain. If there is no FireAndForget, the publisher can await the delivery of the message to all branches.
+The feedback chain is intact through Branch, so if one of the branches throws an exception which is not handled, it is passed up the chain and can potentially prevent other branches to complete. If there is no FireAndForget, the publisher can await the delivery of the message to all branches.
 
 ##### Overloads
 ```csharp
 .Branch(params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches);
 ```
-
+* `branches` - the action that returns an array of MHC branches. See the examples.
 ##### Examples
 ```csharp
 bus
@@ -455,11 +506,46 @@ bus
     .Branch(
         branch1 => branch1
             .Delay(TimeSpan.FromSeconds(1))
-            .Handler(message => Console.WriteLine("Invoked 1 second after the other branch")),
+            .Handler(message => Console.WriteLine("Invoked 1 second after the second branch")),
         branch2 => branch2
             .Handler(message => Console.WriteLine("Invoked immediately"))
     );
 ```
+You can have as many branches as you like and branches in branches in branches...
+```csharp
+bus
+    .Subscribe()
+    .NoDuplicates(message => message.Id)
+    .Branch(
+        branch1 => branch1
+            .Delay(TimeSpan.FromSeconds(1))
+            .Handler(message => Console.WriteLine("Branch 1")),
+        branch2 => branch2
+            .Delay(TimeSpan.FromSeconds(2))
+            .Handler(message => Console.WriteLine("Branch 2")),
+        branch3 => branch3
+            .Delay(TimeSpan.FromSeconds(3))
+            .Handler(message => Console.WriteLine("Branch 3")),
+        branch4 => branch4
+            .Delay(TimeSpan.FromSeconds(4))
+            .Handler(message => Console.WriteLine("Branch 4")),
+        branch5 => branch5
+            .Delay(TimeSpan.FromSeconds(5))
+            .Handler(message => Console.WriteLine("Branch 5")),
+        branch6 => branch6
+            .Delay(TimeSpan.FromSeconds(6))
+            .Handler(message => Console.WriteLine("Branch 6")),
+
+        branchInBranch => branchInBranch
+            .Delay(TimeSpan.FromSeconds(10))
+            .Branch(
+                subSubBranch1 => 
+                    .Handler(message => Console.WriteLine("Branch 10.1")),
+                subSubBranch2 => 
+                    .Handler(message => Console.WriteLine("Branch 10.2"))
+                ));
+```
+
 
 #### `.BranchOut()`
 `.BranchOut()` works like `.Branch()` but adds one or more parallel MHC trees to the current tree instead of splitting the current tree into one or more trees. 
@@ -487,17 +573,17 @@ Message 2 will be handled by the branched message handler 10 seconds after the s
 Since we don''t want the Publisher to await the delayed delivery, we stack `.SoftFireAndForget()` and `.Delay()`.
 
 #### `.Concurrent()`
-Parallelizes the message handling to a maximum of X messages concurrently. Messages that arrive to `.Concurrent()` are queued and handled as soon as possible, in a FIFO (first in first out) manner. 
-`.Concurrent()` both parallelizes and limits parallelism to the defined level. If you use `.Concurrent(20)` to send e-mails, it will send 20 e-mails concurrently, and it will not allow sending more than 20 e-mails concurrently.
+Parallelizes the message handler chain to a maximum of X concurrent messages. Messages that arrive to `.Concurrent()` are queued and handled as soon as possible, in a FIFO (first in first out) manner. 
+`.Concurrent()` both parallelizes and limits parallelism to your defined level. If you use `.Concurrent(20)` to send e-mails, up to 20 and no more than 20 e-mails are sent concurrently.
 
-Why?
-You usually get a lot higher throughput, handling multiple concurrent messages when the handlers do I/O (read/write to disk, seneding e-mails, calling web services, web apis, sending data to an Azure service bus, etc.).
+You usually get a lot higher throughput by handling multiple concurrent messages, especially when the handlers perform I/O (read/write to disk, sending e-mails, calling web services, web apis, sending data to an Azure service bus, etc.).
 Often there is also a threshold where too much parallelism degrades performance. Sending 20 e-mails concurrently is likely much faster than 1, but sending 100 e-mails concurrently may put too much pressure on the SMTP server and can be slower than 20.
+It's often wise to make the level of parallelism configurable. You may experience great performance at some level on your developer machine, and a different one when you deploy to your test and production environments.
 
 `.Concurrent()` will keep the feedback chain which will allow the caller to await until the message is handled. Exceptions thrown pass right back to the caller. 
 This makes decorators like `.Retry()` work properly both before and after `.Concurrent()`. See the examples.
 
-If you do not need the feedback chain, you can use `.ConcurrentFireAndForget()`, which has slightly smaller execution footprint
+If you do not need the feedback chain, you can use `.ConcurrentFireAndForget()`, which has slightly smaller execution footprint.
 
 ##### Overloads
 ```csharp
@@ -505,43 +591,53 @@ If you do not need the feedback chain, you can use `.ConcurrentFireAndForget()`,
 ```
 
 ##### Examples
-
-Let's say you want to send a newsletter to a 5000 of recipients. If you don't parallelize the process, it may take quite a while to send the messages. 
-
+Let's say you want to send a newsletter to a 5000 of recipients. If you don't parallelize the process, it may take quite a while. 
 
 ```csharp
+var smtpClient = new SmtpClient();
+
 var subscription = bus
     .Subscribe()
-    // .SoftFireAndForget() is usually wise to have somewhere before .Concurrent()
     .SoftFireAndForget()
-	// 16 concurrent messages being handled
-    .Concurrent(16)	
+    .Concurrent(20)	
     .Handler(async message =>
         {
-            await this.SomeMethodAsync();
-            Console.WriteLine(message.Id);
+            await smtpClient.SendMailAsync(
+                new MailMessage(
+                    "noreply@mynewsletter.test", 
+                    message.EmailAddress,
+                    "Your daily news",
+                    "This is the news letter content"));
         });
 ```
 
 ##### `.Retry()` stacked with `.Concurrent()`
+We specify `.Retry()` before `.Concurrent()` to process other messages if an exception is thrown. If we add `.Retry()` after `.Concurrent()` a message failing will use one of the 20 concurrent handlers for upp to 4 minutes.
+
 ```csharp
+var smtpClient = new SmtpClient();
+
 var subscription = bus
     .Subscribe()
     // .SoftFireAndForget() is usually wise to have somewhere before .Concurrent()
     .SoftFireAndForget()
     // Handle errors from last attempt
-    .Exception(message => Console.WriteLine("Message id:" + message.Id + " failed all attempts"))
+    .Exception(message => Console.WriteLine("Mail failed id:" + message.Id + " failed all attempts"))
     // Try 5 times. First retry (out of 4) after 1 minute
     .Retry(5, TimeSpan.FromMinutes(1))
     // 16 concurrent messages being handled
     .Concurrent(16)	
     .Handler(async message =>
         {
-            await this.SomeMethodAsync();
-            Console.WriteLine(message.Id);
+            await smtpClient.SendMailAsync(
+                new MailMessage(
+                    "noreply@mynewsletter.test", 
+                    message.EmailAddress,
+                    "Your daily news",
+                    "This is the news letter content"));
         });
 ```
-The reason we have `.Retry()` before `.Concurrent()`, is to prevent locking one of the concurrent message handler slots when a message handler fails. 
+The reason we have `.Retry()` before `.Concurrent()`, is to prevent locking one of the 16 message handler slots while waiting to retry.
 
 #### `.ConcurrentFireAndForget()`
 `.ConcurrentFireAndForget()` is roughly the same as `.SoftFireAndForget().Concurrent()` - feedback can't pass through, but for scenarios where performance is very important, `.ConcurrentFireAndForget()` has smaller overhead.
@@ -556,8 +652,7 @@ The reason we have `.Retry()` before `.Concurrent()`, is to prevent locking one 
 
 var subscription = bus
     .Subscribe()
-	// 16 concurrent messages being handled
-	.ConcurrentFireAndForget(16)	
+    .ConcurrentFireAndForget(16)
     .Handler(async message =>
         {
             await this.SomeMethodAsync();
@@ -566,7 +661,7 @@ var subscription = bus
 ```
 
 #### `.Delay()`
-Delay the message chain a specified time.
+Delay the message handler chain a specified time.
 
 ##### Overloads
 ```csharp
@@ -579,7 +674,8 @@ Delay (await) the specified number of milliseconds
 ```csharp
 var subscription = bus
     .Subscribe()
-    .Delay(TimeSpan.FromSeconds(10)) // delay 10 seconds before handling the message	
+    .SoftFireAndForget()
+    .Delay(TimeSpan.FromSeconds(10)) // delay the message 10 seconds
     .Handler(async message =>
         {
             await this.SomeMethodAsyncInvoked10SecondsLaterAsync();
@@ -591,24 +687,42 @@ var subscription = bus
 ```csharp
 var subscription = bus
     .Subscribe()
-    .SoftFireAndForget()    // Don't have the publisher await the delay
-    .Delay(TimeSpan.FromSeconds(10)) // delay 10 seconds before handling the message
+    .SoftFireAndForget()
+    .Delay(10000)) // delay 100000 milliseconds before handling the message
     .Handler(async message =>
         {
             await this.SomeMethodAsyncInvoked10SecondsLaterAsync();
             Console.WriteLine(message.Id);
         });
-
 ```
 
 #### `.Distinct()`
+Only allow a message with a certain key to be handled once.
+##### Overloads
+```csharp
+.Distinct(Func<TMessageType, TKeyType> keySelector);
+.Distinct(Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer);
+```
 
+##### Example
+```csharp
+var subscription = bus
+    .Subscribe()
+    .Distinct(message => message.Id)    // Only allow a message with a certain key to be delivered once
+    .SoftFireAndForget()
+    .Handler(async message =>
+        {
+            await this.SomeMethodAsyncInvoked10SecondsLaterAsync();
+            Console.WriteLine(message.Id);
+        });
+```
 
 #### `.Exception()`
-`Exception()` invokes a method if the message handler (or a MHC Decorator below in the chain) throws an exception. If the exception handler returns nothing or false, the exception is caught and it does not propagate further up the chain.
+`Exception()` invokes a method if the message handler (or a MHC Decorator below in the chain) throws an exception. 
+If the exception handler returns nothing or false, the exception is caught and does not propagate further up the chain.
 If you want the exception to continue it's journey up the chain, for exampel to use the `Retry()` decorator, return true.
 
-This decorator for example can be useful for logging exceptions or trigger something else to happen as a response. 
+This decorator can for example be useful for logging exceptions or trigger something else to happen as a response. 
 
 ##### Overloads
 ```csharp
@@ -622,10 +736,12 @@ This decorator for example can be useful for logging exceptions or trigger somet
 ```csharp
 var subscription = bus
     .Subscribe()
-	.Exception((message, exception) => {
-			Console.WriteLine("Error! " + exception));
-			return true; // Propagate the exception up the chain
-		})
+    .Exception(
+        (message, exception) =>
+        {
+            Console.WriteLine("Error! " + exception));
+            return true; // Propagate the exception up the chain
+        })
     .Handler(async message =>
         {
             await this.SomeMethodAsync();
@@ -679,7 +795,7 @@ Stack it with .`Filter()`
     .Exception(
     (message, exception) =>
     {
-        Console.WriteLine("Error! " + exception);
+        Console.WriteLine("Exception: " + exception);
         return true; // Propagate the exception up the chain
     })
     .Filter(
@@ -691,14 +807,12 @@ Stack it with .`Filter()`
                     Console.WriteLine(message.Id);
                 });
 ```
-
 #### `.Filter()`
 `.Filter()` executes a function before the message handler (or the next subscription modifier) is executed. 
 The filter function can optionally return false to drop the message, or true to let it pass through.
 `.Filter()` can also execute a function after the message is handled successfully. To catch exceptions thrown, use `.Exception()`.
 `.Filter()` can be a sweet way to add logging, together with `.Exception()`.
 The last overload of `.Filter()` is an inline decorator. To keep the chain you have to call the message handler passed as the second parameter.
-
 ##### Overloads
 ```csharp
 .Filter(Func<TMessageType, Task<bool>> beforeInvoke = null, Func<TMessageType, Task> afterInvoke = null);
@@ -706,7 +820,6 @@ The last overload of `.Filter()` is an inline decorator. To keep the chain you h
 .Filter(Action<TMessageType> beforeInvoke = null, Action<TMessageType> afterInvoke = null);
 .Filter(Func<TMessageType, Func<TMessageType, Task>, Task> filterFunc);
 ```
-
 ##### Examples
 ```csharp
 var subscription = bus
@@ -718,8 +831,7 @@ var subscription = bus
             Console.WriteLine(message.Id);
         });
 ```
-
-Before and after
+Before and after the message handler
 ```csharp
 var subscription = bus
     .Subscribe()
@@ -732,7 +844,6 @@ var subscription = bus
             Console.WriteLine(message.Id);
         });
 ```
-
 Async
 ```csharp
 var subscription = bus
@@ -752,7 +863,7 @@ var subscription = bus
 ```
 
 #### `.FireAndForget()`
-NOTE! `.FireAndForget` should be avoided if possible. 
+NOTE! `.FireAndForget` should be avoided if possible. `.SoftFireAndForget()` is a much better alternative in most cases.
 By default, messages are dispatched through the MHC to the handler function. If a decorator or the message handler take 10 seconds to complete, control is not returned to the decorators and ultimately the publisher for 10 seconds. 
 You can use `.FireAndForget()` to invoke the next MHC decorator or the message handler as a new Task.
 Since a new task is started for each message, this subscription handler will introduce infinite concurrency, which means, 
@@ -764,7 +875,6 @@ Another option would be `.ConcurrentFireAndForget()` or `.SoftFireAndForget()` t
 ```csharp
 .FireAndForget();
 ```
-
 ##### Example
 ```csharp
 var subscription = bus
@@ -775,7 +885,6 @@ var subscription = bus
             Console.WriteLine("Invoked - Fired and forgotten: " + message.Id);
         });
 ```
-
 #### `.First()`
 Pass only a single message through the chain, optionally based on a predicate.
 
@@ -824,11 +933,11 @@ var subscription = bus
 
 #### `.LimitedThroughput()`
 Limits the number of messages passing through the decorator during a specified period.
-A new period starts as soon as the last period ends. Messages not allowed to pass through are queued. The queue is FIFO (first in, first out).
-Messages are not evenly throttled within the period, which means, if you use `.LimitedThroughput(1000, TimeSpan.FromSeconds(1))` all 1000 messages allowed to pass through can come the periods first millisecond.
-To throttle messages more evenly, you can make the period smaller - `.LimitedThroughput(100, TimeSpan.FromSeconds(0.1))`. 
+A new period starts as soon as the previous period ends. If you set the limit to 100 messages per second and 101 messages are sent during a second, the 101th message is queued and handled first in line when the next period starts. 
+Messages are not evenly distributed within the period, which means, `.LimitedThroughput(1000, TimeSpan.FromSeconds(1))` will allow all 1000 messages to can pass through during the periods first millisecond, if the rest of the mesasge handler chain is fast enough to handle it.
+To distribute messages more evenly, you can make the period smaller - `.LimitedThroughput(100, TimeSpan.FromSeconds(0.1))`. 
 
-`.LimitedThroughput()` count messages at the arrival time, which means only X message handlers can be started per period.
+`.LimitedThroughput()` count messages as they arrive, which means only X message handlers can be started per period. 
 
 ##### Overloads
 ```csharp
@@ -841,7 +950,7 @@ var subscription = bus
     .LimitedThroughput(100, TimeSpan.FromSeconds(0.5))
     .Handler(message =>
         {
-            Console.WriteLine("Throttled!");
+            Console.WriteLine("Limited edition!");
         });
 
 var subscription = bus
@@ -849,9 +958,10 @@ var subscription = bus
     .LimitedThroughput(200, TimeSpan.FromMilliseconds(1000))
     .Handler(message =>
         {
-            Console.WriteLine("Throttled!");
+            Console.WriteLine("Limited edition!");
         });
 ```
+
 #### `.LimitedThroughputFireAndForget()`
 This is roughly the same functionality as `SoftFireAndForget().LimitedThroughput()` but since `.LimitedThroughputFireAndForget()` does not keep the feedback chain, it's has a little less overhead.
 
@@ -861,10 +971,10 @@ This is roughly the same functionality as `SoftFireAndForget().LimitedThroughput
 ```
 
 #### `.NoDuplicates()`
-Make all messages waiting to be handled to be unique, based on a key.
+`.NoDuplicates()` will drop all messages that have the same key as a message being handled by the chain already.
 This means if a message enters `.NoDuplicates()` with the same key as another message that has already entered but not exited the same `.NoDuplicates()`, it is dropped.
 
-If you for instance have a message handler that is responsible for deleting a file from disk, the file can only be deleted once, and therefore having duplicate messages in the chain, based on full path and filename is unnecessary.
+If you for instance have a message handler that is responsible for deleting a file from disk, the file can only be deleted once, and therefore we can remove duplicates, based on full path and filename.
 Another example would be a handler responsible for loading a project from a database. As long as the data is not fully loaded, it would be better to just wait for the first load request to finish.
 
 ##### Overloads
@@ -874,9 +984,88 @@ Another example would be a handler responsible for loading a project from a data
 ```
 
 ##### Examples
+```csharp
+var subscription = bus
+    .Subscribe()
+    .SoftFireAndForget()
+    .NoDuplicates(message => message.FullPathName)
+    .Handler(message =>
+        {
+            Console.WriteLine("Concurrently unique!");
+        });
+```
 
+This next example demonstrates using an equality comparer to eliminate duplicates case insensitively.
+```csharp
+var subscription = bus
+    .Subscribe()
+    .SoftFireAndForget()
+    .NoDuplicates(message => message.FullPathName, StringComparer.OrdinalIgnoreCase)
+    .Handler(async message =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            Console.WriteLine("Concurrently unique, insensitively!");
+        });
+
+// This message will be handled
+await bus.PublishAsync(new MyMessage("c:\\temp\\filename1"));
+// But this won't, since it's a duplicate, and the second the handler takes has not passed
+await bus.PublishAsync(new MyMessage("c:\\TEMP\\fileName1"));
+```
+
+#### `.Prepend()`
+Handle a new message before every incoming message. See Append for more information.
+Prepend currently does not support predicate and recursive. There is also no PrependMany.
+
+##### Overloads
+```csharp
+.Prepend<TMessageType>(Func<TMessageType, Task<TMessageType>> messagePrependFunc)
+.Prepend<TMessageType>(Func<TMessageType, TMessageType> messageAppendFunc)
+```
 
 #### `.Retry()`
+Allows you to configure the message handler chain to retry if the message handler fails.
+You specify the number of attempts (not retries).
+
+##### Overloads
+```csharp
+.Retry<TMessageType>(
+            int maxNumberOfAttempts,
+            TimeSpan retryDelay,
+            Func<TMessageType, Exception, int, int, Task> exceptionFunc = null,
+            Func<TMessageType, Task> successFunc = null);
+
+.Retry<TMessageType>(
+            int maxNumberOfAttempts,
+            TimeSpan retryDelay,
+            Action<TMessageType, Exception, int, int> exceptionAction,
+            Action<TMessageType> successAction = null)
+```
+* `numberOfAttemps` - The total number of attemps to make.
+* `retryDelay` - The delay between attempts
+* `exceptionFunc` / `exceptionAction` *(optional)* - The method to invoke if an exception is thrown
+* `successFunc` / `successAction` *(optional)* - The method to invoke if the handler is successful
+
+##### Examples
+```csharp
+var subscription = bus
+    .Subscribe()
+    .SoftFireAndForget()
+    .Retry(
+        5,      // 5 attempts
+        TimeSpan.FromSeconds(30),
+        (message, exception, currentAttempt, maxNumberOfAttempts) =>
+            {
+                Console.WriteLine("Id:" + message.Id + " failed, attempt " + currentAttempt + "/" + maxNumberOfAttempts + ", Exception:" + exception);
+            },
+        message => Console.WriteLine("Message succeeded!")
+        )
+    .Concurrent(16)
+    .Handler(async message =>
+        {
+            throw new Exception("FAIL!");
+        });
+```
 
 #### `.Select()`
 Changes the message handler chain from one message type to another type, much like LINQ's `.Select` for enumerables. 
@@ -906,7 +1095,6 @@ public class PoliteMessage
 
     public string Id { get; }
     public string PoliteText { get; }
-
 }
 
 public void SetupSubscription(IMessageBusSubscriber<Message> bus)
@@ -922,7 +1110,7 @@ public void SetupSubscription(IMessageBusSubscriber<Message> bus)
 }
 ```
 
-As usual, you can use the decorators more than once to convert between different types. In the following example we start by 
+As usual, you can use decorators more than once to convert between different types. 
 ```csharp
 public class Message
 {
@@ -958,177 +1146,194 @@ public void SetupSubscription(IMessageBusSubscriber<Message> bus)
             {
                 Console.WriteLine("This message is guaranteed to be polite: " + message.Text);
             });
-}
+```
+
+
+#### `.SelectMany()`
+
+##### Overloads
+```csharp
+```
+##### Examples
+```csharp
 ```
 
 #### `.Semaphore()`
+Limits the number of concurrent messages being handled without parallelizing.
+
+
+
+#### `.Skip()`
+
+##### Overloads
+```csharp
+```
+##### Examples
+```csharp
+```
+
+
+
+
+#### `.SkipWhile()`
+
+##### Overloads
+```csharp
+```
+##### Examples
+```csharp
+```
+
+
 
 #### `.SoftFireAndForget()`
+Breaks the feedback/exception chain which means that everything being synchronous coming after `.SoftFireAndForget()` is handled synchronous but it does not await asynchronous waiting.
+Exceptions thrown after `.SoftFireAndForget()` does not pass `.SoftFireAndForget()`. 
+Since `.SoftFireAndForget()` returns when all synchronous work is done, using `.NoDuplicates().SoftFireAndForget()` will render `.NoDuplicates()` unusable.
+Using `.SoftFireAndForget()` after `.Concurrent()` will make the concurrency infinite.
+
+`.SoftFireAndForget()` should be used early in most subscriber message chains unless you want to have the feedback and awaitability.
+
+##### Overloads
+```csharp
+.SoftFireAndForget();
+```
+
+##### Examples
+```csharp
+var subscription = bus
+    .Subscribe()
+    .SoftFireAndForget() // wise to have before .Concurrent
+    .Concurrent(16)
+    .Handler(async message =>
+        {
+            Console.WriteLine("Handler");
+        });
+```
+
+```csharp
+var subscription = bus
+    .Subscribe()
+    .SoftFireAndForget() // wise to have before .Concurrent
+    .Delay(TimeSpan.FromSeconds(10))
+    .Handler(async message =>
+        {
+            Console.WriteLine("Handler");
+        });
+```
+
+#### `.Take()`
+
+##### Overloads
+```csharp
+```
+##### Examples
+```csharp
+```
+
+
+#### `.TakeWhile()`
+
+##### Overloads
+```csharp
+```
+##### Examples
+```csharp
+```
 
 #### `.TaskScheduler()`
+Invoke all calls on a specified Task Scheduler. This can come in handy if you use the message bus to handle messages on a UI where it's important that the messages are invoked on the UI thread.
+
+##### Overloads
+```csharp
+```
+##### Examples
+```csharp
+```
 
 #### `.Where()`
+Only forwards messages for which the `predicate` returns true.
+##### Overloads
+```csharp
+.Where(Func<TMessageType, bool> predicate);
+.Where(Func<TMessageType, Task<bool>> predicate);
+```
+`predicate` - the function that is used to filter messages.
+
+##### Examples
+```csharp
+var subscription = bus
+    .Subscribe()
+    .Where(message => message.Id == "1")
+    .Handler(async message =>
+        {
+            Console.WriteLine("Only messages with Id 1");
+        });
+```
 
 ### Publishing
 You have a selection of options to customize the way messages are delivered. You can customize the way messages are published to the subscribers, and you can customize the way the subscribers handle the messages.
 Customizing publishing affects all messages being published to a bus, while customizing a subscription only affects that subscription.
 
-Use custom subscriptions before custom publishing, since it''s it will not change as much 
+Use custom subscriptions before custom publishing, since it it will not affect as much 
 
-### Publishing
-The default method of publishing messages to the subscribers is Parallel. The subscriber methods are invoked in parallel and are then awaited as a group. See ParallelPublisher below.
+#### Customizing the bus publisher message handler chain
+You can configure the bus using the same decorators you use to configure subscriptions.
 
-Publishing is implemented by Publishers, types deriving from BusPublisher<TMessageType>. Serpent.Common.MessageBus has implementation for a lot of common scenarios.
+Use `.Dispatch()` extension method on ´ConcurrentMessagesBusOptions<TMesageBus>` to change the dispatch message handler chain:
 
-To change publisher, change the BusPublisher property on the ConcurrentMessageBusOptions<TMessageType>, either directly or by using one of the extension methods.
-
-3 examples of how to use FireAndForgetPublisher:
-
+##### Overloads
 ```csharp
-
-	var bus = new ConcurrentMessageBus<int>(options => {
-		options.BusPublisher = new FireAndForgetPublisher<int>();
-	});
-
-	var bus = new ConcurrentMessageBus<int>(options => {
-		options.BusPublisher = FireAndForgetPublisher<int>.Default;
-	});
-
-	var bus = new ConcurrentMessageBus<int>(options => {
-		options.UseFireAndForgetPublisher();
-	});
+.Dispatch<TMessageType>(Action<MessageHandlerChainBuilder<MessageAndSubscription<TMessageType>>, Func<MessageAndSubscription<TMessageType>, Task>> setupMessageHandlerChainAction);
 ```
 
-You can also implement your own bus publishers by deriving from BusPublisher<TMessageType> and by implementing/overriding PublishAsync(IEnumerable<ISubscription<T>> subscriptions, T message).
-
-##### Bus Publishers
-The bus publishers are categorized in Publishers and Decorators. Some of the bus publishers are dectorators with a default Publisher.
-The publishers will actually call the subscribers. The decorators will modify the behaviour of a Publisher.
-
-##### BackgroundSemaphorePublisher (Decorator)
-Set the concurrency level and then messages handled will be invoked on one of the tasks, just awaiting to be activated and publish the message.
-This publisher is a Fire And Forget publisher since all messages are queued when PublishAsync is called and handled as soon as the concurrency allows it.
-
-The concurrency level decides the number of messages being processed in parallel, not the number of handlers processing a message in parallel.
-
-The difference between SemaphorePublisher and BackgroundSemaphorePublisher is that for BackgroundSemaphorePublisher, PublishAsync queues the message and the current subscribers and then returns. One of the worker tasks will publish the message as soon as possible.
-The mechanisms behind them are different. Use BackgroundSemaphorePublisher to THROTTLE the number of concurrent messages being handled. 
-
-The publisher use ParallelPublisher<T> by default for publishing messages but this can be customized through the constructor.
-
-BackgroundSemaphorePublisher is similar to using a FireAndForgetPublisher decorating a SemaphorePublisher but with different mechanisms behind it.
-
-##### FireAndForgetPublisher (Dectorator)
-Makes PublishAsync return without allowing the caller to decide if all handlers have been called.
-
-The publisher use ParallelPublisher<T> by default for publishing messages but this can be customized through the constructor.
-
+The message in the dispatch message handler chain is of type `MessageAndSubscription<TMessageType>`:
 ```csharp
+public struct MessageAndSubscription<TMessageType>
+{
+    public MessageAndSubscription(TMessageType message, ISubscription<TMessageType> subscription)
+    {
+        this.Message = message;
+        this.Subscription = subscription;
+    }
 
-	// Instantiate a new FireAndForgetPublisher
-	var bus = new ConcurrentMessageBus<int>(options => {
-		options.BusPublisher = new FireAndForgetPublisher<int>();
-	});
+    public TMessageType Message { get; }
 
-	// Using the default FireAndForgetPublisher
-	var bus = new ConcurrentMessageBus<int>(options => {
-		options.BusPublisher = FireAndForgetPublisher<int>.Default;
-	});
+    public ISubscription<TMessageType> Subscription { get; }
+}
+```
+* `Message` is the message being dispatched.
+* `Subscription` is the subscription message handler chain.
 
-	// Using the options extension method
-	var bus = new ConcurrentMessageBus<int>(options => {
-		options.UseFireAndForgetPublisher();
-	});
+Make sure you call the handler method at the end of the MHC chain or your subscribers will not be called.
 
-            // Using the options extension method to decorate ParallelPublisher with FireAndForgetPublisher
-            var bus = new ConcurrentMessageBus<int>(options =>
+##### Example
+```csharp
+var bus = new ConcurrentMessageBus<TestMessage>(
+    options => options.Dispatch(
+    // chain - the dispatch message handler chain
+    // handler - the handler 
+        (chain, handler) =>
             {
-                options.UseFireAndForgetPublisher(ParallelPublisher<int>.Default);
-            });
-
+                chain
+                    .SoftFireAndForget()
+                    .Concurrent(16)
+                    .Filter(
+                        message =>
+                            {
+                                Console.WriteLine("Before the message is invoked");
+                            },
+                        message =>
+                            {
+                                Console.WriteLine("After the message was invoked")
+                            })
+                    .Handler(handler);
+            }));
 ```
-
-##### ForcedParallelPublisher
-A message is sent to all handler functions in parallel, not awaiting each handler to finish before the next handler is invoked
-The Task returned by PublishAsync is done when all handlers Tasks are done
-
-##### FuncPublisher
-The subscribers and message are sent to a provided function. 
-
-Examples:
-```csharp
-
-	// Instantiate a new FuncPublisher to drop all messages
-	var bus = new ConcurrentMessageBus<int>(options => {
-		options.BusPublisher = new FuncPublisher<int>((subscribers, message) => Task.CompletedTask);
-	});
-
-	// Using the options extension method
-	var bus = new ConcurrentMessageBus<int>(options => {
-		options.UseFuncPublisher((subscribers, message) => Task.CompletedTask);
-	});
-
-
-	// Using the options extension method to log all messages published and then send them to the default ParallelPublisher
-	// The logger of your choice
-	ILogger log = GetLogger();
-
-	// Make a reference to prevent calling unnecessary calls to the ParallelPublisher<int>.Default property.
-    Func<IEnumerable<ISubscription<int>>, int, Task> publishAsync = ParallelPublisher<int>.Default.PublishAsync;
-
-    var bus = new ConcurrentMessageBus<int>(
-        options =>
-            {
-                options.UseFuncPublisher((subscribers, message) =>
-                    {
-                        log.LogTrace(message + " was published");
-                        return publishAsync(subscribers, message);
-                    });
-            });
-	});
-```
-
-##### LoggingPublisher
-
-##### ParallelPublisher
-A message is sent to all handler functions serially, not awaiting each handler to finish before the next handler is invoked
-This is the DEFAULT value. If all handlers are written to follow the TPL guidelines (never blocking), this is usually the best option. 
-The Task returned by PublishAsync is done when all handlers Tasks are done.
-
-##### SemaphorePublisher (Decorator)
-This concurrency level decides the number messages the bus can publish simultaneously. 
-
-The difference between SemaphorePublisher and BackgroundSemaphorePublisher is that for SemaphorePublisher, PublishAsync does not return before all subscribers have been called.
-The mechanisms behind them are different. Use SemaphorePublisher to LIMIT the number of concurrent messages being handled.
-
-The publisher use ParallelPublisher<T> by default for publishing messages but this can be customized through the constructor.
-
-##### SerialPublisher
-A message is sent to the handler functions serially, which means the first subscriber must finish handling the message before the second handler is invoked.
-The Task returned by PublishAsync is done when all handler functions Tasks are done
-
-##### SingleReceiverPublisher
-A message is sent to only a single subscriber, rotating so every subscriber get approximtely the same number of messages.
-For a bus where subscribers are added and removed frequently, messages may be sent in a higher frequency to long time subscribers.
-
-
-#### Implement your own BusPublisher
-Inhert from BusPublisher<T>, use PublishTypeType.Custom and set CustomBusPublisher to your new type.
-
-
 
 ### Strong and weak references
-
-
+Strong references to your subscriptions will keep your subscribers from being garbage collected. 
+In situations where you control the lifetime of your subscribers you can unsubscribe when your object no longer needs to handle messages. 
+In situations where you do not control the creation and disposition of the subscribers, like some MVVM frameworks, it can be beneficial to use weak references which does not prevent the subscribers from being garbage collected. When the framework's last reference to your subscriber object is removed, .NET framework will GC the object and prevent it from handling messages.
 
 ## Advanced topics
-
-
-
-
-### Subscription handler factories
-Instead of having a single(ton) instance handling all messages you can setup a subscription handler factory that instantates a new handler for each message being published to the bus
-
-
-
-### Semaphore handler by key

@@ -1,6 +1,8 @@
 ﻿namespace Serpent.Common.MessageBus
 {
     using System;
+    using System.Collections.Generic;
+    using System.Net.Mail;
     using System.Threading.Tasks;
 
     using Serpent.Common.MessageBus.Interfaces;
@@ -23,12 +25,12 @@
             var subscription = bus
                 .Subscribe()
                 .Handler(this.HandleTheMessageAsync);
-
-
         }
 
         private async Task HandleTheMessageAsync(ExampleMessage message)
         {
+            var dic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
         }
 
         private static async Task HandleTheMessageStaticAsync(ExampleMessage message)

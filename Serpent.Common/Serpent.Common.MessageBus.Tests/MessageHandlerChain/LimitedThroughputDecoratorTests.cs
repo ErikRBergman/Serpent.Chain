@@ -1,4 +1,5 @@
-﻿namespace Serpent.Common.MessageBus.Tests.SubscriptionTypes
+﻿// ReSharper disable InconsistentNaming
+namespace Serpent.Common.MessageBus.Tests.SubscriptionTypes
 {
     using System;
     using System.Threading;
@@ -10,7 +11,7 @@
     public class LimitedThroughputDecoratorTests
     {
         [TestMethod]
-        public async Task TestLimitedThroughputSubscription()
+        public async Task LimitedThroughput_Subscription_Test()
         {
             var bus = new ConcurrentMessageBus<Message1>();
 
@@ -36,6 +37,38 @@
             }
         }
 
+
+        [TestMethod]
+        public async Task LimitedThroughput_Subscription_Delay_Tests()
+        {
+            var bus = new ConcurrentMessageBus<Message1>();
+
+            var count = 0;
+
+            using (bus
+                .Subscribe()
+                .SoftFireAndForget()
+                .LimitedThroughput(10, TimeSpan.FromMilliseconds(100))
+                .Handler(
+                    async msg =>
+                        {
+                            Interlocked.Increment(ref count);
+                            await Task.Delay(100);
+                        }))
+            {
+                for (var i = 0; i < 2000; i++)
+                {
+                    await bus.PublishAsync();
+                }
+
+                await Task.Delay(150);
+
+                Assert.AreEqual(20, count);
+
+                await Task.Delay(450);
+                Assert.AreEqual(60, count);
+            }
+        }
         private class Message1
         {
             public string Status { get; set; }

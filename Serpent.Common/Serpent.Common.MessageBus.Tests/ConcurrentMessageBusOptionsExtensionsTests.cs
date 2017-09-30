@@ -74,12 +74,20 @@
             // Test having message handler decorators both in the publish dispatch and the Subscription
             var bus = new ConcurrentMessageBus<TestMessage>(
                 options => options.Dispatch(
-                        (chain, handler) =>
-                            {
-                                chain
-                                    .Filter(message => { message.Message.Log.TryAdd("Before", DateTime.Now); }, message => { message.Message.Log.TryAdd("After", DateTime.Now); })
-                                    .Handler(handler);
-                            }));
+                    (chain, handler) =>
+                        {
+                            chain
+                                .Filter(
+                                    message =>
+                                        {
+                                            message.Message.Log.TryAdd("Before", DateTime.Now);
+                                        },
+                                    message =>
+                                        {
+                                            message.Message.Log.TryAdd("After", DateTime.Now);
+                                        })
+                                .Handler(handler);
+                        }));
 
             bus.Subscribe()
                 .Handler(

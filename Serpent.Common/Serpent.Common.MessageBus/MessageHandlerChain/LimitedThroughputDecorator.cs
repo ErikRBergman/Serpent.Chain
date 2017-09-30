@@ -86,7 +86,7 @@
 
         private async Task DispatchMessageAsync(MessageAndCompletionContainer<TMessageType> message)
         {
-            await Task.Yield();
+            //await Task.Yield();
 
             try
             {
