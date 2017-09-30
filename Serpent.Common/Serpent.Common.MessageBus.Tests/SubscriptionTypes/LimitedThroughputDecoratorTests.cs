@@ -16,7 +16,11 @@
 
             var count = 0;
 
-            using (bus.Subscribe().LimitedThroughput(10, TimeSpan.FromMilliseconds(100)).Handler(msgz => { Interlocked.Increment(ref count); }))
+            using (bus
+                .Subscribe()
+                .SoftFireAndForget()
+                .LimitedThroughput(10, TimeSpan.FromMilliseconds(100))
+                .Handler(msgz => { Interlocked.Increment(ref count); }))
             {
                 for (var i = 0; i < 2000; i++)
                 {

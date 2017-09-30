@@ -31,8 +31,8 @@
                     branch => { branch.FireAndForget().Delay(TimeSpan.FromSeconds(10)).Handler(message => { Console.WriteLine("Sub branch 1"); }); },
                     branch => { branch.FireAndForget().Delay(TimeSpan.FromSeconds(20)).Handler(message => { Console.WriteLine("Sub branch 1"); }); })
                 .Retry(5, TimeSpan.FromSeconds(5))
-                .Semaphore(5)
-                .LimitedThroughput(10, TimeSpan.FromSeconds(0.1))
+                .Semaphore(1)
+                .LimitedThroughput(1, TimeSpan.FromSeconds(1))
                 .Delay(TimeSpan.FromMilliseconds(50))
                 .Select(message => new OuterMessage { Message = message, Token = CancellationToken.None })
                 .Handler(

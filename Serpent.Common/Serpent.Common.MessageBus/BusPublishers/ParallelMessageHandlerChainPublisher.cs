@@ -18,6 +18,11 @@ namespace Serpent.Common.MessageBus
             this.publisher = messageHandlerChainBuilder.Build(this.PublishAsync);
         }
 
+        public ParallelMessageHandlerChainPublisher(Func<MessageAndSubscription<TMessageType>, Task> handlerFunc)
+        {
+            this.publisher = handlerFunc;
+        }
+
         public override Task PublishAsync(IEnumerable<ISubscription<TMessageType>> subscriptions, TMessageType message)
         {
             return Task.WhenAll(subscriptions.Select(subscription => this.publisher(new MessageAndSubscription<TMessageType>(message, subscription))));

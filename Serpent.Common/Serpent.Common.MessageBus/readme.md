@@ -287,6 +287,8 @@ Here's a summary of the currently available decorators
 * `.Delay()` - Delay the execution of the message handler.
 * `.Exception()` - Handle exceptions not handled by the message handler.
 * `.Filter()` - Execute a method before and after the execution of the message handler. Can also filter messages to stop the message from being processed further.
+* `.First()` - Only let 1 message pass through. Optionally by a predicate.
+* `.FirstAsync()` - Only let 1 message pass through, based on an async predicate.
 * `.FireAndForget()` - Spawn a new Task to execute each message.
 * `.LimitedThroughput()` - Limit the throughput to X messages per period. For example, 100 messages per second. Or 10 messages per 100 ms.
 * `.LimitedThroughputFireAndForget()` - Same as `.LimitedThroughput()` but break the feedback chain.
@@ -295,6 +297,7 @@ Here's a summary of the currently available decorators
 * `.Select()` - Change message message type for the remaining message handler chain. Like LINQ `.Select()`.
 * `.Semaphore()` - Limit the number of concurrent messages being handled by this subscription.
 * `.SoftFireAndForget()` - Executes the synchronous parts of the next MHCD or Handler, synchronous but everything asynchronous is executed without feedback. 
+* `.Take()` - Only let X messages pass through
 * `.TaskScheduler()` - Have the messages despatched to a new Task on a specified Task Scheduler. For example, to have all messages handled by the UI thread.
 * `.Where()` - Filter messages based on predicate. Like LINQ `.Where()`
 
