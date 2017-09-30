@@ -7,7 +7,7 @@ namespace Serpent.Common.MessageBus
 
     using Serpent.Common.MessageBus.MessageHandlerChain;
 
-    public static class RetrySubscriptionExtensions
+    public static class RetryExtensions
     {
         /// <summary>
         /// Retry the message dispatch
@@ -18,7 +18,7 @@ namespace Serpent.Common.MessageBus
         /// <param name="retryDelay">The delay between retries.</param>
         /// <param name="exceptionFunc">Optional function called for each time the message handler throws an exception.</param>
         /// <param name="successFunc">Option function called after the messgae handler has succeeded.</param>
-        /// <returns>The subscription builder</returns>
+        /// <returns>The MHC builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Retry<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             int maxNumberOfAttempts,

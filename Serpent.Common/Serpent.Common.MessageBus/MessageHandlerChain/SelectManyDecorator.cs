@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
 
     public class SelectManyDecorator<TOldMessageType, TNewMessageType> : IMessageBusSubscriber<TNewMessageType>
@@ -24,10 +25,7 @@
             return this.outerMessageHandlerChainBuilder.Handler(async message =>
                 {
                     var messages = this.selector(message);
-                    foreach (var msg in messages)
-                    {
-                        await invocationFunc(msg);
-                    }
+                    await Task.WhenAll(messages.Select(invocationFunc)).ConfigureAwait(false);
                 });
         }
     }

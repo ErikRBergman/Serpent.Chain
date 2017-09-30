@@ -18,6 +18,14 @@ Well, I can come up with a few reasons.
 * Flexibility and out of the box functionality. When you have created your message handler, you can add quite some out-of-the-box functionality to it without modifying the message handler. Throttling, Exception handling, Retry, Duplicate message elimination, to name a few.
 * Configurability - Adding fancy functionality like `Retry()`, with one line of code. See Message chain decorators.
 
+## How to install
+If you use Visual Studio, open the NuGet client for your project and find `Serpent.Common.MessageBus`.
+
+or
+
+Open the `Package Manager Console` and type:
+`install-package Serpent.Common.MessageBus`
+
 ## Example
 
 ```csharp
@@ -82,6 +90,22 @@ var subscription = bus
 
 The `.Handler()` method returns a subscription that you can call to unsubscribe.
 
+#### `.Subscribe().SoftFireAndForget()`
+Most often, you do not want the bus to track execution of your message handlers. The most common and best way to do this is by using `.SoftFireAndForget()`.
+```csharp
+var subscription = bus
+    .Subscribe()
+    .Handler(async message =>
+        {
+            await this.SomeMethodAsync();
+            Console.WriteLine(message.Id);
+        });
+```
+
+The `.Handler()` method returns a subscription that you can call to unsubscribe.
+
+
+
 #### Subscribe and handle with IMessageHandler
 
 ```csharp
@@ -102,6 +126,7 @@ var handler = new HandlerClass();
 
 var subscription = bus
     .Subscribe()
+    .SoftFireAndForget()
     .Handler(handler);
 ```
 
@@ -111,6 +136,7 @@ The Handler-function returns an IMessageBusSubscription. To unsubscribe, you can
 ```csharp
 var subscription = bus
     .Subscribe()
+    .SoftFireAndForget()
     .Handler(async message =>
         {
             await this.SomeMethodAsync();
@@ -128,18 +154,19 @@ You can also use a SubscriptionWrapper that unsubscribes when it goes out of sco
 ```csharp
 public class HandlerClass
 {
-	private readonly SubscriptionWrapper wrapper;
+    private readonly SubscriptionWrapper wrapper;
 
-	HandlerClass(IMessageSubscriber<ExampleMessage> bus)
-	{
-		this.wrapper = bus
-			.Subscribe()
-			.Handler(async message =>
-				{
-					await this.SomeMethodAsync();
-					Console.WriteLine(message.Id);
-				})
-			.Wrapper();
+    HandlerClass(IMessageSubscriber<ExampleMessage> bus)
+    {
+        this.wrapper = bus
+            .Subscribe()
+            .SoftFireAndForget()
+            .Handler(async message =>
+                {
+                    await this.SomeMethodAsync();
+                    Console.WriteLine(message.Id);
+                })
+            .Wrapper();
 	}
 }
 ```
@@ -169,6 +196,7 @@ internal class ReadmeFactoryHandlerSetup
     {
         bus
             .Subscribe()
+            .SoftFireAndForget()
             .Factory(() => new ReadmeFactoryHandler());
     }
 }
@@ -180,11 +208,12 @@ This is how it would look using the dependency injection in ASP NET Core.
 ```csharp
         bus
             .Subscribe()
+            .SoftFireAndForget()
             .Factory(() => container.GetService<ReadmeFactoryHandler>());
 ```
 
 ### The message handler chain (MHC)
-An MHC (Message Handler Chain) is simply an execution tree where messages pass through. We can easily use this concept to add functionality that normally might require quite some time to write yourself.
+MHC (Message Handler Chain) is the execution tree where messages pass through. We can easily use this concept to add functionality that normally might require quite some time to write yourself.
 The MHC exists both on the subscriber and publisher side.
 
 When a subscription receives a message, it passes through the MHC before it reaches the `.Handler()` or `.Factory()` *MHCD (MHC Decorator)* which is the last step of the message handler chain.
@@ -211,15 +240,16 @@ var subscription = bus
 ```
 
 1. The subscription receives the message
-2. The `.Handler()` *MHCD (MHC Decorator)* calls our specified handler.
+2. The `.Handler()` calls our specified handler.
 
-Let's add some MHCD functionality to it!
+Let's add some functionality to our subscription!
 
 ```csharp
 var subscription = bus
     .Subscribe()
     // Inserted decorators
-    .NoDuplicates(message => message.Id)
+    .SoftFireAndForget()
+    .NoDuplicates(message => message.Filename)
     .Delay(TimeSpan.FromSeconds(5))
     .Retry(5, TimeSpan.FromSeconds(30))
     .Concurrent(16)
@@ -232,7 +262,7 @@ var subscription = bus
                 using (var streamReader = new StreamReader(fileStream))
                 {
                     var fileText = await streamReader.ReadToEndAsync();
-                    if (fileText == "Warning")
+                    if (fileText == "Danger! Danger! High voltage!")
                     {
                         // Do something
                     }
@@ -242,21 +272,24 @@ var subscription = bus
 ```
 Let's break down what happens here
 1. The subscription receives the message
-2. `.NoDuplicates()` stops all messages that are already being handled by the subscription
-3. `.Delay()` delay the handling of all messages by 5 seconds. In this case, to make sure the system creating the files is done writing.
-4. `.Concurrent()` use 16 parallel Tasks to execute incoming messages
-5. `.Retry()` Makes a total of 5 attempts to execute the handler. If the handler throws an exception, it will wait 30 seconds before retrying.
-6. `.LimitedThroughput()` ensures a total of 100 messages are handled per 100ms = maximum of 1000 messages/second 
-7. `.Handler()` calls our specified handler.
+2. `.SoftFireAndForget()` break the feedback chain so publishers won't wait for the message handling
+3. `.NoDuplicates()` stops/drops all messages that are already being handled by the subscription, making sure the same file is not read more than once concurrently 
+4. `.Delay()` delay the handling of all messages by 5 seconds. In this case, to make sure the "other" system creating the files is done writing before we start reading.
+5. `.Retry()` make a total of 5 attempts to read the file. If the handler throws an exception, `.Retry()` will wait 30 seconds before trying again
+6. `.Concurrent()` processes up to 16 files concurrently, queueing any excess
+7. `.LimitedThroughput()` limits throughput to maximum of 100 messages per 100ms = 1000 messages/second 
+8. `.Handler()` calls our code reading the file
+
+We added functionality to our subscription MHC by adding MHC decorators.  
 
 ### Message handler chain decorators (MHCD's)
+Message handler chain decorators (MHCD's) are functionality you can add to your MHC (subscription or bus).
 
 * The decorators are executed in the order they are specified.
 * Exceptions thrown in a message handler are propagated back in the reverse order they are specified. 
-* Exceptions and feedback do not pass `.FireAndForget()`, `.SoftFireAndForget()`, `.ConcurrentFireAndForget()`, and `.LimitedThroughputFireAndForget()`.
-* A decorator can be added more than once to further customize functionality. 
-* Some decorators break the feedback chain which prevents exceptions and awaitability to pass through. For example if you first add `.Retry()` and then `.FireAndForget()`, Retry will not be invoked if the handler throws an exception. They are usually called `.*FireAndForget`
-* The decorators can be applied both to the subscriber and publisher side.
+* Exceptions and awaitability do not pass `.FireAndForget()`, `.SoftFireAndForget()`, `.ConcurrentFireAndForget()`, and `.LimitedThroughputFireAndForget()`.
+* A decorator can be added more than once to the message chain to further customize functionality. 
+* The decorators can be applied both to your subscriptions and directly to the bus.
 
 Note! The message handler chain and it's decorators can also be used stand alone, without a bus. See examples later.
 
@@ -265,17 +298,17 @@ Using the decorators when configuring a subscription
 
     var subscription = bus
         .Subscribe()
-		.SoftFireAndForget()						// Fire and forget
-		.NoDuplicates(message => message.Id)	    // Do not allow messages with an Id matching a message already being handled
-		.Delay(TimeSpan.FromSeconds(5))			// Delay the message 5 seconds
-		.Retry(3, TimeSpan.FromSeconds(60))		// If the two attempts in the next line fail, try again 2 more times (3 attempts)
-		.Retry(2, TimeSpan.FromSeconds(5))		// If the handler fails, retry once (two attempts in total if the first fails)
-        .Handler(async message =>
-            {
-                await this.SomeMethodAsync();
-                Console.WriteLine(message.Id);
-				throw new Exception("Fail!");
-            });
+            .SoftFireAndForget()                    // Fire and forget
+            .NoDuplicates(message => message.Id)    // Do not allow messages with an Id matching a message already being handled
+            .Delay(TimeSpan.FromSeconds(5))         // Delay the message 5 seconds
+            .Retry(3, TimeSpan.FromSeconds(60))     // If the two attempts in the next line fail, try again 2 more times (3 attempts)
+            .Retry(2, TimeSpan.FromSeconds(5))      // If the handler fails, retry once (two attempts in total if the first fails)
+                .Handler(async message =>
+                    {
+                        await this.SomeMethodAsync();
+                        Console.WriteLine(message.Id);
+                        throw new Exception("Fail!");
+                    });
 ```
 
 #### Message handler chain decorators list
@@ -323,9 +356,9 @@ bus
     .SoftFireAndForget()                    // Don't let the publisher await no more
     .NoDuplicates(message => message.Id)    // Drop all messages already in the message chain based on key
     .Where(message => message.IsPolite)     // Only allow plite messages to pass through
-    .Exception(message => Console.WriteLine("All 10 attempts failed"))
+    .Exception(message => Console.WriteLine("All 10 attempts failed"))  // no exceptions will pass this point
     .Retry(2, TimeSpan.FromSeconds(60)) // If the first 5 attempts fail, wait 60 seconds and try 5 more times
-    .Exception(message => Console.WriteLine("First 5 attempts failed. Retrying in 50 seconds"))
+    .Exception(message => { Console.WriteLine("First 5 attempts failed. Retrying in 50 seconds"; return true; })) // true is to have the exception to continue up the chain
     .Retry(5, TimeSpan.FromSeconds(10)) // Try 5 times, with a 10 second delay between failures
     .Concurrent(16) // 16 concurrent handlers
     .Handler(message => Console.WriteLine("I handle all messages"));
@@ -341,8 +374,8 @@ bus
 ```
 
 #### `.Append()`
-Appends another message to the subscription right after the current message is handled.
-The overloads with the predicate is used to conditionally append a message. 
+Appends a message to the subscription right after the current message is handled.
+The overloads with the `predicate` parameter are used to conditionally append a message. 
 
 ##### Overloads
 ```csharp
@@ -353,8 +386,7 @@ The overloads with the predicate is used to conditionally append a message.
 ```
 `messageSelector` is the selector that returns the appended message.
 `predicate` only append the message if predicate returns true.
-`isRecursive` passes the appended message through the append mechanism, to allow recursion.
-
+`isRecursive` passes the appended message through the append mechanism, which allows recursion. 
 
 ##### Examples
 ```csharp
@@ -363,7 +395,7 @@ public class MyMessage
     public string Text { get; set; }
 }
 
-IMessageSubscriber<MyMessage> bus = GetSubscriber();
+IMessageSubscriber<MyMessage> bus = new ConcurrentMessageBus<MyMessage>();
 
 var subscription = bus
     .Subscribe()
@@ -374,14 +406,15 @@ var subscription = bus
             Console.WriteLine(message.Id);
         });
 ```
-Using append to unwrapp the inner message
+Using `.Append()` to unwrapp and handle a messages tree recursively.
 ```csharp
 public class MyMessage
 {
+    public int Id { get; set; }
     public MyMessage InnerMessage { get; set; }
 }
 
-IMessageSubscriber<MyMessage> bus = GetSubscriber();
+IMessageSubscriber<MyMessage> bus = new ConcurrentMessageBus<MyMessage>();
 
 var subscription = bus
     .Subscribe()
@@ -396,9 +429,16 @@ var subscription = bus
         });
 ```
 
+#### `.AppendMany()`
+##### Overloads
+```csharp
+.Branch(params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches);
+```
+##### Examples
+
 
 #### `.Branch()`
-This is actually not a decorator, like `.BranchOut()`, but handler that splits the message handler chain into two ore more message handler chains.
+`.Branch()` is not actually a decorator, like `.BranchOut()`, but a handler that splits the message handler chain into two ore more message handler chains.
 The branches are invoked "softly parallel", which means that if the first branch does only CPU intensive work for seconds, the other branches will not get their message delivered until the first branch is done. If the first branch awaits I/O, the next branch will start, and so on.
 The feedback chain is intact through Branch, so if one of the branches throw an exception, it is passed up the chain. If there is no FireAndForget, the publisher can await the delivery of the message to all branches.
 
@@ -419,23 +459,22 @@ bus
         branch2 => branch2
             .Handler(message => Console.WriteLine("Invoked immediately"))
     );
-
 ```
 
 #### `.BranchOut()`
-Maybe this is not the modifier you will use first, but it can come in handy. If you''re brand new to Serpent.Common.MessageBus you might want to read about the other modifiers first.
-The Branch() modifier branches the message handler to a tree. It will make your subscription act as multiple subscription branches.
-Branch() will not start a new Task for the created branch or branches unless you state it specifically.
-I think an example will make more sense :).
+`.BranchOut()` works like `.Branch()` but adds one or more parallel MHC trees to the current tree instead of splitting the current tree into one or more trees. 
 
 ##### Overloads
+```csharp
+.BranchOut(params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches);
+```
 
 ##### Examples
 ```csharp
 bus
     .Subscribe()
     .NoDuplicates(message => message.Id)
-    .Branch(
+    .BranchOut(
         branch => branch
             .SoftFireAndForget()
             .Delay(TimeSpan.FromSeconds(10))
@@ -448,12 +487,17 @@ Message 2 will be handled by the branched message handler 10 seconds after the s
 Since we don''t want the Publisher to await the delayed delivery, we stack `.SoftFireAndForget()` and `.Delay()`.
 
 #### `.Concurrent()`
-Handles up to X messages in parallel. This decorator is as much a limiting as a parallelizing. The decorator will handle X concurrent messages, queueing (FIFO) those not being handled.
-For instance, you usually get a lot higher throughput, handling multiple concurrent messages when the handlers do I/O (read/write to disk, network calls etc.).
-`.Concurrent()` will keep the feedback chain which will make the caller await until the message is handled, and exceptions thrown pass right back to the caller. 
-This makes `.Retry()` work properly both before and after `.Concurrent()`. See examples.
-If you do not need the feedback to pass through `.Concurrent()`, you can use `.ConcurrentFireAndForget()`, which is a little bit quicker.
-You usually stack `.Concurrent()` with `.SoftFireAndForget()` to prevent message publishers to wait if there are a lot of messages in the queue.
+Parallelizes the message handling to a maximum of X messages concurrently. Messages that arrive to `.Concurrent()` are queued and handled as soon as possible, in a FIFO (first in first out) manner. 
+`.Concurrent()` both parallelizes and limits parallelism to the defined level. If you use `.Concurrent(20)` to send e-mails, it will send 20 e-mails concurrently, and it will not allow sending more than 20 e-mails concurrently.
+
+Why?
+You usually get a lot higher throughput, handling multiple concurrent messages when the handlers do I/O (read/write to disk, seneding e-mails, calling web services, web apis, sending data to an Azure service bus, etc.).
+Often there is also a threshold where too much parallelism degrades performance. Sending 20 e-mails concurrently is likely much faster than 1, but sending 100 e-mails concurrently may put too much pressure on the SMTP server and can be slower than 20.
+
+`.Concurrent()` will keep the feedback chain which will allow the caller to await until the message is handled. Exceptions thrown pass right back to the caller. 
+This makes decorators like `.Retry()` work properly both before and after `.Concurrent()`. See the examples.
+
+If you do not need the feedback chain, you can use `.ConcurrentFireAndForget()`, which has slightly smaller execution footprint
 
 ##### Overloads
 ```csharp
@@ -461,6 +505,10 @@ You usually stack `.Concurrent()` with `.SoftFireAndForget()` to prevent message
 ```
 
 ##### Examples
+
+Let's say you want to send a newsletter to a 5000 of recipients. If you don't parallelize the process, it may take quite a while to send the messages. 
+
+
 ```csharp
 var subscription = bus
     .Subscribe()
