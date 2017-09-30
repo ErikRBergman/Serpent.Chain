@@ -32,6 +32,7 @@ var bus = new ConcurrentMessageBus<ExampleMessage>();
 // Add a synchronous subscriber
 var subscription = bus
         .Subscribe()
+        // .SoftFireAndForget() // De-couple the publisher from the subscriber execution chain
         // .Concurrent(16) // Up to 16 concurrent tasks will handle messges
         // .Retry(3, TimeSpan.FromSeconds(30)) // Try up to 3 times with 30 sec. delay between
         .Handler(message => Console.WriteLine(message.Id));
@@ -311,13 +312,11 @@ Here's a summary of the currently available decorators
 
 Stacking these allow you to configure in a lot of advanced functionality, for example:
 ```csharp
-
 public class Message
 {
  public string Id { get; set; }
  public bool IsPolite { get; set; }
 }
-
 
 bus
     .Subscribe()
@@ -343,31 +342,85 @@ bus
 
 #### `.Append()`
 Appends another message to the subscription right after the current message is handled.
+The overloads with the predicate is used to conditionally append a message. 
 
 ##### Overloads
 ```csharp
-.Append(Func<TMessageType, TMessageType> appendMessageFunc);
-.Append(Func<TMessageType, Task<TMessageType>> appendMessageFunc);
+.Append(Func<TMessageType, TMessageType> messageSelector);
+.Append(Func<TMessageType, TMessageType> messageSelector, Func<TMessageType, bool> predicate, bool isRecursive = false);
+.Append(Func<TMessageType, Task<TMessageType>> messageSelector);
+.Append(Func<TMessageType, Task<TMessageType>> messageSelector, Func<TMessageType, Task<bool>> predicate, bool isRecursive = false);
 ```
+`messageSelector` is the selector that returns the appended message.
+`predicate` only append the message if predicate returns true.
+`isRecursive` passes the appended message through the append mechanism, to allow recursion.
+
 
 ##### Examples
 ```csharp
+public class MyMessage
+{
+    public string Text { get; set; }
+}
 
 IMessageSubscriber<MyMessage> bus = GetSubscriber();
 
 var subscription = bus
     .Subscribe()
+    // Always append a message
     .Append(message => new MyMessage { Text = "Appended" })
     .Handler(async message =>
         {
-            await this.SomeMethodAsync();
+            Console.WriteLine(message.Id);
+        });
+```
+Using append to unwrapp the inner message
+```csharp
+public class MyMessage
+{
+    public MyMessage InnerMessage { get; set; }
+}
+
+IMessageSubscriber<MyMessage> bus = GetSubscriber();
+
+var subscription = bus
+    .Subscribe()
+    // Unwrapp the inner message, and do it recursively
+    .Append(
+        message => message.InnerMessage != null, 
+        message => message.InnerMessage,
+        true)
+    .Handler(async message =>
+        {
             Console.WriteLine(message.Id);
         });
 ```
 
-#### `.Branch()`
-This is actually not a decorator, like `.BranchOut()` but instead a handler that splits the message handler chain into two ore more message handler chains.
 
+#### `.Branch()`
+This is actually not a decorator, like `.BranchOut()`, but handler that splits the message handler chain into two ore more message handler chains.
+The branches are invoked "softly parallel", which means that if the first branch does only CPU intensive work for seconds, the other branches will not get their message delivered until the first branch is done. If the first branch awaits I/O, the next branch will start, and so on.
+The feedback chain is intact through Branch, so if one of the branches throw an exception, it is passed up the chain. If there is no FireAndForget, the publisher can await the delivery of the message to all branches.
+
+##### Overloads
+```csharp
+.Branch(params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches);
+```
+
+##### Examples
+```csharp
+bus
+    .Subscribe()
+    .NoDuplicates(message => message.Id)
+    .Branch(
+        branch1 => branch1
+            .Delay(TimeSpan.FromSeconds(1))
+            .Handler(message => Console.WriteLine("Invoked 1 second after the other branch")),
+        branch2 => branch2
+            .Handler(message => Console.WriteLine("Invoked immediately"))
+    );
+
+```
 
 #### `.BranchOut()`
 Maybe this is not the modifier you will use first, but it can come in handy. If you''re brand new to Serpent.Common.MessageBus you might want to read about the other modifiers first.
@@ -375,6 +428,9 @@ The Branch() modifier branches the message handler to a tree. It will make your 
 Branch() will not start a new Task for the created branch or branches unless you state it specifically.
 I think an example will make more sense :).
 
+##### Overloads
+
+##### Examples
 ```csharp
 bus
     .Subscribe()

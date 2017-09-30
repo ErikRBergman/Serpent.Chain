@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
 
     public class BranchHandler<TMessageType> : MessageHandlerChainDecorator<TMessageType>, IMessageBusSubscriber<TMessageType>
@@ -20,12 +21,9 @@
             }
         }
 
-        public override async Task HandleMessageAsync(TMessageType message)
+        public override Task HandleMessageAsync(TMessageType message)
         {
-            foreach (var branch in this.handlers)
-            {
-                await branch(message).ConfigureAwait(false);
-            }
+            return Task.WhenAll(this.handlers.Select(h => h(message)));
         }
 
         public IMessageBusSubscription Subscribe(Func<TMessageType, Task> invocationFunc)
