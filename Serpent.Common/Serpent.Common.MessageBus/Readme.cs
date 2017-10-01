@@ -19,7 +19,7 @@
 
     internal class ReadmeHandlerSignatures
     {
-        public ReadmeHandlerSignatures(IMessageBusSubscriber<ExampleMessage> bus)
+        public ReadmeHandlerSignatures(IMessageBusSubscriptions<ExampleMessage> bus)
         {
             // Normal method handler
             var subscription = bus
@@ -47,7 +47,7 @@
         /// Branch()
         /// </summary>
         /// <param name="bus"></param>
-        public ReadmeBranch(IMessageBusSubscriber<ExampleMessage> bus)
+        public ReadmeBranch(IMessageBusSubscriptions<ExampleMessage> bus)
         {
             bus
                 .Subscribe()
@@ -75,7 +75,7 @@
 
     internal class ReadmeExceptionAndFilter
     {
-        public ReadmeExceptionAndFilter(IMessageBusSubscriber<ExampleMessage> bus)
+        public ReadmeExceptionAndFilter(IMessageBusSubscriptions<ExampleMessage> bus)
         {
             var subscription = bus
                 .Subscribe()
@@ -103,7 +103,7 @@
 
     internal class ReadmeFactoryHandlerSetup
     {
-        public void SetupSubscription(IMessageBusSubscriber<ExampleMessage> bus)
+        public void SetupSubscription(IMessageBusSubscriptions<ExampleMessage> bus)
         {
             bus
                 .Subscribe()

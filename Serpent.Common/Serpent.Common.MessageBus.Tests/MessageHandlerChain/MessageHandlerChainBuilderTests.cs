@@ -42,7 +42,7 @@
                             await Task.Delay(200);
                             message.Message.HandlerInvoked = "Sure was";
                             Interlocked.Increment(ref count);
-                        }))
+                        }).Wrapper())
             {
                 for (var i = 0; i < 1000; i++)
                 {
@@ -86,7 +86,7 @@
                         {
                             message.Steps.Add("handler");
                             message.HandlerInvoked = "yes";
-                        }))
+                        }).Wrapper())
             {
                 var msg = new Message();
                 await bus.PublishAsync(msg);

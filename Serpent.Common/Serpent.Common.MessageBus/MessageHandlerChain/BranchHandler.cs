@@ -5,7 +5,7 @@
     using System.Linq;
     using System.Threading.Tasks;
 
-    public class BranchHandler<TMessageType> : MessageHandlerChainDecorator<TMessageType>, IMessageBusSubscriber<TMessageType>
+    public class BranchHandler<TMessageType> : MessageHandlerChainDecorator<TMessageType>, IMessageBusSubscriptions<TMessageType>
     {
         private readonly List<Func<TMessageType, Task>> handlers;
 

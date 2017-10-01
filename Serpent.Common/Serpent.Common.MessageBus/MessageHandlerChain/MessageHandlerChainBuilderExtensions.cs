@@ -34,9 +34,9 @@ namespace Serpent.Common.MessageBus
             return messageHandlerChainBuilder.Handler(handler.HandleMessageAsync);
         }
 
-        public static IMessageHandlerChainBuilder<TMessageType> Subscribe<TMessageType>(this IMessageBusSubscriber<TMessageType> subscriber)
+        public static IMessageHandlerChainBuilder<TMessageType> Subscribe<TMessageType>(this IMessageBusSubscriptions<TMessageType> subscriptions)
         {
-            return new MessageHandlerChainBuilder<TMessageType>(subscriber);
+            return new MessageHandlerChainBuilder<TMessageType>(subscriptions);
         }
     }
 }

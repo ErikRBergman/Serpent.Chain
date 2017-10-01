@@ -3,7 +3,7 @@
     using System;
     using System.Threading.Tasks;
 
-    public class SelectAsyncDecorator<TOldMessageType, TNewMessageType> : IMessageBusSubscriber<TNewMessageType>
+    public class SelectAsyncDecorator<TOldMessageType, TNewMessageType> : IMessageBusSubscriptions<TNewMessageType>
     {
         private readonly IMessageHandlerChainBuilder<TOldMessageType> outerMessageHandlerChainBuilder;
 

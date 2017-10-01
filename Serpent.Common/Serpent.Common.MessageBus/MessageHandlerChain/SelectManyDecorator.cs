@@ -5,7 +5,7 @@
     using System.Linq;
     using System.Threading.Tasks;
 
-    public class SelectManyDecorator<TOldMessageType, TNewMessageType> : IMessageBusSubscriber<TNewMessageType>
+    public class SelectManyDecorator<TOldMessageType, TNewMessageType> : IMessageBusSubscriptions<TNewMessageType>
     {
         private readonly IMessageHandlerChainBuilder<TOldMessageType> outerMessageHandlerChainBuilder;
 

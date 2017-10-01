@@ -5,7 +5,7 @@
 
     using Serpent.Common.MessageBus.Helpers;
 
-    public class SelectDecorator<TOldMessageType, TNewMessageType> : IMessageBusSubscriber<TNewMessageType>
+    public class SelectDecorator<TOldMessageType, TNewMessageType> : IMessageBusSubscriptions<TNewMessageType>
     {
         private readonly IMessageHandlerChainBuilder<TOldMessageType> outerMessageHandlerChainBuilder;
 

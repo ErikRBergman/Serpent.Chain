@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    public class SelectManyAsyncDecorator<TOldMessageType, TNewMessageType> : IMessageBusSubscriber<TNewMessageType>
+    public class SelectManyAsyncDecorator<TOldMessageType, TNewMessageType> : IMessageBusSubscriptions<TNewMessageType>
     {
         private readonly IMessageHandlerChainBuilder<TOldMessageType> outerMessageHandlerChainBuilder;
 

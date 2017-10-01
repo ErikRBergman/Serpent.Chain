@@ -4,7 +4,7 @@ namespace Serpent.Common.MessageBus
     using System;
     using System.Threading.Tasks;
 
-    public class SubscriptionWrapper : IMessageBusSubscription
+    public class SubscriptionWrapper : IMessageBusSubscription, IDisposable
     {
         private IMessageBusSubscription subscription;
 
@@ -23,7 +23,7 @@ namespace Serpent.Common.MessageBus
             return new SubscriptionWrapper(messageBusSubscription);
         }
 
-        public static SubscriptionWrapper Create<T>(IMessageBusSubscriber<T> messageBus, Func<T, Task> invocationFunc, Func<T, bool> messageFilterFunc = null)
+        public static SubscriptionWrapper Create<T>(IMessageBusSubscriptions<T> messageBus, Func<T, Task> invocationFunc, Func<T, bool> messageFilterFunc = null)
         {
             IMessageBusSubscription subscription;
 
@@ -41,7 +41,7 @@ namespace Serpent.Common.MessageBus
 
         public void Unsubscribe()
         {
-            this.subscription?.Unsubscribe();
+            this.subscription?.Dispose();
             this.subscription = null;
         }
 

@@ -79,7 +79,7 @@ var subscription = bus
 ```
 Note! The message bus works internally fully with TPL, but if you do not have a need for any async operations, like I/O, you can use one of the handler extensions to make your code more readable.
 
-#### Subscribe and handle asynchronously
+#### Subscribe and handle messages asynchronously
 ```csharp
 var subscription = bus
     .Subscribe()
@@ -89,8 +89,7 @@ var subscription = bus
             Console.WriteLine(message.Id);
         });
 ```
-
-`.Handler()` returns a subscription that you call to unsubscribe.
+`.Handler()` returns an `IMessageBusSubscription` subscription that you call to unsubscribe.
 
 #### `.Subscribe().SoftFireAndForget()`
 Most often, you do not want the bus to track execution of your message handlers. The most common and best way to do this is by using `.SoftFireAndForget()`.
@@ -132,7 +131,7 @@ var subscription = bus
 ```
 
 ### Unsubscribe
-The Handler-function returns an IMessageBusSubscription. To unsubscribe, you can call Unsubscribe() or Dispose().
+The Handler-function returns an `IMessageBusSubscription` that inherits from `IDisposable`. To unsubscribe, call `IMessageBusSubscription.Dispose()`.
 
 ```csharp
 var subscription = bus
@@ -143,21 +142,16 @@ var subscription = bus
             await this.SomeMethodAsync();
             Console.WriteLine(message.Id);
         });
-
 ...
-
-subscription.Unsubscribe();
-// or
 subscription.Dispose();
 ```
-
 You can also use a SubscriptionWrapper that unsubscribes when it goes out of scope.
 ```csharp
 public class HandlerClass
 {
     private readonly SubscriptionWrapper wrapper;
 
-    HandlerClass(IMessageSubscriber<ExampleMessage> bus)
+    HandlerClass(IMessageSubscriptions<ExampleMessage> bus)
     {
         this.wrapper = bus
             .Subscribe()
@@ -173,11 +167,10 @@ public class HandlerClass
 ```
 
 ### Using a `.Factory()` to instantiate a handler for each message
-Note that this handler implements IDisposable, which is not a requirement. When using a factory to instantiate an IDisposable type, the type is automatically disposed when the message has been handled.
+Note! The handler in this example implements IDisposable, but it is not a requirement. When using a factory to instantiate an IDisposable type, the type is automatically disposed when the message has been handled.
 This approach can come in handy and simplify your code if, for example, your handler class use resources that can can only be used for a short period of time.
 
 ```csharp
-
 internal class ReadmeFactoryHandler : IMessageHandler<ExampleMessage>, IDisposable
 {
     public void Dispose()
@@ -203,14 +196,115 @@ internal class ReadmeFactoryHandlerSetup
 }
 ```
 
-You can easily have your dependency injection container produce the instance of the handler. 
-This is how it would look using the dependency injection in ASP NET Core.
+#### Using dependency injection
+You can easily have a dependency injection container produce the handle instance. 
 
+
+##### ASP.NET Core dependency injection
+Resolve a service
 ```csharp
         bus
             .Subscribe()
             .SoftFireAndForget()
             .Factory(() => container.GetService<ReadmeFactoryHandler>());
+```
+
+You can write your own extension to make the ASP.NET Core subscription code neater:
+```csharp
+public struct AspNetDependencyInjectionResolver<TMessageType>
+{
+    private readonly IMessageHandlerChainBuilder<TMessageType> builder;
+    private readonly IServiceProvider provider;
+
+    public AspNetDependencyInjectionResolver(IMessageHandlerChainBuilder<TMessageType> builder, IServiceProvider provider)
+    {
+        this.builder = builder;
+        this.provider = provider;
+    }
+
+    public IMessageBusSubscription UseService<TService>()
+        where TService : IMessageHandler<TMessageType>
+    {
+        var service = this.provider.GetService<TService>();
+        return this.builder.Handler(service.HandleMessageAsync);
+    }
+
+    public IMessageBusSubscription UseMessageHandler()
+    {
+        var service = this.provider.GetService<IMessageHandler<TMessageType>>();
+        return this.builder.Handler(service.HandleMessageAsync);
+    }
+}
+
+public static class ServiceExtensions
+{
+    public static AspNetDependencyInjectionResolver<TMessageType> ServiceFactory<TMessageType>(
+        this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+        IServiceProvider serviceProvider)
+    {
+        return new AspNetDependencyInjectionResolver<TMessageType>(messageHandlerChainBuilder, serviceProvider);
+    }
+
+    public static IMessageBusSubscriptions<TMessageType> Subscriptions<TMessageType>(
+        this IServiceProvider serviceProvider)
+    {
+        return serviceProvider.GetService<IMessageBusSubscriptions<TMessageType>>();
+    }
+}
+```
+
+Registering our services
+```csharp
+
+public void ConfigureServices(IServiceCollection services)
+{
+    // To resolve only based on service name
+    services.AddSingleton<ReadmeService>();
+
+    // To resolve based on message handler
+    services.AddSingleton<ReadmeService, IMessageHandler<ReadmeMessage>();
+}
+
+```
+Now, we can create subscriptions a little neater from for example `Startup.Configure()`.
+```csharp
+
+public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider serviceProvider) 
+{
+    if (env.IsDevelopment())
+    {
+        app.UseDeveloperExceptionPage();
+    }
+
+    // Subscribe to messages by service type
+    serviceProvider
+        .Subscriptions<ReadmeMessage>()
+            .Subscribe()
+            .SoftFireAndForget()
+            .ServiceFactory(serviceProvider)
+                .UseService<ReadmeService>();
+
+    // OR
+
+    // Subscribe to messages by message type
+    serviceProvider
+        .Subscriptions<ReadmeMessage>()
+            .Subscribe()
+            .SoftFireAndForget()
+            .ServiceFactory(serviceProvider)
+                .UseMessageHandler<ReadmeMessage>();
+
+    app.UseMvc();
+}
+
+```
+
+##### Producing a handler using Autofac
+```csharp
+        bus
+            .Subscribe()
+            .SoftFireAndForget()
+            .Factory(() => container.Resolve<ReadmeFactoryHandler>());
 ```
 
 ### The message handler chain (MHC)
@@ -311,13 +405,13 @@ Using the decorators when configuring a subscription
                         throw new Exception("Fail!");
                     });
 ```
-
 #### Message handler chain decorators list
 To customize the way your subscription is handled, you can add one or many subscription decorators. 
 
 Here's a summary of the currently available decorators. If you have requirements that these decorators does not support, you can write your own decorators (see the chapter Custom MHC Decorators). 
 
 * `.Append()` - Append a message for each message. Like LINQ `.Append()`.
+* `.AppendMany()` - Append a range of messages based on an incoming message. Supports recursive unwrapping of trees and such.
 * `.Branch()` - Split the MHC into two or more parallel trees. 
 * `.BranchOut()` - Branch the MHC tree into one or more MHC trees parallel to the normal MHC tree.
 * `.Concurrent()` - Parallelize and handle X concurrent messages.
@@ -397,7 +491,7 @@ public class MyMessage
     public string Text { get; set; }
 }
 
-IMessageSubscriber<MyMessage> bus = new ConcurrentMessageBus<MyMessage>();
+IMessageSubscriptions<MyMessage> bus = new ConcurrentMessageBus<MyMessage>();
 
 var subscription = bus
     .Subscribe()
@@ -416,7 +510,7 @@ public class MyMessage
     public MyMessage InnerMessage { get; set; }
 }
 
-IMessageSubscriber<MyMessage> bus = new ConcurrentMessageBus<MyMessage>();
+IMessageSubscriptions<MyMessage> bus = new ConcurrentMessageBus<MyMessage>();
 
 var subscription = bus
     .Subscribe()
@@ -455,7 +549,7 @@ public class MyMessage
     public IEnumerable<MyMessage> ChildMessages { get; set; }
 }
 
-IMessageSubscriber<MyMessage> bus = new ConcurrentMessageBus<MyMessage>();
+IMessageSubscriptions<MyMessage> bus = new ConcurrentMessageBus<MyMessage>();
 
 var subscription = bus
     .Subscribe()
@@ -476,7 +570,7 @@ public class MyMessage
     public IEnumerable<MyMessage> ChildMessages { get; set; }
 }
 
-IMessageSubscriber<MyMessage> bus = new ConcurrentMessageBus<MyMessage>();
+IMessageSubscriptions<MyMessage> bus = new ConcurrentMessageBus<MyMessage>();
 
 var subscription = bus
     .Subscribe()

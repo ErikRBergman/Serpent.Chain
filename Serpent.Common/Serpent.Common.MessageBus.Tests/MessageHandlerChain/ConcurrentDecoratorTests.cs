@@ -23,7 +23,7 @@
                         {
                             await Task.Delay(500);
                             Interlocked.Increment(ref counter);
-                        }))
+                        }).Wrapper())
             {
                 await Task.Delay(100);
 

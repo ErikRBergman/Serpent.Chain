@@ -11,13 +11,13 @@ namespace Serpent.Common.MessageBus
 
     public struct MessageHandlerChainBuilder<TMessageType> : IMessageHandlerChainBuilder<TMessageType>
     {
-        private readonly IMessageBusSubscriber<TMessageType> subscriber;
+        private readonly IMessageBusSubscriptions<TMessageType> subscriptions;
 
         private Stack<Func<Func<TMessageType, Task>, Func<TMessageType, Task>>> handlerSetupFuncs;
 
-        public MessageHandlerChainBuilder(IMessageBusSubscriber<TMessageType> subscriber)
+        public MessageHandlerChainBuilder(IMessageBusSubscriptions<TMessageType> subscriptions)
         {
-            this.subscriber = subscriber;
+            this.subscriptions = subscriptions;
             this.handlerSetupFuncs = new Stack<Func<Func<TMessageType, Task>, Func<TMessageType, Task>>>();
         }
 
@@ -39,7 +39,7 @@ namespace Serpent.Common.MessageBus
         {
             if (typeof(IDisposable).IsAssignableFrom(typeof(THandler)))
             {
-                return this.subscriber.Subscribe(
+                return this.subscriptions.Subscribe(
                     this.Build(
                         async message =>
                             {
@@ -55,7 +55,7 @@ namespace Serpent.Common.MessageBus
                             }));
             }
 
-            return this.subscriber.Subscribe(
+            return this.subscriptions.Subscribe(
                 this.Build(
                     message =>
                         {
@@ -66,7 +66,7 @@ namespace Serpent.Common.MessageBus
 
         public IMessageBusSubscription Handler(Func<TMessageType, Task> handlerFunc)
         {
-            return this.subscriber.Subscribe(this.Build(handlerFunc));
+            return this.subscriptions.Subscribe(this.Build(handlerFunc));
         }
 
         internal Func<TMessageType, Task> Build(Func<TMessageType, Task> handlerFunc)

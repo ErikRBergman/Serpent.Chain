@@ -5,7 +5,7 @@ namespace Serpent.Common.MessageBus.BusPublishers
 
     using Serpent.Common.MessageBus.Helpers;
 
-    internal class MessageHandlerPublishDispatch<TMessgeType> : IMessageBusSubscriber<TMessgeType>
+    internal class MessageHandlerPublishDispatch<TMessgeType> : IMessageBusSubscriptions<TMessgeType>
     {
         public Func<TMessgeType, Task> InvocationFunc { get; private set; }
 

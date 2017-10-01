@@ -27,7 +27,8 @@
                             Debug.WriteLine(DateTime.Now + $" attempt {attempt} / {maxNumberOfAttempts}");
                             attemptsCount++;
                         })
-                .Handler(message => throw new Exception(DateTime.Now.ToString(CultureInfo.CurrentCulture))))
+                .Handler(message => throw new Exception(DateTime.Now.ToString(CultureInfo.CurrentCulture)))
+                .Wrapper())
             {
                 await bus.PublishAsync();
 
