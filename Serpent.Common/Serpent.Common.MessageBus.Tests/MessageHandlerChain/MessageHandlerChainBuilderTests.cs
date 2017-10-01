@@ -1,4 +1,4 @@
-﻿namespace Serpent.Common.MessageBus.Tests.SubscriptionTypes
+﻿namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
 {
     using System;
     using System.Collections.Generic;
@@ -29,7 +29,7 @@
                 .FireAndForget()
                 .BranchOut(
                     branch => { branch.FireAndForget().Delay(TimeSpan.FromSeconds(10)).Handler(message => { Console.WriteLine("Sub branch 1"); }); },
-                    branch => { branch.FireAndForget().Delay(TimeSpan.FromSeconds(20)).Handler(message => { Console.WriteLine("Sub branch 1"); }); })
+                    branch => { branch.FireAndForget().Delay(TimeSpan.FromSeconds(20)).Handler(message => { Console.WriteLine("Sub branch 2"); }); })
                 .Retry(5, TimeSpan.FromSeconds(5))
                 .Semaphore(1)
                 .LimitedThroughput(1, TimeSpan.FromSeconds(1))

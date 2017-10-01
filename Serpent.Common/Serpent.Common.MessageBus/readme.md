@@ -29,40 +29,52 @@ Open the `Package Manager Console` and type:
 
 `install-package Serpent.Common.MessageBus`
 
-## Example
-
+To start using the bus, add
 ```csharp
+using Serpent.Common.MessageBus;
+```
+
+## Example
+```csharp
+using Serpent.Common.MessageBus;
+
 internal class ExampleMessage
 {
     public string Id { get; set; }
 }
 
-// Create a message bus
-var bus = new ConcurrentMessageBus<ExampleMessage>();
+public class Program
+{
+    public static void Main()
+    {
+        // Create a message bus
+        var bus = new ConcurrentMessageBus<ExampleMessage>();
 
-// Add a synchronous subscriber
-var subscription = bus
-        .Subscribe()
-        // .SoftFireAndForget() // De-couple the publisher from the subscriber execution chain
-        // .Concurrent(16) // Up to 16 concurrent tasks will handle messges
-        // .Retry(3, TimeSpan.FromSeconds(30)) // Try up to 3 times with 30 sec. delay between
-        .Handler(message => Console.WriteLine(message.Id));
+        // Add a synchronous subscriber
+        var subscription = bus
+                .Subscribe()
+                // .SoftFireAndForget() // De-couple the publisher from the subscriber execution chain
+                // .Concurrent(16) // Up to 16 concurrent tasks will handle messges
+                // .Retry(3, TimeSpan.FromSeconds(30)) // Try up to 3 times with 30 sec. delay between
+                .Handler(message => Console.WriteLine(message.Id));
 
-// Add an asynchronous subscriber
-var asynchronousSubscription = bus
-    .Subscribe()
-    .Handler(async message =>
-        {
-            await this.SomeMethodAsync();
-            Console.WriteLine(message.Id);
-        });
+        // Add an asynchronous subscriber
+        var asynchronousSubscription = bus
+            .Subscribe()
+            .Handler(async message =>
+                {
+                    await this.SomeMethodAsync();
+                    Console.WriteLine(message.Id);
+                });
 
-// Publish a message to the bus
-await bus.PublishAsync(
-    new ExampleMessage
-        {
-            Id = "Message 1"
-        });
+        // Publish a message to the bus
+        await bus.PublishAsync(
+            new ExampleMessage
+                {
+                    Id = "Message 1"
+                });
+        }
+    }
 ```
 
 ## Subscribing to messages
@@ -196,115 +208,86 @@ internal class ReadmeFactoryHandlerSetup
 }
 ```
 
-#### Using dependency injection
-You can easily have a dependency injection container produce the handle instance. 
+#### Using dependency injection to resolve message handlers
+You can easily have your favorite dependency injection container produce the handler instance. 
 
+##### Resolving with ASP.NET Core dependency injection
+Note! There is a passage later in this document about how to use Serpent.Common.MessageBus with ASP.NET Core.
 
-##### ASP.NET Core dependency injection
-Resolve a service
+Registering the services 
 ```csharp
-        bus
-            .Subscribe()
-            .SoftFireAndForget()
-            .Factory(() => container.GetService<ReadmeFactoryHandler>());
-```
-
-You can write your own extension to make the ASP.NET Core subscription code neater:
-```csharp
-public struct AspNetDependencyInjectionResolver<TMessageType>
-{
-    private readonly IMessageHandlerChainBuilder<TMessageType> builder;
-    private readonly IServiceProvider provider;
-
-    public AspNetDependencyInjectionResolver(IMessageHandlerChainBuilder<TMessageType> builder, IServiceProvider provider)
-    {
-        this.builder = builder;
-        this.provider = provider;
-    }
-
-    public IMessageBusSubscription UseService<TService>()
-        where TService : IMessageHandler<TMessageType>
-    {
-        var service = this.provider.GetService<TService>();
-        return this.builder.Handler(service.HandleMessageAsync);
-    }
-
-    public IMessageBusSubscription UseMessageHandler()
-    {
-        var service = this.provider.GetService<IMessageHandler<TMessageType>>();
-        return this.builder.Handler(service.HandleMessageAsync);
-    }
-}
-
-public static class ServiceExtensions
-{
-    public static AspNetDependencyInjectionResolver<TMessageType> ServiceFactory<TMessageType>(
-        this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
-        IServiceProvider serviceProvider)
-    {
-        return new AspNetDependencyInjectionResolver<TMessageType>(messageHandlerChainBuilder, serviceProvider);
-    }
-
-    public static IMessageBusSubscriptions<TMessageType> Subscriptions<TMessageType>(
-        this IServiceProvider serviceProvider)
-    {
-        return serviceProvider.GetService<IMessageBusSubscriptions<TMessageType>>();
-    }
-}
-```
-
-Registering our services
-```csharp
+using Serpent.Common.MessageBus;
+using Serpent.Common.MessageBus.Extras;
 
 public void ConfigureServices(IServiceCollection services)
 {
-    // To resolve only based on service name
+    services.AddMvc();
+
+    // Register message bus for all types
+    services.AddSingleton(typeof(IMessageBus<>), typeof(ConcurrentMessageBus<>));
+
+    // These two are required if you want to be able to resolve IMessageBusPublisher<> and IMessageBusSubscriptions
+    services.AddSingleton(typeof(IMessageBusPublisher<>), typeof(PublisherBridge<>));
+    services.AddSingleton(typeof(IMessageBusSubscriptions<>), typeof(SubscriptionsBridge<>));
+
+    // Register the ReadmeService based on service type
     services.AddSingleton<ReadmeService>();
 
-    // To resolve based on message handler
-    services.AddSingleton<ReadmeService, IMessageHandler<ReadmeMessage>();
+    // Register the service based on message handler
+    services.AddSingleton<ReadmeService, IMessageHandler<ReadmeMessage>>();
 }
-
 ```
-Now, we can create subscriptions a little neater from for example `Startup.Configure()`.
+Resolving a service
 ```csharp
-
-public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider serviceProvider) 
+public void SetupSubscriptions(IMesssageBusSubscriptions<ReadmeMessage> bus, IServiceProvider services)
 {
-    if (env.IsDevelopment())
-    {
-        app.UseDeveloperExceptionPage();
-    }
+    bus
+        .Subscribe()
+        .SoftFireAndForget()
+        .Factory(() => services.GetService<ReadmeService>());
 
-    // Subscribe to messages by service type
-    serviceProvider
-        .Subscriptions<ReadmeMessage>()
-            .Subscribe()
-            .SoftFireAndForget()
-            .ServiceFactory(serviceProvider)
-                .UseService<ReadmeService>();
+    // Using IMessageHandler<>
 
-    // OR
-
-    // Subscribe to messages by message type
-    serviceProvider
-        .Subscriptions<ReadmeMessage>()
-            .Subscribe()
-            .SoftFireAndForget()
-            .ServiceFactory(serviceProvider)
-                .UseMessageHandler<ReadmeMessage>();
-
-    app.UseMvc();
+    bus
+        .Subscribe()
+        .SoftFireAndForget()
+        .Factory(() => services.GetService<IMessageHandler<ReadmeMessage>>());
 }
-
 ```
-
-##### Producing a handler using Autofac
+##### Resolving services with Autofac
 ```csharp
-        bus
-            .Subscribe()
-            .SoftFireAndForget()
-            .Factory(() => container.Resolve<ReadmeFactoryHandler>());
+public void ConfigureServices(IRegistrationBuilder builder)
+{
+    // Register message busses for all types
+    builder
+        .RegisterGeneric(typeof(ConcurrentMessageBus<>))
+        .As(typeof(IMessageBusPublisher<>))
+        .As(typeof(IMessageBusSubscriptions<>))
+            .SingleInstance();
+
+    // Register the ReadmeService based on service type and IMessageHandler<>
+    builder
+        .RegisterType<ReadmeService>()
+            .As<ReadmeService>()
+            .As<IMessageHandler<ReadmeService>>();
+}
+```
+And to resolve
+```csharp
+public void SetupSubscriptions(IMesssageBusSubscriptions<ReadmeMessage> bus, IComponentContext services)
+{
+    bus
+        .Subscribe()
+        .SoftFireAndForget()
+        .Factory(() => services.Resolve<ReadmeService>());
+
+    // Using IMessageHandler<>
+
+    bus
+        .Subscribe()
+        .SoftFireAndForget()
+        .Factory(() => services.Resolve<IMessageHandler<ReadmeMessage>>());
+}
 ```
 
 ### The message handler chain (MHC)
@@ -312,8 +295,7 @@ MHC (Message Handler Chain) is the execution tree where messages pass through. W
 The MHC exists both on the subscriber and publisher side.
 
 When a subscription receives a message, it passes through the MHC before it reaches the `.Handler()` or `.Factory()` *MHCD (MHC Decorator)* which is the last step of the message handler chain.
-Example:
-
+Example
 ```csharp
 var subscription = bus
     .Subscribe()
@@ -1432,4 +1414,86 @@ Strong references to your subscriptions will keep your subscribers from being ga
 In situations where you control the lifetime of your subscribers you can unsubscribe when your object no longer needs to handle messages. 
 In situations where you do not control the creation and disposition of the subscribers, like some MVVM frameworks, it can be beneficial to use weak references which does not prevent the subscribers from being garbage collected. When the framework's last reference to your subscriber object is removed, .NET framework will GC the object and prevent it from handling messages.
 
-## Advanced topics
+Strong references is the default setting.
+
+To configure a message bus to use Weak references you can configure the service options in the bus constructor
+```csharp
+    var bus = new ConcurrentMessageBus<MyMessage>(options => options.UseWeakReferences());
+```
+Or you can set the options manually
+```csharp
+    var options = 
+        new ConcurrentMessageBusOptions<MyMessage>()
+         .UseWeakReferences();
+
+    var bus = new ConcurrentMessageBus<MyMessage>(options => options.UseWeakReferences());
+```
+If you use a dependency injection container to instantiate your message busses and you do not have a factory function, you can always register the options with the container.
+This example is with ASP.NET Core, `Setup.cs/ConfigureServices()` 
+```csharp
+// Register generic message bus singletons
+services.AddSingleton(typeof(IMessageBus<>), typeof(ConcurrentMessageBus<>));
+
+// These two are required if you want to be able to resolve IMessageBusPublisher<> and IMessageBusSubscriptions
+services.AddSingleton(typeof(IMessageBusPublisher<>), typeof(PublisherBridge<>));
+services.AddSingleton(typeof(IMessageBusSubscriptions<>), typeof(SubscriptionsBridge<>));
+
+// Register options for MyMessage
+services.AddSingleton(services =>   
+    new ConcurrentMessageBusOptions<MyMessage>()
+        .UseWeakReferences());
+```
+
+
+
+## Using the message handler chain without the message bus
+
+
+
+
+### ASP.NET Core
+Check out the ASP.NET Core example project
+
+```csharp
+using Serpent.Common.MessageBus;
+using Serpent.Common.MessageBus.Extras;
+
+public class Startup
+{
+    public IConfiguration Configuration { get; }
+
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddMvc();
+
+        // Register generic message bus singletons
+        services.AddSingleton(typeof(IMessageBus<>), typeof(ConcurrentMessageBus<>));
+
+        // These two are required if you want to be able to resolve IMessageBusPublisher<> and IMessageBusSubscriptions
+        services.AddSingleton(typeof(IMessageBusPublisher<>), typeof(PublisherBridge<>));
+        services.AddSingleton(typeof(IMessageBusSubscriptions<>), typeof(SubscriptionsBridge<>));
+
+        // To resolve only based on service type
+        services.AddSingleton<ReadmeService>();
+
+        // To resolve based on message handler
+        services.AddSingleton<ReadmeService, IMessageHandler<ReadmeMessage>();
+    }
+}
+
+```
+
+Resolve a service
+```csharp
+bus
+    .Subscribe()
+    .SoftFireAndForget()
+    .Factory(() => container.GetService<ReadmeService>());
+
+// Or using IMessagesHandler
+
+bus
+    .Subscribe()
+    .SoftFireAndForget()
+    .Factory(() => container.GetService<IMessageHandler<ReadmeMessage>>());
+```
