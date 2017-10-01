@@ -6,33 +6,26 @@
 
     public class SemaphoreDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
-        private readonly Func<TMessageType, Task> handlerFunc;
+        private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 
         private readonly SemaphoreSlim semaphore;
 
-        public SemaphoreDecorator(Func<TMessageType, Task> handlerFunc, int maxNumberOfConcurrentMessages)
+        public SemaphoreDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, int maxNumberOfConcurrentMessages)
         {
             this.handlerFunc = handlerFunc;
             this.MaxNumberOfConcurrentMessages = maxNumberOfConcurrentMessages;
             this.semaphore = new SemaphoreSlim(maxNumberOfConcurrentMessages);
         }
 
-        public SemaphoreDecorator(MessageHandlerChainDecorator<TMessageType> innerSubscription, int maxNumberOfConcurrentMessages)
-        {
-            this.MaxNumberOfConcurrentMessages = maxNumberOfConcurrentMessages;
-            this.handlerFunc = innerSubscription.HandleMessageAsync;
-            this.semaphore = new SemaphoreSlim(maxNumberOfConcurrentMessages);
-        }
-
         private int MaxNumberOfConcurrentMessages { get; }
 
-        public override async Task HandleMessageAsync(TMessageType message)
+        public override async Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
-            await this.semaphore.WaitAsync().ConfigureAwait(false);
+            await this.semaphore.WaitAsync(token).ConfigureAwait(false);
 
             try
             {
-                await this.handlerFunc(message).ConfigureAwait(false);
+                await this.handlerFunc(message, token).ConfigureAwait(false);
             }
             finally
             {

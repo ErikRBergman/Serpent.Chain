@@ -5,8 +5,6 @@ namespace Serpent.Common.MessageBus
     using System;
     using System.Threading.Tasks;
 
-    using Serpent.Common.MessageBus.MessageHandlerChain;
-
     internal static class XTodoExtensions
     {
         //// Other types
@@ -18,7 +16,6 @@ namespace Serpent.Common.MessageBus
         ////  OfType - Only messages of a specified type
 
         ////  Repeat - Repeat a message X times (maybe after a TimeSpan)
-        ////  SkipWhile - Cool
 
         //// LINQ low prio
 
@@ -37,6 +34,7 @@ namespace Serpent.Common.MessageBus
         ////  Select - Done
         ////  SelectMany - Interesting bus.Subscribe().SelectMany(message => message.InnerMessages).SoftFireAndForget().Concurrent(16)...
         ////  Skip - Skip the first X messages (based on predicate or not)
+        ////  SkipWhile - Cool
         ////  Take - First X messages
         ////  TakeWhile - Subscribe while the predicate is fullilled
         ////  Where - Done
@@ -91,11 +89,11 @@ namespace Serpent.Common.MessageBus
 
             return messageHandlerChainBuilder.Add(innerMessageHandler =>
                 {
-                    return async message =>
+                    return async (message, token) =>
                         {
                             if (await asyncPredicate(message).ConfigureAwait(false))
                             {
-                                await innerMessageHandler(message).ConfigureAwait(false);
+                                await innerMessageHandler(message, token).ConfigureAwait(false);
                             }
                         };
                 });
@@ -110,16 +108,15 @@ namespace Serpent.Common.MessageBus
                 return messageHandlerChainBuilder;
             }
 
-            return messageHandlerChainBuilder.Add(innerMessageHandler => message =>
+            return messageHandlerChainBuilder.Add(innerMessageHandler => (message, token) =>
                 {
                     if (predicate(message))
                     {
-                        return innerMessageHandler(message);
+                        return innerMessageHandler(message, token);
                     }
 
                     return Task.CompletedTask;
                 });
         }
-
     }
 }

@@ -3,19 +3,18 @@
 namespace Serpent.Common.MessageBus
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using Serpent.Common.MessageBus.BusPublishers;
     using Serpent.Common.MessageBus.Exceptions;
-    using Serpent.Common.MessageBus.Helpers;
-    using Serpent.Common.MessageBus.Interfaces;
     using Serpent.Common.MessageBus.Models;
 
     public static class ParallelMessageHandlerChainPublisherExtensions
     {
         public static ConcurrentMessageBusOptions<TMessageType> Dispatch<TMessageType>(
             this ConcurrentMessageBusOptions<TMessageType> options,
-            Action<MessageHandlerChainBuilder<MessageAndSubscription<TMessageType>>, Func<MessageAndSubscription<TMessageType>, Task>> setupMessageHandlerChainAction)
+            Action<MessageHandlerChainBuilder<MessageAndSubscription<TMessageType>>, Func<MessageAndSubscription<TMessageType>, CancellationToken, Task>> setupMessageHandlerChainAction)
         {
             var dispatch = new MessageHandlerPublishDispatch<MessageAndSubscription<TMessageType>>();
 

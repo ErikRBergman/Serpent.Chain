@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using Serpent.Common.MessageBus.Helpers;
@@ -13,7 +14,7 @@
 
         private readonly ExclusiveAccess<int> currentSubscriptionId = new ExclusiveAccess<int>(0);
 
-        private readonly Func<IEnumerable<ISubscription<TMessageType>>, TMessageType, Task> publishAsyncFunc;
+        private readonly Func<IEnumerable<ISubscription<TMessageType>>, TMessageType, CancellationToken, Task> publishAsyncFunc;
 
         private readonly ConcurrentQueue<int> recycledSubscriptionIds = new ConcurrentQueue<int>();
 
@@ -47,7 +48,7 @@
             this.publishAsyncFunc = this.options.BusPublisher.PublishAsync;
         }
 
-        public ConcurrentMessageBus(ConcurrentMessageBusOptions<TMessageType> options, Func<IEnumerable<ISubscription<TMessageType>>, TMessageType, Task> publishFunction)
+        public ConcurrentMessageBus(ConcurrentMessageBusOptions<TMessageType> options, Func<IEnumerable<ISubscription<TMessageType>>, TMessageType, CancellationToken, Task> publishFunction)
         {
             this.options = options;
             this.publishAsyncFunc = publishFunction;
@@ -61,9 +62,9 @@
 
         public int SubscriberCount => this.subscriptions.Count;
 
-        public Task PublishAsync(TMessageType message) => this.publishAsyncFunc(this.subscriptionCache, message);
+        public Task PublishAsync(TMessageType message, CancellationToken token) => this.publishAsyncFunc(this.subscriptionCache, message, token);
 
-        public IMessageBusSubscription Subscribe(Func<TMessageType, Task> invocationFunc)
+        public IMessageBusSubscription Subscribe(Func<TMessageType, CancellationToken, Task> invocationFunc)
         {
             var subscription = this.CreateSubscription(invocationFunc);
 
@@ -84,7 +85,7 @@
             return new ConcurrentMessageBusSubscription(() => this.Unsubscribe(newSubscriptionId));
         }
 
-        private ISubscription<TMessageType> CreateSubscription(Func<TMessageType, Task> subscriptionHandlerFunc)
+        private ISubscription<TMessageType> CreateSubscription(Func<TMessageType, CancellationToken, Task> subscriptionHandlerFunc)
         {
             return this.options.SubscriptionReferenceType != SubscriptionReferenceTypeType.WeakReferences
                        ? new StrongReferenceSubscription(subscriptionHandlerFunc)
@@ -150,24 +151,24 @@
 
         private struct StrongReferenceSubscription : ISubscription<TMessageType>
         {
-            public StrongReferenceSubscription(Func<TMessageType, Task> subscriptionHandlerFunc)
+            public StrongReferenceSubscription(Func<TMessageType, CancellationToken, Task> subscriptionHandlerFunc)
             {
                 this.SubscriptionHandlerFunc = subscriptionHandlerFunc;
             }
 
-            public Func<TMessageType, Task> SubscriptionHandlerFunc { get; set; }
+            public Func<TMessageType, CancellationToken, Task> SubscriptionHandlerFunc { get; set; }
         }
 
         private struct WeakReferenceSubscription : ISubscription<TMessageType>
         {
-            private readonly WeakReference<Func<TMessageType, Task>> subscriptionHandlerFunc;
+            private readonly WeakReference<Func<TMessageType, CancellationToken, Task>> subscriptionHandlerFunc;
 
-            public WeakReferenceSubscription(Func<TMessageType, Task> subscriptionHandlerFunc)
+            public WeakReferenceSubscription(Func<TMessageType, CancellationToken, Task> subscriptionHandlerFunc)
             {
-                this.subscriptionHandlerFunc = new WeakReference<Func<TMessageType, Task>>(subscriptionHandlerFunc);
+                this.subscriptionHandlerFunc = new WeakReference<Func<TMessageType, CancellationToken, Task>>(subscriptionHandlerFunc);
             }
 
-            public Func<TMessageType, Task> SubscriptionHandlerFunc
+            public Func<TMessageType, CancellationToken, Task> SubscriptionHandlerFunc
             {
                 get
                 {

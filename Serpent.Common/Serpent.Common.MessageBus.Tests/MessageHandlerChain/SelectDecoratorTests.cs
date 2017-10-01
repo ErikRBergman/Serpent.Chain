@@ -1,6 +1,6 @@
 ﻿// ReSharper disable InconsistentNaming
 
-namespace Serpent.Common.MessageBus.Tests.SubscriptionTypes
+namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
 {
     using System.Threading.Tasks;
 
@@ -32,7 +32,6 @@ namespace Serpent.Common.MessageBus.Tests.SubscriptionTypes
             Assert.IsTrue(messageToPublish.Step1);
             Assert.IsTrue(messageToPublish.Step2);
             Assert.IsFalse(messageToPublish.Step3);
-
         }
 
         private class Message
@@ -42,10 +41,15 @@ namespace Serpent.Common.MessageBus.Tests.SubscriptionTypes
             public string Id { get; set; }
 
             public bool Step1 { get; set; }
+
             public bool Step2 { get; set; }
+
             public bool Step3 { get; set; }
+
             public bool Step4 { get; set; }
+
             public bool Step5 { get; set; }
+
             public bool Step6 { get; set; }
         }
 

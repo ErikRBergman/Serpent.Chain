@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public class SelectManyAsyncDecorator<TOldMessageType, TNewMessageType> : IMessageBusSubscriptions<TNewMessageType>
@@ -19,14 +20,14 @@
 
         public IMessageHandlerChainBuilder<TNewMessageType> NewMessageHandlerChainBuilder { get; }
 
-        public IMessageBusSubscription Subscribe(Func<TNewMessageType, Task> invocationFunc)
+        public IMessageBusSubscription Subscribe(Func<TNewMessageType, CancellationToken, Task> invocationFunc)
         {
-            return this.outerMessageHandlerChainBuilder.Handler(async message =>
+            return this.outerMessageHandlerChainBuilder.Handler(async (message, token) =>
                 {
                     var messages = await this.selector(message).ConfigureAwait(false);
                     foreach (var msg in messages)
                     {
-                        await invocationFunc(msg).ConfigureAwait(false);
+                        await invocationFunc(msg, token).ConfigureAwait(false);
                     }
                 });
         }

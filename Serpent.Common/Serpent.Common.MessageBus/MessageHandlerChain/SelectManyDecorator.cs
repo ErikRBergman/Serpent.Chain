@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public class SelectManyDecorator<TOldMessageType, TNewMessageType> : IMessageBusSubscriptions<TNewMessageType>
@@ -20,12 +21,12 @@
 
         public IMessageHandlerChainBuilder<TNewMessageType> NewMessageHandlerChainBuilder { get; }
 
-        public IMessageBusSubscription Subscribe(Func<TNewMessageType, Task> invocationFunc)
+        public IMessageBusSubscription Subscribe(Func<TNewMessageType, CancellationToken, Task> invocationFunc)
         {
-            return this.outerMessageHandlerChainBuilder.Handler(async message =>
+            return this.outerMessageHandlerChainBuilder.Handler((message, token) =>
                 {
                     var messages = this.selector(message);
-                    await Task.WhenAll(messages.Select(invocationFunc)).ConfigureAwait(false);
+                    return Task.WhenAll(messages.Select(msg => invocationFunc(msg, token)));
                 });
         }
     }

@@ -5,6 +5,7 @@ namespace Serpent.Common.MessageBus
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using Serpent.Common.MessageBus.Interfaces;
@@ -13,21 +14,21 @@ namespace Serpent.Common.MessageBus
     {
         private readonly IMessageBusSubscriptions<TMessageType> subscriptions;
 
-        private Stack<Func<Func<TMessageType, Task>, Func<TMessageType, Task>>> handlerSetupFuncs;
+        private Stack<Func<Func<TMessageType, CancellationToken, Task>, Func<TMessageType, CancellationToken, Task>>> handlerSetupFuncs;
 
         public MessageHandlerChainBuilder(IMessageBusSubscriptions<TMessageType> subscriptions)
         {
             this.subscriptions = subscriptions;
-            this.handlerSetupFuncs = new Stack<Func<Func<TMessageType, Task>, Func<TMessageType, Task>>>();
+            this.handlerSetupFuncs = new Stack<Func<Func<TMessageType, CancellationToken, Task>, Func<TMessageType, CancellationToken, Task>>>();
         }
 
         public int Count => this.handlerSetupFuncs?.Count ?? 0;
 
-        public IMessageHandlerChainBuilder<TMessageType> Add(Func<Func<TMessageType, Task>, Func<TMessageType, Task>> addFunc)
+        public IMessageHandlerChainBuilder<TMessageType> Add(Func<Func<TMessageType, CancellationToken, Task>, Func<TMessageType, CancellationToken, Task>> addFunc)
         {
             if (this.handlerSetupFuncs == null)
             {
-                this.handlerSetupFuncs = new Stack<Func<Func<TMessageType, Task>, Func<TMessageType, Task>>>();
+                this.handlerSetupFuncs = new Stack<Func<Func<TMessageType, CancellationToken, Task>, Func<TMessageType, CancellationToken, Task>>>();
             }
 
             this.handlerSetupFuncs.Push(addFunc);
@@ -41,12 +42,12 @@ namespace Serpent.Common.MessageBus
             {
                 return this.subscriptions.Subscribe(
                     this.Build(
-                        async message =>
+                        async (message, token) =>
                             {
                                 var handler = handlerFactory();
                                 try
                                 {
-                                    await handler.HandleMessageAsync(message);
+                                    await handler.HandleMessageAsync(message, token);
                                 }
                                 finally
                                 {
@@ -57,19 +58,19 @@ namespace Serpent.Common.MessageBus
 
             return this.subscriptions.Subscribe(
                 this.Build(
-                    message =>
+                    (message, token) =>
                         {
                             var handler = handlerFactory();
-                            return handler.HandleMessageAsync(message);
+                            return handler.HandleMessageAsync(message, token);
                         }));
         }
 
-        public IMessageBusSubscription Handler(Func<TMessageType, Task> handlerFunc)
+        public IMessageBusSubscription Handler(Func<TMessageType, CancellationToken, Task> handlerFunc)
         {
             return this.subscriptions.Subscribe(this.Build(handlerFunc));
         }
 
-        internal Func<TMessageType, Task> Build(Func<TMessageType, Task> handlerFunc)
+        internal Func<TMessageType, CancellationToken, Task> Build(Func<TMessageType, CancellationToken, Task> handlerFunc)
         {
             if (this.handlerSetupFuncs == null || this.handlerSetupFuncs.Count == 0)
             {

@@ -1,9 +1,8 @@
 ﻿namespace Serpent.Common.MessageBus.MessageHandlerChain
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
-
-    using Serpent.Common.MessageBus.Helpers;
 
     public class SelectDecorator<TOldMessageType, TNewMessageType> : IMessageBusSubscriptions<TNewMessageType>
     {
@@ -20,9 +19,9 @@
 
         public IMessageHandlerChainBuilder<TNewMessageType> NewMessageHandlerChainBuilder { get; }
 
-        public IMessageBusSubscription Subscribe(Func<TNewMessageType, Task> invocationFunc)
+        public IMessageBusSubscription Subscribe(Func<TNewMessageType, CancellationToken, Task> invocationFunc)
         {
-            return this.outerMessageHandlerChainBuilder.Handler(message => invocationFunc(this.selector(message)));
+            return this.outerMessageHandlerChainBuilder.Handler((message, token) => invocationFunc(this.selector(message), token));
         }
     }
 }

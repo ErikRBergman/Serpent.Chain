@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Concurrent;
-    using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
@@ -13,7 +12,7 @@
     {
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-        private readonly Func<TMessageType, Task> handlerFunc;
+        private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 
         private readonly int maxMessagesPerPeriod;
 
@@ -23,7 +22,7 @@
 
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(0);
 
-        public LimitedThroughputDecorator(Func<TMessageType, Task> handlerFunc, int maxMessagesPerPeriod, TimeSpan periodSpan)
+        public LimitedThroughputDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, int maxMessagesPerPeriod, TimeSpan periodSpan)
         {
             this.handlerFunc = handlerFunc;
             this.maxMessagesPerPeriod = maxMessagesPerPeriod;
@@ -32,12 +31,26 @@
             Task.Run(this.MessageHandlerWorkerAsync);
         }
 
-        public override Task HandleMessageAsync(TMessageType message)
+        public override Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
             var taskCompletionSource = new TaskCompletionSource<TMessageType>();
-            this.messages.Enqueue(new MessageAndCompletionContainer<TMessageType>(message, taskCompletionSource));
+            this.messages.Enqueue(new MessageAndCompletionContainer<TMessageType>(message, taskCompletionSource, token));
             this.semaphore.Release();
             return taskCompletionSource.Task;
+        }
+
+        private async Task DispatchMessageAsync(MessageAndCompletionContainer<TMessageType> message)
+        {
+            // await Task.Yield();
+            try
+            {
+                await this.handlerFunc(message.Message, message.CancellationToken).ConfigureAwait(false);
+                message.TaskCompletionSource.SetResult(message.Message);
+            }
+            catch (Exception exception)
+            {
+                message.TaskCompletionSource.SetException(exception);
+            }
         }
 
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1126:PrefixCallsCorrectly", Justification = "Reviewed. Suppression is OK here.")]
@@ -81,21 +94,6 @@
                     this.DispatchMessageAsync(message);
 #pragma warning restore 4014
                 }
-            }
-        }
-
-        private async Task DispatchMessageAsync(MessageAndCompletionContainer<TMessageType> message)
-        {
-            //await Task.Yield();
-
-            try
-            {
-                await this.handlerFunc(message.Message).ConfigureAwait(false);
-                message.TaskCompletionSource.SetResult(message.Message);
-            }
-            catch (Exception exception)
-            {
-                message.TaskCompletionSource.SetException(exception);
             }
         }
     }

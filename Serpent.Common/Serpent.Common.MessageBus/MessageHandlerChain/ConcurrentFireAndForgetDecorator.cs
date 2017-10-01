@@ -8,15 +8,15 @@
 
     public class ConcurrentFireAndForgetDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
-        private readonly Func<TMessageType, Task> handlerFunc;
+        private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-        private readonly ConcurrentQueue<TMessageType> messages = new ConcurrentQueue<TMessageType>();
+        private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
+
+        private readonly ConcurrentQueue<MessageAndToken> messages = new ConcurrentQueue<MessageAndToken>();
 
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(0);
 
-        private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-
-        public ConcurrentFireAndForgetDecorator(Func<TMessageType, Task> handlerFunc, int concurrencyLevel = -1)
+        public ConcurrentFireAndForgetDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, int concurrencyLevel = -1)
         {
             if (concurrencyLevel < 0)
             {
@@ -31,9 +31,9 @@
             }
         }
 
-        public override Task HandleMessageAsync(TMessageType message)
+        public override Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
-            this.messages.Enqueue(message);
+            this.messages.Enqueue(new MessageAndToken(message, token));
             this.semaphore.Release();
             return Task.CompletedTask;
         }
@@ -51,7 +51,7 @@
                 {
                     try
                     {
-                        await this.handlerFunc(message).ConfigureAwait(false);
+                        await this.handlerFunc(message.Message, message.Token).ConfigureAwait(false);
                     }
                     catch (Exception)
                     {
@@ -59,6 +59,19 @@
                     }
                 }
             }
+        }
+
+        private struct MessageAndToken
+        {
+            public MessageAndToken(TMessageType message, CancellationToken token)
+            {
+                this.Message = message;
+                this.Token = token;
+            }
+
+            public TMessageType Message { get; }
+
+            public CancellationToken Token { get; }
         }
     }
 }

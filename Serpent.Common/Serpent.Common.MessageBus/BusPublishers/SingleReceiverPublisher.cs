@@ -9,17 +9,17 @@ namespace Serpent.Common.MessageBus
 
     public class SingleReceiverPublisher<TMessageType> : BusPublisher<TMessageType>
     {
-        private readonly Func<ISubscription<TMessageType>, TMessageType, Task> handlerFunc;
+        private readonly Func<ISubscription<TMessageType>, TMessageType, CancellationToken, Task> handlerFunc;
 
         private int nextSubscriptionIndex = -1;
 
-        public SingleReceiverPublisher(Func<ISubscription<TMessageType>, TMessageType, Task> customHandlerMethod = null)
+        public SingleReceiverPublisher(Func<ISubscription<TMessageType>, TMessageType, CancellationToken, Task> customHandlerMethod = null)
         {
-            this.handlerFunc = customHandlerMethod ?? ((subscription, message) => subscription.SubscriptionHandlerFunc(message));
+            this.handlerFunc = customHandlerMethod ?? ((subscription, message, token) => subscription.SubscriptionHandlerFunc(message, token));
         }
 
         // This publisher assumes the subscriptions always come in the same order
-        public override Task PublishAsync(IEnumerable<ISubscription<TMessageType>> subscriptions, TMessageType message)
+        public override Task PublishAsync(IEnumerable<ISubscription<TMessageType>> subscriptions, TMessageType message, CancellationToken token)
         {
             while (true)
             {
@@ -30,7 +30,7 @@ namespace Serpent.Common.MessageBus
                 {
                     if (index == nextIndex)
                     {
-                        return this.handlerFunc(subscription, message);
+                        return this.handlerFunc(subscription, message, token);
                     }
 
                     index++;

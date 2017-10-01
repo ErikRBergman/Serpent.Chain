@@ -1,5 +1,6 @@
 ﻿namespace Serpent.Common.MessageBus.Extras
 {
+    using System.Threading;
     using System.Threading.Tasks;
 
     public struct PublisherBridge<T> : IMessageBusPublisher<T>
@@ -11,9 +12,9 @@
             this.bus = bus;
         }
 
-        public Task PublishAsync(T message)
+        public Task PublishAsync(T message, CancellationToken cancellationToken)
         {
-            return this.bus.PublishAsync(message);
+            return this.bus.PublishAsync(message, cancellationToken);
         }
     }
 }

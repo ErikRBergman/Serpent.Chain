@@ -1,6 +1,7 @@
 ﻿namespace Serpent.Common.MessageBus.MessageHandlerChain
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public class SelectAsyncDecorator<TOldMessageType, TNewMessageType> : IMessageBusSubscriptions<TNewMessageType>
@@ -18,11 +19,11 @@
 
         public IMessageHandlerChainBuilder<TNewMessageType> NewMessageHandlerChainBuilder { get; }
 
-        public IMessageBusSubscription Subscribe(Func<TNewMessageType, Task> invocationFunc)
+        public IMessageBusSubscription Subscribe(Func<TNewMessageType, CancellationToken, Task> invocationFunc)
         {
-            return this.outerMessageHandlerChainBuilder.Handler(async message =>
+            return this.outerMessageHandlerChainBuilder.Handler(async (message, token) =>
                 {
-                    await invocationFunc(await this.selector(message).ConfigureAwait(false)).ConfigureAwait(false);
+                    await invocationFunc(await this.selector(message).ConfigureAwait(false), token).ConfigureAwait(false);
                 });
         }
     }

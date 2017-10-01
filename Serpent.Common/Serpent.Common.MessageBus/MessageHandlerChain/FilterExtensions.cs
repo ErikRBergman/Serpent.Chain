@@ -3,6 +3,7 @@
 namespace Serpent.Common.MessageBus
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using Serpent.Common.MessageBus.MessageHandlerChain;
@@ -74,9 +75,9 @@ namespace Serpent.Common.MessageBus
 
         public static IMessageHandlerChainBuilder<TMessageType> Filter<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
-            Func<TMessageType, Func<TMessageType, Task>, Task> filterFunc)
+            Func<TMessageType, CancellationToken, Func<TMessageType, CancellationToken, Task>, Task> filterFunc)
         {
-            return messageHandlerChainBuilder.Add(innerMessageHandler => { return message => filterFunc(message, innerMessageHandler); });
+            return messageHandlerChainBuilder.Add(innerMessageHandler => { return (message, token) => filterFunc(message, token, innerMessageHandler); });
         }
     }
 }

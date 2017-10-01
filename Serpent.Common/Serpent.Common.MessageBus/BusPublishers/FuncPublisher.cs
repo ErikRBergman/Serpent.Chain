@@ -3,6 +3,7 @@ namespace Serpent.Common.MessageBus
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public class FuncPublisher<TMessageType> : BusPublisher<TMessageType>
@@ -14,7 +15,7 @@ namespace Serpent.Common.MessageBus
             this.publishFunc = publishFunc;
         }
 
-        public override Task PublishAsync(IEnumerable<ISubscription<TMessageType>> subscriptions, TMessageType message)
+        public override Task PublishAsync(IEnumerable<ISubscription<TMessageType>> subscriptions, TMessageType message, CancellationToken token)
         {
             return this.publishFunc(subscriptions, message);
         }

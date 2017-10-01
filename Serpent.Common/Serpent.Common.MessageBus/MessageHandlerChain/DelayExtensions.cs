@@ -21,15 +21,4 @@ namespace Serpent.Common.MessageBus
                 currentHandler => new DelayDecorator<TMessageType>(currentHandler, TimeSpan.FromMilliseconds(timeInMilliseconds)).HandleMessageAsync);
         }
     }
-
-
-// #define README
-#if README
-    internal interface IDelayExtensionsForReadme
-    {
-        IMessageHandlerChainBuilder<TMessageType> Delay<TMessageType>(TimeSpan timeToWait);
-
-        IMessageHandlerChainBuilder<TMessageType> Delay<TMessageType>(int timeInMilliseconds);
-    }
-#endif
 }

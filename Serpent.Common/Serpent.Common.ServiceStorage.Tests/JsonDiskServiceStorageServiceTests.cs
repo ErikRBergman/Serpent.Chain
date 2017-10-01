@@ -31,9 +31,7 @@
                 Assert.IsNotNull(storage);
 
                 storage = await serviceStorage.GetOrCreateStorageAsync(
-                              () => new Test
-                                        {
-                                        });
+                              () => new Test());
 
                 Assert.IsNotNull(storage);
 

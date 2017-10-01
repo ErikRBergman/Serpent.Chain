@@ -3,6 +3,7 @@ namespace Serpent.Common.MessageBus
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public static class ConcurrentMessageBusOptionsExtensions
@@ -75,7 +76,7 @@ namespace Serpent.Common.MessageBus
 
         public static ConcurrentMessageBusOptions<TMessageType> UseSingleReceiverPublisher<TMessageType>(
             this ConcurrentMessageBusOptions<TMessageType> options,
-            Func<ISubscription<TMessageType>, TMessageType, Task> customHandlerMethod = null)
+            Func<ISubscription<TMessageType>, TMessageType, CancellationToken, Task> customHandlerMethod = null)
         {
             return options.UseCustomPublisher(new SingleReceiverPublisher<TMessageType>(customHandlerMethod));
         }

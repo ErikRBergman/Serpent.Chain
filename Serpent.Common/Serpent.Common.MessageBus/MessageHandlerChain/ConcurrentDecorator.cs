@@ -12,13 +12,13 @@
     {
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-        private readonly Func<TMessageType, Task> handlerFunc;
+        private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 
         private readonly ConcurrentQueue<MessageAndCompletionContainer<TMessageType>> messages = new ConcurrentQueue<MessageAndCompletionContainer<TMessageType>>();
 
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(0);
 
-        public ConcurrentDecorator(Func<TMessageType, Task> handlerFunc, int concurrencyLevel = -1)
+        public ConcurrentDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, int concurrencyLevel = -1)
         {
             if (concurrencyLevel < 0)
             {
@@ -33,10 +33,10 @@
             }
         }
 
-        public override Task HandleMessageAsync(TMessageType message)
+        public override Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
             var taskCompletionSource = new TaskCompletionSource<TMessageType>();
-            this.messages.Enqueue(new MessageAndCompletionContainer<TMessageType>(message, taskCompletionSource));
+            this.messages.Enqueue(new MessageAndCompletionContainer<TMessageType>(message, taskCompletionSource, token));
             this.semaphore.Release();
             return taskCompletionSource.Task;
         }
@@ -54,7 +54,7 @@
                 {
                     try
                     {
-                        await this.handlerFunc(message.Message).ConfigureAwait(false);
+                        await this.handlerFunc(message.Message, message.CancellationToken).ConfigureAwait(false);
                         message.TaskCompletionSource.SetResult(message.Message);
                     }
                     catch (Exception exception)

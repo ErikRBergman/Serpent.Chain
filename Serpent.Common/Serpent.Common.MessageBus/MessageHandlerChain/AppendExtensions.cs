@@ -3,6 +3,7 @@
 namespace Serpent.Common.MessageBus
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public static class AppendExtensions
@@ -26,10 +27,10 @@ namespace Serpent.Common.MessageBus
             return messageHandlerChainBuilder.Add(
                 innerMessageHandler =>
                     {
-                        return async message =>
+                        return async (message, token) =>
                             {
-                                var chainedMessageTask = innerMessageHandler(message);
-                                await Task.WhenAll(chainedMessageTask, InnerMessageHandlerAsync(innerMessageHandler, messageSelector, message));
+                                var chainedMessageTask = innerMessageHandler(message, token);
+                                await Task.WhenAll(chainedMessageTask, InnerMessageHandlerAsync(innerMessageHandler, messageSelector, message, token));
                             };
                     });
         }
@@ -58,7 +59,7 @@ namespace Serpent.Common.MessageBus
             }
 
             return messageHandlerChainBuilder.Add(
-                innerMessageHandler => message => Task.WhenAll(innerMessageHandler(message), AppendIfAsync(innerMessageHandler, predicate, messageSelector, message, isRecursive)));
+                innerMessageHandler => (message, token) => Task.WhenAll(innerMessageHandler(message, token), AppendIfAsync(innerMessageHandler, predicate, messageSelector, message, token, isRecursive)));
         }
 
         /// <summary>
@@ -80,11 +81,11 @@ namespace Serpent.Common.MessageBus
             return messageHandlerChainBuilder.Add(
                 innerMessageHandler =>
                     {
-                        return async message =>
+                        return (message, token) =>
                             {
-                                var originalMessageTask = innerMessageHandler(message);
-                                var newMessageTask = innerMessageHandler(messageSelector(message));
-                                await Task.WhenAll(originalMessageTask, newMessageTask).ConfigureAwait(false);
+                                var originalMessageTask = innerMessageHandler(message, token);
+                                var newMessageTask = innerMessageHandler(messageSelector(message), token);
+                                return Task.WhenAll(originalMessageTask, newMessageTask);
                             };
                     });
         }
@@ -128,14 +129,15 @@ namespace Serpent.Common.MessageBus
             }
 
             return messageHandlerChainBuilder.Add(
-                innerMessageHandler => message => Task.WhenAll(innerMessageHandler(message), AppendIfAsync(predicate, messageSelector, innerMessageHandler, message, isRecursive)));
+                innerMessageHandler => (message, token) => Task.WhenAll(innerMessageHandler(message, token), AppendIfAsync(predicate, messageSelector, innerMessageHandler, message, token, isRecursive)));
         }
 
         private static Task AppendIfAsync<TMessageType>(
             Func<TMessageType, bool> predicate,
             Func<TMessageType, TMessageType> messageSelector,
-            Func<TMessageType, Task> innerMessageHandler,
+            Func<TMessageType, CancellationToken, Task> innerMessageHandler,
             TMessageType message,
+            CancellationToken token,
             bool isRecursive)
         {
             if (predicate(message) == false)
@@ -144,21 +146,22 @@ namespace Serpent.Common.MessageBus
             }
 
             var newMessage = messageSelector(message);
-            var newMessageTask = innerMessageHandler(newMessage);
+            var newMessageTask = innerMessageHandler(newMessage, token);
 
             if (isRecursive)
             {
-                return Task.WhenAll(newMessageTask, AppendIfAsync(predicate, messageSelector, innerMessageHandler, newMessage, true));
+                return Task.WhenAll(newMessageTask, AppendIfAsync(predicate, messageSelector, innerMessageHandler, newMessage, token, true));
             }
 
             return newMessageTask;
         }
 
         private static async Task AppendIfAsync<TMessageType>(
-            Func<TMessageType, Task> messageHandler,
+            Func<TMessageType, CancellationToken, Task> messageHandler,
             Func<TMessageType, Task<bool>> predicate,
             Func<TMessageType, Task<TMessageType>> messageSelector,
             TMessageType originalMessage,
+            CancellationToken token,
             bool isRecursive)
         {
             if (await predicate(originalMessage).ConfigureAwait(false))
@@ -166,22 +169,23 @@ namespace Serpent.Common.MessageBus
                 var newMessage = await messageSelector(originalMessage).ConfigureAwait(false);
                 if (isRecursive)
                 {
-                    await Task.WhenAll(messageHandler(newMessage), AppendIfAsync(messageHandler, predicate, messageSelector, newMessage, true));
+                    await Task.WhenAll(messageHandler(newMessage, token), AppendIfAsync(messageHandler, predicate, messageSelector, newMessage, token, true));
                 }
                 else
                 {
-                    await messageHandler(newMessage).ConfigureAwait(false);
+                    await messageHandler(newMessage, token).ConfigureAwait(false);
                 }
             }
         }
 
         private static async Task InnerMessageHandlerAsync<TMessageType>(
-            Func<TMessageType, Task> messageHandler,
+            Func<TMessageType, CancellationToken, Task> messageHandler,
             Func<TMessageType, Task<TMessageType>> messageSelector,
-            TMessageType originalMessage)
+            TMessageType originalMessage,
+            CancellationToken token)
         {
             var newMessage = await messageSelector(originalMessage).ConfigureAwait(false);
-            await messageHandler(newMessage).ConfigureAwait(false);
+            await messageHandler(newMessage, token).ConfigureAwait(false);
         }
     }
 }

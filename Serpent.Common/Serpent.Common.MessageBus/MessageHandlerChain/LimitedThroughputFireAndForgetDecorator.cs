@@ -10,7 +10,7 @@
     {
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-        private readonly Func<TMessageType, Task> handlerFunc;
+        private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 
         private readonly int maxMessagesPerPeriod;
 
@@ -20,7 +20,7 @@
 
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(0);
 
-        public LimitedThroughputFireAndForgetDecorator(Func<TMessageType, Task> handlerFunc, int maxMessagesPerPeriod, TimeSpan periodSpan)
+        public LimitedThroughputFireAndForgetDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, int maxMessagesPerPeriod, TimeSpan periodSpan)
         {
             this.handlerFunc = handlerFunc;
             this.maxMessagesPerPeriod = maxMessagesPerPeriod;
@@ -29,7 +29,7 @@
             Task.Run(this.MessageHandlerWorkerAsync);
         }
 
-        public override Task HandleMessageAsync(TMessageType message)
+        public override Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
             this.messages.Enqueue(message);
             this.semaphore.Release();
@@ -74,7 +74,7 @@
                     try
                     {
 #pragma warning disable 4014
-                        Task.Run(() => this.handlerFunc(message));
+                        Task.Run(() => this.handlerFunc(message,  token));
 #pragma warning restore 4014
                     }
                     catch (Exception)

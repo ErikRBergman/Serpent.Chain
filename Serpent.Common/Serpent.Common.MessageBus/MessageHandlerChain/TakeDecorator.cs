@@ -6,17 +6,17 @@
 
     public class TakeDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
-        private readonly Func<TMessageType, Task> handlerFunc;
+        private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 
         private int count;
 
-        public TakeDecorator(Func<TMessageType, Task> handlerFunc, int numberOfMessages)
+        public TakeDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, int numberOfMessages)
         {
             this.handlerFunc = handlerFunc;
             this.count = numberOfMessages;
         }
 
-        public override Task HandleMessageAsync(TMessageType message)
+        public override Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
             if (this.count > 0)
             {
@@ -24,7 +24,7 @@
 
                 if (ourCount >= 0)
                 {
-                    return this.handlerFunc(message);
+                    return this.handlerFunc(message, token);
                 }
             }
 

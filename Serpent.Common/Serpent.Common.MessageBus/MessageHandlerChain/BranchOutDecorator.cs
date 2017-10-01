@@ -2,16 +2,18 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public class BranchOutDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>, IMessageBusSubscriptions<TMessageType>
     {
-        private readonly List<Func<TMessageType, Task>> handlers;
+        private readonly List<Func<TMessageType, CancellationToken, Task>> handlers;
 
-        public BranchOutDecorator(Func<TMessageType, Task> handlerFunc, params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches)
+        public BranchOutDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches)
         {
             var numberOfHandlers = (branches?.Length ?? 0) + 1;
-            this.handlers = new List<Func<TMessageType, Task>>(numberOfHandlers)
+            this.handlers = new List<Func<TMessageType, CancellationToken, Task>>(numberOfHandlers)
                 {
                     handlerFunc
                 };
@@ -28,15 +30,12 @@
             }
         }
 
-        public override async Task HandleMessageAsync(TMessageType message)
+        public override Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
-            foreach (var branch in this.handlers)
-            {
-                await branch(message).ConfigureAwait(false);
-            }
+            return Task.WhenAll(this.handlers.Select(h => h(message, token)));
         }
 
-        public IMessageBusSubscription Subscribe(Func<TMessageType, Task> invocationFunc)
+        public IMessageBusSubscription Subscribe(Func<TMessageType, CancellationToken, Task> invocationFunc)
         {
             this.handlers.Add(invocationFunc);
             return null;

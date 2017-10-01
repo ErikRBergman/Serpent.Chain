@@ -5,8 +5,6 @@ namespace Serpent.Common.MessageBus
     using System;
     using System.Threading.Tasks;
 
-    using Serpent.Common.MessageBus.MessageHandlerChain;
-
     public static class WhereExtensions
     {
         public static IMessageHandlerChainBuilder<TMessageType> Where<TMessageType>(
@@ -20,11 +18,11 @@ namespace Serpent.Common.MessageBus
 
             return messageHandlerChainBuilder.Add(innerMessageHandler =>
                 {
-                    return async message =>
+                    return async (message, token) =>
                         {
                             if (await asyncPredicate(message).ConfigureAwait(false))
                             {
-                                await innerMessageHandler(message).ConfigureAwait(false);
+                                await innerMessageHandler(message, token).ConfigureAwait(false);
                             }
                         };
                 });
@@ -39,11 +37,11 @@ namespace Serpent.Common.MessageBus
                 return messageHandlerChainBuilder;
             }
 
-            return messageHandlerChainBuilder.Add(innerMessageHandler => message =>
+            return messageHandlerChainBuilder.Add(innerMessageHandler => (message, token) =>
                 {
                     if (predicate(message))
                     {
-                        return innerMessageHandler(message);
+                        return innerMessageHandler(message, token);
                     }
 
                     return Task.CompletedTask;

@@ -1,11 +1,12 @@
 ﻿namespace Serpent.Common.MessageBus.MessageHandlerChain
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public class RetryDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
-        private readonly Func<TMessageType, Task> handlerFunc;
+        private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 
         private readonly int maxNumberOfAttempts;
 
@@ -15,7 +16,7 @@
 
         private readonly Func<TMessageType, Task> successFunc;
 
-        public RetryDecorator(Func<TMessageType, Task> handlerFunc, int maxNumberOfAttempts, TimeSpan retryDelay, Func<TMessageType, Exception, int, int, Task> exceptionFunc = null, Func<TMessageType, Task> successFunc = null)
+        public RetryDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, int maxNumberOfAttempts, TimeSpan retryDelay, Func<TMessageType, Exception, int, int, Task> exceptionFunc = null, Func<TMessageType, Task> successFunc = null)
         {
             this.handlerFunc = handlerFunc;
             this.maxNumberOfAttempts = maxNumberOfAttempts;
@@ -43,7 +44,7 @@
             this.handlerFunc = innerSubscription.HandleMessageAsync;
         }
 
-        public override async Task HandleMessageAsync(TMessageType message)
+        public override async Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
             Exception lastException = null;
 
@@ -51,7 +52,7 @@
             {
                 try
                 {
-                    await this.handlerFunc(message).ConfigureAwait(false);
+                    await this.handlerFunc(message, token).ConfigureAwait(false);
 
                     if (this.successFunc != null)
                     {
@@ -73,7 +74,7 @@
                 if (i != this.maxNumberOfAttempts - 1)
                 {
                     // await and then retry
-                    await Task.Delay(this.retryDelay).ConfigureAwait(false);
+                    await Task.Delay(this.retryDelay, token).ConfigureAwait(false);
                 }
             }
 

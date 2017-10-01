@@ -9,7 +9,7 @@
 
     public class NoDuplicatesDecorator<TMessageType, TKeyType> : MessageHandlerChainDecorator<TMessageType>
     {
-        private readonly Func<TMessageType, Task> handlerFunc;
+        private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 
         private readonly ConcurrentDictionary<TKeyType, bool> keyDictionary = new ConcurrentDictionary<TKeyType, bool>();
 
@@ -17,13 +17,13 @@
 
         private int isDefaultInvoked;
 
-        public NoDuplicatesDecorator(Func<TMessageType, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector)
+        public NoDuplicatesDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector)
         {
             this.handlerFunc = handlerFunc ?? throw new ArgumentNullException(nameof(handlerFunc));
             this.keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
         }
 
-        public NoDuplicatesDecorator(Func<TMessageType, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer)
+        public NoDuplicatesDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer)
         {
             this.handlerFunc = handlerFunc ?? throw new ArgumentNullException(nameof(handlerFunc));
             this.keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
@@ -31,7 +31,7 @@
         }
 
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1126:PrefixCallsCorrectly", Justification = "Reviewed. Suppression is OK here.")]
-        public override async Task HandleMessageAsync(TMessageType message)
+        public override async Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
             var key = this.keySelector(message);
 
@@ -41,7 +41,7 @@
                 {
                     try
                     {
-                        await this.handlerFunc(message).ConfigureAwait(false);
+                        await this.handlerFunc(message, token).ConfigureAwait(false);
                     }
                     finally
                     {
@@ -56,7 +56,7 @@
             {
                 try
                 {
-                    await this.handlerFunc(message).ConfigureAwait(false);
+                    await this.handlerFunc(message, token).ConfigureAwait(false);
                 }
                 finally
                 {

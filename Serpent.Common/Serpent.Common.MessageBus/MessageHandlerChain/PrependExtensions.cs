@@ -2,6 +2,7 @@
 namespace Serpent.Common.MessageBus
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public static class PrependExtensions
@@ -25,11 +26,11 @@ namespace Serpent.Common.MessageBus
             return messageHandlerChainBuilder.Add(
                 innerMessageHandler =>
                     {
-                        return async message =>
+                        return (message, token) =>
                             {
-                                var prependMessageTask = InnerMessageHandlerAsync(innerMessageHandler, messagePrependFunc, message);
-                                var chainedMessageTask = innerMessageHandler(message);
-                                await Task.WhenAll(chainedMessageTask, prependMessageTask).ConfigureAwait(false);
+                                var prependMessageTask = InnerMessageHandlerAsync(innerMessageHandler, messagePrependFunc, message, token);
+                                var chainedMessageTask = innerMessageHandler(message, token);
+                                return Task.WhenAll(chainedMessageTask, prependMessageTask);
                             };
                     });
         }
@@ -53,22 +54,23 @@ namespace Serpent.Common.MessageBus
             return messageHandlerChainBuilder.Add(
                 innerMessageHandler =>
                     {
-                        return message =>
+                        return (message, token) =>
                             {
-                                var newMessageTask = innerMessageHandler(messageAppendFunc(message));
-                                var originalMessageTask = innerMessageHandler(message);
+                                var newMessageTask = innerMessageHandler(messageAppendFunc(message), token);
+                                var originalMessageTask = innerMessageHandler(message, token);
                                 return Task.WhenAll(originalMessageTask, newMessageTask);
                             };
                     });
         }
 
         private static async Task InnerMessageHandlerAsync<TMessageType>(
-            Func<TMessageType, Task> messageHandler,
+            Func<TMessageType, CancellationToken, Task> messageHandler,
             Func<TMessageType, Task<TMessageType>> prependMessageFunc,
-            TMessageType originalMessage)
+            TMessageType originalMessage,
+            CancellationToken token)
         {
             var newMessage = await prependMessageFunc(originalMessage).ConfigureAwait(false);
-            await messageHandler(newMessage).ConfigureAwait(false);
+            await messageHandler(newMessage, token).ConfigureAwait(false);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿namespace Serpent.Common.MessageBus.Extras
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public struct SubscriptionsBridge<TMessageType> : IMessageBusSubscriptions<TMessageType>
@@ -12,7 +13,7 @@
             this.bus = bus;
         }
 
-        public IMessageBusSubscription Subscribe(Func<TMessageType, Task> invocationFunc)
+        public IMessageBusSubscription Subscribe(Func<TMessageType, CancellationToken, Task> invocationFunc)
         {
             return this.bus.Subscribe(invocationFunc);
         }
