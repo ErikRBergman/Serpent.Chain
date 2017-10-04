@@ -3,17 +3,26 @@
 namespace Serpent.Common.MessageBus
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
 
     internal static class XTodoExtensions
     {
+
+        private static void x()
+        {
+            var x = new object[] { 1, 2, 3 };
+
+            IEnumerable<int> items = x.OfType<int>();
+        }
+
         //// Other types
         //// .Collect(int maxMessages, TimeSpan? maxTime)  / .Collect(TimeSpan time) - queue messages and release a read only collection of the messages queued when the threshold is reached
 
         //// LINQ TODO
 
         ////  Cast - Cast messages to specified type
-        ////  OfType - Only messages of a specified type
 
         ////  Repeat - Repeat a message X times (maybe after a TimeSpan)
 
@@ -30,6 +39,7 @@ namespace Serpent.Common.MessageBus
         ////  Append - Add a secondary message when a message is received
         ////  Distinct - Only a single message may only pass through once based on key selector
         ////  First - Only a single message, either by itself or based on a predicate
+        ////  OfType - Only messages of a specified type
         ////  Prepend - Insert message before the every message
         ////  Select - Done
         ////  SelectMany - Interesting bus.Subscribe().SelectMany(message => message.InnerMessages).SoftFireAndForget().Concurrent(16)...
@@ -78,45 +88,45 @@ namespace Serpent.Common.MessageBus
         ////  Union - N/A
         ////  Zip -  N /A
 
-        public static IMessageHandlerChainBuilder<TMessageType> Where<TMessageType>(
-            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
-            Func<TMessageType, Task<bool>> asyncPredicate)
-        {
-            if (asyncPredicate == null)
-            {
-                return messageHandlerChainBuilder;
-            }
+        //public static IMessageHandlerChainBuilder<TMessageType> Where<TMessageType>(
+        //    this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+        //    Func<TMessageType, Task<bool>> asyncPredicate)
+        //{
+        //    if (asyncPredicate == null)
+        //    {
+        //        return messageHandlerChainBuilder;
+        //    }
 
-            return messageHandlerChainBuilder.Add(innerMessageHandler =>
-                {
-                    return async (message, token) =>
-                        {
-                            if (await asyncPredicate(message).ConfigureAwait(false))
-                            {
-                                await innerMessageHandler(message, token).ConfigureAwait(false);
-                            }
-                        };
-                });
-        }
+        //    return messageHandlerChainBuilder.Add(innerMessageHandler =>
+        //        {
+        //            return async (message, token) =>
+        //                {
+        //                    if (await asyncPredicate(message).ConfigureAwait(false))
+        //                    {
+        //                        await innerMessageHandler(message, token).ConfigureAwait(false);
+        //                    }
+        //                };
+        //        });
+        //}
 
-        public static IMessageHandlerChainBuilder<TMessageType> Where<TMessageType>(
-            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
-            Func<TMessageType, bool> predicate)
-        {
-            if (predicate == null)
-            {
-                return messageHandlerChainBuilder;
-            }
+        //public static IMessageHandlerChainBuilder<TMessageType> Where<TMessageType>(
+        //    this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+        //    Func<TMessageType, bool> predicate)
+        //{
+        //    if (predicate == null)
+        //    {
+        //        return messageHandlerChainBuilder;
+        //    }
 
-            return messageHandlerChainBuilder.Add(innerMessageHandler => (message, token) =>
-                {
-                    if (predicate(message))
-                    {
-                        return innerMessageHandler(message, token);
-                    }
+        //    return messageHandlerChainBuilder.Add(innerMessageHandler => (message, token) =>
+        //        {
+        //            if (predicate(message))
+        //            {
+        //                return innerMessageHandler(message, token);
+        //            }
 
-                    return Task.CompletedTask;
-                });
-        }
+        //            return Task.CompletedTask;
+        //        });
+        //}
     }
 }
