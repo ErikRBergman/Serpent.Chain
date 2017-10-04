@@ -30,8 +30,14 @@ namespace Serpent.Common.MessageBus
 
         public static IMessageBusSubscription Handler<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, Func<TMessageType, Task> handlerFunc)
         {
-            return messageHandlerChainBuilder.Handler(
-                (message, token) => handlerFunc(message));
+            return messageHandlerChainBuilder.Handler((message, token) => handlerFunc(message));
+        }
+
+        public static IMessageBusSubscription Handler<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+            ISimpleMessageHandler<TMessageType> messageHandler)
+        {
+            return messageHandlerChainBuilder.Handler((message, token) => messageHandler.HandleMessageAsync(message));
         }
 
         public static IMessageBusSubscription Handler<TMessageType>(

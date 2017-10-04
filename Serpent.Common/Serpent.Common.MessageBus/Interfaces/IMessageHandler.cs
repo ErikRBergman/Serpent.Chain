@@ -3,7 +3,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public interface IMessageHandler<TMessageType>
+    public interface IMessageHandler<in TMessageType>
     {
         Task HandleMessageAsync(TMessageType message, CancellationToken cancellationToken);
     }
