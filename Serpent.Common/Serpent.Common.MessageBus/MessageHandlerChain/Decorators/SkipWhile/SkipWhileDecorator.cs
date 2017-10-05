@@ -1,4 +1,4 @@
-﻿namespace Serpent.Common.MessageBus.MessageHandlerChain
+﻿namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.SkipWhile
 {
     using System;
     using System.Threading;
