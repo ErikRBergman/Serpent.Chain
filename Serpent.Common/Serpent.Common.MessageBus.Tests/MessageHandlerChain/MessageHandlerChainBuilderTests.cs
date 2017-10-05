@@ -25,7 +25,7 @@
                 .Concurrent(16)
                 .ConcurrentFireAndForget(16)
                 .Exception((msg, e) => Console.WriteLine(e))
-                .Filter(null, null)
+                .Filter(msg => true, null)
                 .FireAndForget()
                 .BranchOut(
                     branch => { branch.FireAndForget().Delay(TimeSpan.FromSeconds(10)).Handler(message => { Console.WriteLine("Sub branch 1"); }); },

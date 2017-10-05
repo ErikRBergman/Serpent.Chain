@@ -2,6 +2,7 @@
 namespace Serpent.Common.MessageBus
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using Serpent.Common.MessageBus.MessageHandlerChain;
@@ -25,7 +26,15 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Task<bool>> asyncPredicate)
         {
+            return messageHandlerChainBuilder.Add(currentHandler => new FirstAsyncDecorator<TMessageType>(currentHandler, (message, token) => asyncPredicate(message)));
+        }
+
+        public static IMessageHandlerChainBuilder<TMessageType> First<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+            Func<TMessageType, CancellationToken, Task<bool>> asyncPredicate)
+        {
             return messageHandlerChainBuilder.Add(currentHandler => new FirstAsyncDecorator<TMessageType>(currentHandler, asyncPredicate));
         }
+
     }
 }

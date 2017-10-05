@@ -20,6 +20,20 @@ namespace Serpent.Common.MessageBus
                 return messageHandlerChainBuilder;
             }
 
+            return messageHandlerChainBuilder.Add(
+                currentHandler => new FilterDecorator<TMessageType>(currentHandler, (msg, _) => beforeInvoke?.Invoke(msg), (msg, _) => afterInvoke?.Invoke(msg)));
+        }
+
+        public static IMessageHandlerChainBuilder<TMessageType> Filter<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+            Func<TMessageType, CancellationToken, Task<bool>> beforeInvoke = null,
+            Func<TMessageType, CancellationToken, Task> afterInvoke = null)
+        {
+            if (beforeInvoke == null && afterInvoke == null)
+            {
+                return messageHandlerChainBuilder;
+            }
+
             return messageHandlerChainBuilder.Add(currentHandler => new FilterDecorator<TMessageType>(currentHandler, beforeInvoke, afterInvoke));
         }
 
@@ -36,12 +50,8 @@ namespace Serpent.Common.MessageBus
             return messageHandlerChainBuilder.Add(
                 currentHandler => new FilterDecorator<TMessageType>(
                     currentHandler,
-                    message =>
-                        {
-                            var result = beforeInvoke == null || beforeInvoke(message);
-                            return Task.FromResult(result);
-                        },
-                    message =>
+                    (message, token) => Task.FromResult(beforeInvoke?.Invoke(message) ?? true),
+                    (message, token) =>
                         {
                             afterInvoke?.Invoke(message);
                             return Task.CompletedTask;
@@ -61,12 +71,12 @@ namespace Serpent.Common.MessageBus
             return messageHandlerChainBuilder.Add(
                 currentHandler => new FilterDecorator<TMessageType>(
                     currentHandler,
-                    message =>
+                    (message, token) =>
                         {
                             beforeInvoke?.Invoke(message);
                             return Task.FromResult(true);
                         },
-                    message =>
+                    (message, token) =>
                         {
                             afterInvoke?.Invoke(message);
                             return Task.CompletedTask;

@@ -518,6 +518,9 @@ The overloads with the `predicate` parameter are used to conditionally append me
 .AppendMany(Func<TMessageType, IEnumerable<TMessageType>> messageSelector, Func<TMessageType, bool> predicate, bool isRecursive = false);
 .AppendMany(Func<TMessageType, Task<IEnumerable<TMessageType>>> messageSelector);
 .AppendMany(Func<TMessageType, Task<IEnumerable<TMessageType>>> messageSelector, Func<TMessageType, Task<bool>> predicate, bool isRecursive = false);
+.AppendMany(Func<TMessageType, CancellationToken, Task<IEnumerable<TMessageType>>> messageSelector);
+.AppendMany(Func<TMessageType, CancellationToken, Task<IEnumerable<TMessageType>>> messageSelector, Func<TMessageType, CancellationToken, Task<bool>> predicate, bool isRecursive = false);
+
 ```
 * `messageSelector` is the selector that returns the messages to append.
 * `predicate` only append the message if predicate returns true.
@@ -780,9 +783,13 @@ Only allow a message with a certain key to be handled once.
 ```csharp
 .Distinct(Func<TMessageType, TKeyType> keySelector);
 .Distinct(Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer);
+.Distinct(Func<TMessageType, Task<TKeyType>> keySelector);
+.Distinct(Func<TMessageType, Task<TKeyType>> keySelector, IEqualityComparer<TKeyType> equalityComparer);
+.Distinct(Func<TMessageType, CancellationToken, Task<TKeyType>> keySelector);
+.Distinct(Func<TMessageType, CancellationToken, Task<TKeyType>> keySelector, IEqualityComparer<TKeyType> equalityComparer);
 ```
 
-##### Example
+##### Examples
 ```csharp
 var subscription = bus
     .Subscribe()
@@ -794,6 +801,19 @@ var subscription = bus
             Console.WriteLine(message.Id);
         });
 ```
+Async with CancellationToken
+```csharp
+var subscription = bus
+    .Subscribe()
+    .Distinct(async (message, token) => GetKeyAsync(message, token))    // Only allow a message with a certain key to be delivered once
+    .SoftFireAndForget()
+    .Handler(async message =>
+        {
+            await this.SomeMethodAsyncInvoked10SecondsLaterAsync();
+            Console.WriteLine(message.Id);
+        });
+```
+
 
 #### `.Exception()`
 `Exception()` invokes a method if the message handler (or a MHC Decorator below in the chain) throws an exception. 
@@ -804,10 +824,12 @@ This decorator can for example be useful for logging exceptions or trigger somet
 
 ##### Overloads
 ```csharp
+.Exception<TMessageType>(Action<TMessageType, Exception> exceptionHandlerAction);
+.Exception<TMessageType>(Func<TMessageType, Exception, bool> exceptionHandlerFunc);
 .Exception<TMessageType>(Func<TMessageType, Exception, Task<bool>> exceptionHandlerFunc);
 .Exception<TMessageType>(Func<TMessageType, Exception, Task> exceptionHandlerFunc);
-.Exception<TMessageType>(Func<TMessageType, Exception, bool> exceptionHandlerFunc);
-.Exception<TMessageType>(Action<TMessageType, Exception> exceptionHandlerAction);
+.Exception<TMessageType>(Func<TMessageType, Exception, CancellationToken, Task<bool>> exceptionHandlerFunc);
+.Exception<TMessageType>(Func<TMessageType, Exception, CancellationToken, Task> exceptionHandlerFunc);
 ```
 
 ##### Examples
@@ -893,10 +915,12 @@ The filter function can optionally return false to drop the message, or true to 
 The last overload of `.Filter()` is an inline decorator. To keep the chain you have to call the message handler passed as the second parameter.
 ##### Overloads
 ```csharp
-.Filter(Func<TMessageType, Task<bool>> beforeInvoke = null, Func<TMessageType, Task> afterInvoke = null);
-.Filter(Func<TMessageType, bool> beforeInvoke = null, Action<TMessageType> afterInvoke = null);
 .Filter(Action<TMessageType> beforeInvoke = null, Action<TMessageType> afterInvoke = null);
+.Filter(Func<TMessageType, bool> beforeInvoke = null, Action<TMessageType> afterInvoke = null);
 .Filter(Func<TMessageType, Func<TMessageType, Task>, Task> filterFunc);
+.Filter(Func<TMessageType, Task<bool>> beforeInvoke = null, Func<TMessageType, Task> afterInvoke = null);
+.Filter(Func<TMessageType, CancellationToken, Task<bool>> beforeInvoke = null, Func<TMessageType, CancellationToken,Task> afterInvoke = null);
+.Filter(Func<TMessageType, CancellationToken, Func<TMessageType, CancellationToken, Task>, Task> filterFunc);
 ```
 ##### Examples
 ```csharp
@@ -930,6 +954,7 @@ var subscription = bus
         async message => 
         {
             Console.WriteLine("Before the message handler is invoked");
+            await SomethingAsync();
             return false; // Stop the message here
         },
         message => Console.WriteLine("The message handler succeeded as far as we know"))
@@ -939,6 +964,34 @@ var subscription = bus
             Console.WriteLine(message.Id);
         });
 ```
+Async with cancellation token
+```csharp
+var subscription = bus
+    .Subscribe()
+    .Filter(
+        async (message, token) => 
+        {
+            Console.WriteLine("Before the message handler is invoked");
+
+            token.ThrowIfCancellationRequested();
+            // or
+            if (token.IsCancellationRequested)
+            {
+                Console.WriteLine("Cancelled!");
+                return false; // Stop the message, right here
+            }
+
+            return true; 
+        },
+        message => Console.WriteLine("The message handler succeeded as far as we know"))
+    .Handler(async message =>
+        {
+            await this.SomeMethodAsync();
+            Console.WriteLine(message.Id);
+        });
+```
+
+
 
 #### `.FireAndForget()`
 NOTE! `.FireAndForget` should be avoided if possible. `.SoftFireAndForget()` is a much better alternative in most cases.
@@ -971,6 +1024,7 @@ Pass only a single message through the chain, optionally based on a predicate.
 .First();
 .First(Func<TMessageType, bool> predicate);
 .First(Func<TMessageType, Task<bool> predicate);
+.First(Func<TMessageType, CancellationToken, Task<bool> predicate);
 ```
 
 ##### Examples

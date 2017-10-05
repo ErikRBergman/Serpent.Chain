@@ -8,11 +8,11 @@
     {
         private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 
-        private readonly Func<TMessageType, Task<bool>> beforeInvoke;
+        private readonly Func<TMessageType, CancellationToken, Task<bool>> beforeInvoke;
 
-        private readonly Func<TMessageType, Task> afterInvoke;
+        private readonly Func<TMessageType, CancellationToken, Task> afterInvoke;
 
-        public FilterDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, Task<bool>> beforeInvoke = null, Func<TMessageType, Task> afterInvoke = null)
+        public FilterDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, CancellationToken, Task<bool>> beforeInvoke = null, Func<TMessageType, CancellationToken, Task> afterInvoke = null)
         {
             this.handlerFunc = handlerFunc;
             this.beforeInvoke = beforeInvoke;
@@ -25,7 +25,7 @@
 
             if (this.beforeInvoke != null)
             {
-                invoke = await this.beforeInvoke(message).ConfigureAwait(false);
+                invoke = await this.beforeInvoke(message, token).ConfigureAwait(false);
             }
 
             if (invoke)
@@ -35,7 +35,7 @@
 
             if (this.afterInvoke != null)
             {
-                await this.afterInvoke(message).ConfigureAwait(false);
+                await this.afterInvoke(message, token).ConfigureAwait(false);
             }
         }
     }
