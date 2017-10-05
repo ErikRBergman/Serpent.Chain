@@ -44,11 +44,13 @@ namespace Serpent.Common.MessageBus
             return Task.WhenAll(messages.Select(message => messageBus.PublishAsync(message, CancellationToken.None)));
         }
 
-        public static Task PublishRangeAsync<TMessageType>(this IMessageBusPublisher<TMessageType> messageBus, IEnumerable<TMessageType> messages, CancellationToken cancellationToken)
+        public static Task PublishRangeAsync<TMessageType>(
+            this IMessageBusPublisher<TMessageType> messageBus,
+            IEnumerable<TMessageType> messages,
+            CancellationToken cancellationToken)
         {
             return Task.WhenAll(messages.Select(message => messageBus.PublishAsync(message, cancellationToken)));
         }
-
 
         public static void PublishWithoutFeedback<TMessageType>(this IMessageBusPublisher<TMessageType> messageBus, TMessageType message)
         {

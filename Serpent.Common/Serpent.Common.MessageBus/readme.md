@@ -290,6 +290,22 @@ public void SetupSubscriptions(IMesssageBusSubscriptions<ReadmeMessage> bus, ICo
 }
 ```
 
+### Approaches to using a message bus
+There are a lot of approaches to using a messages bus. I've picked a few that you can use, either only one, several or all in your applications.
+
+* Event/notification
+* Workflow
+* Request/Response
+
+#### Event/notification
+You may want to subscribe to notifications to carry out operations.
+
+Example:
+
+#### Workflow
+
+#### Reqiest/response
+
 ### The message handler chain (MHC)
 MHC (Message Handler Chain) is the execution tree where messages pass through. We can easily use this concept to add functionality that normally might require quite some time to write yourself.
 The MHC exists both on the subscriber and publisher side.
