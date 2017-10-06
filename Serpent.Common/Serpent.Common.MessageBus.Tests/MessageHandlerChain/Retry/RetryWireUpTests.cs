@@ -1,6 +1,6 @@
 ﻿// ReSharper disable InconsistentNaming
 
-namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.WireUp
+namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Retry
 {
     using System;
     using System.Collections.Generic;

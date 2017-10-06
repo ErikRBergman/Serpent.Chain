@@ -5,6 +5,7 @@
 
     using Serpent.Common.MessageBus.Interfaces;
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Concurrent;
+    using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Delay;
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Retry;
 
     public class WireUpMap
@@ -16,6 +17,7 @@
             // Setup defaults
             this.AddWireUp(new RetryWireUp());
             this.AddWireUp(new ConcurrentWireUp());
+            this.AddWireUp(new DelayWireUp());
         }
 
         public static WireUpMap Default { get; } = new WireUpMap();

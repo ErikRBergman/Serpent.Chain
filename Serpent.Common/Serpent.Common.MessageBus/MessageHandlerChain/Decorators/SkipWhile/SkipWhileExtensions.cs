@@ -3,8 +3,6 @@ namespace Serpent.Common.MessageBus
 {
     using System;
     using System.Threading.Tasks;
-
-    using Serpent.Common.MessageBus.MessageHandlerChain;
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.SkipWhile;
 
     public static class SkipWhileExtensions

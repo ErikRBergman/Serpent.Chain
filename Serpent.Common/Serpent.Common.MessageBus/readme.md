@@ -1180,35 +1180,40 @@ The exception delay starts after the invokation of an `exceptionFunc` or `except
 ##### Overloads
 ```csharp
 
-// Retry the number of times before failing
+// Try up to maxNumberOfAttempts if the handler fails. Wait retryDelay between the attempts.
 .Retry<TMessageType>(
             int maxNumberOfAttempts,
             TimeSpan retryDelay);
 
+// Call an exceptionHandler for each failure and a sucess handler when an attempt succeeds
 .Retry<TMessageType>(
             int maxNumberOfAttempts,
             TimeSpan retryDelay,
             Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task> exceptionFunc = null,
             Func<TMessageType, int, int, TimeSpan, Task> successFunc = null);
 
+// Call an exceptionHandler for each failure and a sucess handler when an attempt succeeds
 .Retry<TMessageType>(
             int maxNumberOfAttempts,
             TimeSpan retryDelay,
             Func<TMessageType, Exception, int, int, TimeSpan, Task> exceptionFunc = null,
             Func<TMessageType, int, int, TimeSpan, Task> successFunc = null);
 
+// Call an exceptionHandler for each failure and a sucess handler when an attempt succeeds
 .Retry<TMessageType>(
             int maxNumberOfAttempts,
             TimeSpan retryDelay,
             Func<TMessageType, Exception, int, int, Task> exceptionFunc = null,
             Func<TMessageType, Task> successFunc = null);
 
+// Call an exceptionHandler for each failure and a sucess handler when an attempt succeeds
 .Retry<TMessageType>(
             int maxNumberOfAttempts,
             TimeSpan retryDelay,
             Action<TMessageType, Exception, int, int> exceptionAction,
             Action<TMessageType> successAction = null)
 
+// Call an exceptionHandler for each failure and a sucess handler when an attempt succeeds
 .Retry<TMessageType>(
             int maxNumberOfAttempts,
             TimeSpan retryDelay,

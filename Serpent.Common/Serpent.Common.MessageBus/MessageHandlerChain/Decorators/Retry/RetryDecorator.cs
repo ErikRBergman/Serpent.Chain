@@ -35,7 +35,7 @@
 
         public override async Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
-            Exception lastException = null;
+            Exception lastException;
 
             List<Exception> exceptions = null;
 

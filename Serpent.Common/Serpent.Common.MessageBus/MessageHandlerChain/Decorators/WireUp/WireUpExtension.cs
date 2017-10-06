@@ -1,8 +1,6 @@
 ﻿// ReSharper disable once CheckNamespace
 namespace Serpent.Common.MessageBus
 {
-    using System;
-
     using Serpent.Common.MessageBus.Interfaces;
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.WireUp;
 

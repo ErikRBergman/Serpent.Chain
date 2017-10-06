@@ -1,4 +1,4 @@
-﻿namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
+﻿namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Retry
 {
     using System;
     using System.Diagnostics;
