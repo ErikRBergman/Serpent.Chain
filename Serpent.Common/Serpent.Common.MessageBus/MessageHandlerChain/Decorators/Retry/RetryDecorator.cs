@@ -1,8 +1,11 @@
 ﻿namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Retry
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+
+    using Serpent.Common.MessageBus.Exceptions;
 
     public class RetryDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
@@ -12,11 +15,11 @@
 
         private readonly TimeSpan retryDelay;
 
-        private readonly Func<TMessageType, Exception, int, int, Task> exceptionFunc;
+        private readonly Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task> exceptionFunc;
 
-        private readonly Func<TMessageType, Task> successFunc;
+        private readonly Func<TMessageType, int, int, TimeSpan, Task> successFunc;
 
-        public RetryDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, int maxNumberOfAttempts, TimeSpan retryDelay, Func<TMessageType, Exception, int, int, Task> exceptionFunc = null, Func<TMessageType, Task> successFunc = null)
+        public RetryDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, int maxNumberOfAttempts, TimeSpan retryDelay, Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task> exceptionFunc = null, Func<TMessageType, int, int, TimeSpan, Task> successFunc = null)
         {
             this.handlerFunc = handlerFunc;
             this.maxNumberOfAttempts = maxNumberOfAttempts;
@@ -30,23 +33,11 @@
             this.successFunc = successFunc;
         }
 
-        public RetryDecorator(MessageHandlerChainDecorator<TMessageType> innerSubscription, int maxNumberOfAttempts, TimeSpan retryDelay, Func<TMessageType, Exception, int, int, Task> exceptionFunc = null, Func<TMessageType, Task> successFunc = null)
-        {
-            this.maxNumberOfAttempts = maxNumberOfAttempts;
-            if (this.maxNumberOfAttempts < 1)
-            {
-                throw new ArgumentException("Max number of attempts must be at least 1");
-            }
-
-            this.retryDelay = retryDelay;
-            this.exceptionFunc = exceptionFunc;
-            this.successFunc = successFunc;
-            this.handlerFunc = innerSubscription.HandleMessageAsync;
-        }
-
         public override async Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
             Exception lastException = null;
+
+            List<Exception> exceptions = null;
 
             for (int i = 0; i < this.maxNumberOfAttempts; i++)
             {
@@ -56,19 +47,24 @@
 
                     if (this.successFunc != null)
                     {
-                        await this.successFunc(message).ConfigureAwait(false);
+                        await this.successFunc(message, i, this.maxNumberOfAttempts, this.retryDelay).ConfigureAwait(false);
                     }
 
                     return; // success
                 }
                 catch (Exception exception)
                 {
+                    if (exceptions == null)
+                    {
+                        exceptions = new List<Exception>(this.maxNumberOfAttempts);    
+                    }
+
                     lastException = exception;
                 }
 
                 if (this.exceptionFunc != null)
                 {
-                    await this.exceptionFunc.Invoke(message, lastException, i + 1, this.maxNumberOfAttempts).ConfigureAwait(false);
+                    await this.exceptionFunc.Invoke(message, lastException, i + 1, this.maxNumberOfAttempts, this.retryDelay, token).ConfigureAwait(false);
                 }
 
                 if (i != this.maxNumberOfAttempts - 1)
@@ -78,7 +74,7 @@
                 }
             }
 
-            throw new Exception("Message handler failed " + this.maxNumberOfAttempts + " attempts.", lastException);
+            throw new RetryFailedException("Message handler failed " + this.maxNumberOfAttempts + " attempts.", this.maxNumberOfAttempts, this.retryDelay, exceptions);
         }
     }
 }

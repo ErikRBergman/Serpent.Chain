@@ -76,9 +76,14 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.WireUp
                 throw new NotImplementedException();
             }
 
-            public Task HandleRetryAsync(Message message, Exception exception, TimeSpan delay, int attemptNumber, int maxNumberOfAttemps)
+            public Task HandleRetryAsync(Message message, Exception exception, int attemptNumber, int maxNumberOfAttemps, TimeSpan delay, CancellationToken token)
             {
                 this.Attempts.Add(attemptNumber);
+                return Task.CompletedTask;
+            }
+
+            public Task MessageHandledSuccessfullyAsync(Message message, int attemptNumber, int maxNumberOfAttemps, TimeSpan delay)
+            {
                 return Task.CompletedTask;
             }
         }

@@ -14,7 +14,7 @@
             {
                 if (retryAttribute.UseWireUpRetryMethod && handler is IMessageHandlerRetry<TMessageType> retryHandler)
                 {
-                    messageHandlerChainBuilder.Retry(retryAttribute.MaxNumberOfRetries, retryAttribute.RetryDelay, (message, exception, attempt, maxNumberOfAttempts) => retryHandler.HandleRetryAsync(message, exception, retryAttribute.RetryDelay, attempt, maxNumberOfAttempts));
+                    messageHandlerChainBuilder.Retry(retryAttribute.MaxNumberOfRetries, retryAttribute.RetryDelay, retryHandler);
                 }
                 else
                 {

@@ -22,7 +22,7 @@
                 .Retry(
                     5,
                     TimeSpan.FromMilliseconds(100),
-                    (message, exception, attempt, maxNumberOfAttempts) =>
+                    (message, exception, attempt, maxNumberOfAttempts, delay, token) =>
                         {
                             Debug.WriteLine(DateTime.Now + $" attempt {attempt} / {maxNumberOfAttempts}");
                             attemptsCount++;

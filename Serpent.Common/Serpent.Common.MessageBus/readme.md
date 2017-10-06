@@ -1172,11 +1172,31 @@ Prepend currently does not support predicate and recursive. There is also no Pre
 ```
 
 #### `.Retry()`
-Allows you to configure the message handler chain to retry if the message handler fails.
-You specify the number of attempts (not retries).
+Allows you to configure the message handler chain to retry if the message handler fails (throws an exception).
+You specify the number of attempts (not retries). If all attempts fail, `Retry()` throws a `Serpent.Common.MessageBus.Exceptions.RetryFailedException` that contains the number of attempts, retry delay and a collection of all exceptions that was thrown.
+
+The exception delay starts after the invokation of an `exceptionFunc` or `exceptionAction`. You can use the exceptionFunc to wait a specific delay by setting `retryDelay` to TimeSpan.Zero and then awaiting `Task.Delay()`.
 
 ##### Overloads
 ```csharp
+
+// Retry the number of times before failing
+.Retry<TMessageType>(
+            int maxNumberOfAttempts,
+            TimeSpan retryDelay);
+
+.Retry<TMessageType>(
+            int maxNumberOfAttempts,
+            TimeSpan retryDelay,
+            Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task> exceptionFunc = null,
+            Func<TMessageType, int, int, TimeSpan, Task> successFunc = null);
+
+.Retry<TMessageType>(
+            int maxNumberOfAttempts,
+            TimeSpan retryDelay,
+            Func<TMessageType, Exception, int, int, TimeSpan, Task> exceptionFunc = null,
+            Func<TMessageType, int, int, TimeSpan, Task> successFunc = null);
+
 .Retry<TMessageType>(
             int maxNumberOfAttempts,
             TimeSpan retryDelay,
@@ -1188,11 +1208,18 @@ You specify the number of attempts (not retries).
             TimeSpan retryDelay,
             Action<TMessageType, Exception, int, int> exceptionAction,
             Action<TMessageType> successAction = null)
+
+.Retry<TMessageType>(
+            int maxNumberOfAttempts,
+            TimeSpan retryDelay,
+            IMessageHandler<TMessageType> retryHandler);
+
 ```
 * `numberOfAttemps` - The total number of attemps to make.
 * `retryDelay` - The delay between attempts
 * `exceptionFunc` / `exceptionAction` *(optional)* - The method to invoke if an exception is thrown
 * `successFunc` / `successAction` *(optional)* - The method to invoke if the handler is successful
+* `retryHandler` use a separate handler for retries
 
 ##### Examples
 ```csharp
