@@ -1,4 +1,4 @@
-﻿namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
+﻿namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Concurrent
 {
     using System.Threading;
     using System.Threading.Tasks;
