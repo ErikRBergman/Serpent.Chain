@@ -1,4 +1,4 @@
-﻿namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.WireUp
+﻿namespace Serpent.Common.MessageBus.MessageHandlerChain.WireUp
 {
     using System;
 

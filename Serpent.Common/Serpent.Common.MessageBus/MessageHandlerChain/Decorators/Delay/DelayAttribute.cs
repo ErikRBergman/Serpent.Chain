@@ -2,7 +2,8 @@
 namespace Serpent.Common.MessageBus
 {
     using System;
-    using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.WireUp;
+
+    using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
     public class DelayAttribute : WireUpAttribute
     {

@@ -1,6 +1,6 @@
 ﻿namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Concurrent
 {
-    using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.WireUp;
+    using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
     public class ConcurrentWireUp : BaseWireUp<ConcurrentAttribute>
     {

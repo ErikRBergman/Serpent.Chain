@@ -1,7 +1,7 @@
 ﻿// ReSharper disable once CheckNamespace
 namespace Serpent.Common.MessageBus
 {
-    using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.WireUp;
+    using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
     public class ConcurrentAttribute : WireUpAttribute
     {

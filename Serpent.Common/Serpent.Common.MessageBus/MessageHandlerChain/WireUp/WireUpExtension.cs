@@ -2,7 +2,7 @@
 namespace Serpent.Common.MessageBus
 {
     using Serpent.Common.MessageBus.Interfaces;
-    using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.WireUp;
+    using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
     public static class WireUpExtension
     {

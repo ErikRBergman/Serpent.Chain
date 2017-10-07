@@ -1,6 +1,6 @@
 ﻿namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Retry
 {
-    using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.WireUp;
+    using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
     public class RetryWireUp : BaseWireUp<RetryAttribute>
     {
