@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="ConcurrentMessageBusOptionsExtensionsTests.cs" />
     <Compile Include="ConcurrentMessageBusTests.cs" />
+    <Compile Include="Experiments.cs" />
     <Compile Include="MessageBusExtensionsTests.cs" />
     <Compile Include="MessageHandlerChain\AppendDecoratorTests.cs" />
     <Compile Include="MessageHandlerChain\BranchDecoratorTests.cs" />

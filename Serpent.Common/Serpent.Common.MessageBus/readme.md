@@ -1551,6 +1551,14 @@ services.AddSingleton(services =>
 ## Using the message handler chain without the message bus
 
 
+## Using the WireUp
+A few of the decorators supports wire up, which means, you decorate your handler type with their attributes. When you `WireUp()` the handler, the decorators are applied to the subscription or publisher.
+```csharp
+    
+
+```
+
+
 
 
 ### ASP.NET Core

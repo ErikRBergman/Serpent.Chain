@@ -19,7 +19,7 @@ namespace Serpent.Common.MessageBus
             this.RetryDelay = TimeSpan.Parse(retryDelayInText);
         }
 
-        public bool UseWireUpRetryMethod { get; set; } = true;
+        public bool UseIMessageHandlerRetry { get; set; } = true;
 
         public int MaxNumberOfRetries { get; }
 

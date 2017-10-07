@@ -54,7 +54,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Retry
         {
         }
 
-        [Retry(3, "00:00:00.100", UseWireUpRetryMethod = true)]
+        [Retry(3, "00:00:00.100", UseIMessageHandlerRetry = true)]
         private class NonRetryMessageHandler : IMessageHandler<Message>
         {
             public int NumberOfInvokations { get; set; }
@@ -66,7 +66,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Retry
             }
         }
 
-        [Retry(3, "00:00:00.100", UseWireUpRetryMethod = true)]
+        [Retry(3, "00:00:00.100", UseIMessageHandlerRetry = true)]
         private class RetryMessageHandler : IMessageHandler<Message>, IMessageHandlerRetry<Message>
         {
             public List<int> Attempts { get; } = new List<int>();

@@ -1,25 +1,18 @@
 ﻿namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Retry
 {
-    using System;
-
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.WireUp;
 
-    public class RetryWireUp : IWireUp
+    public class RetryWireUp : BaseWireUp<RetryAttribute>
     {
-        public Type AttributeType { get; } = typeof(RetryAttribute);
-
-        public void WireUp<TMessageType, THandlerType>(Attribute attribute, IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler)
+        public override void WireUp<TMessageType, THandlerType>(RetryAttribute retryAttribute, IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler)
         {
-            if (attribute is RetryAttribute retryAttribute)
+            if (retryAttribute.UseIMessageHandlerRetry && handler is IMessageHandlerRetry<TMessageType> retryHandler)
             {
-                if (retryAttribute.UseWireUpRetryMethod && handler is IMessageHandlerRetry<TMessageType> retryHandler)
-                {
-                    messageHandlerChainBuilder.Retry(retryAttribute.MaxNumberOfRetries, retryAttribute.RetryDelay, retryHandler);
-                }
-                else
-                {
-                    messageHandlerChainBuilder.Retry(retryAttribute.MaxNumberOfRetries, retryAttribute.RetryDelay);
-                }
+                messageHandlerChainBuilder.Retry(retryAttribute.MaxNumberOfRetries, retryAttribute.RetryDelay, retryHandler);
+            }
+            else
+            {
+                messageHandlerChainBuilder.Retry(retryAttribute.MaxNumberOfRetries, retryAttribute.RetryDelay);
             }
         }
     }

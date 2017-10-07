@@ -6,7 +6,9 @@
     using Serpent.Common.MessageBus.Interfaces;
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Concurrent;
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Delay;
+    using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.LimitedThroughput;
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Retry;
+    using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.SoftFireAndForget;
 
     public class WireUpMap
     {
@@ -18,6 +20,8 @@
             this.AddWireUp(new RetryWireUp());
             this.AddWireUp(new ConcurrentWireUp());
             this.AddWireUp(new DelayWireUp());
+            this.AddWireUp(new SoftFireAndForgetWireUp());
+            this.AddWireUp(new LimitedThroughputWireUp());
         }
 
         public static WireUpMap Default { get; } = new WireUpMap();
