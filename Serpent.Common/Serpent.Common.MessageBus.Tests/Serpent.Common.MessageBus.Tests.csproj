@@ -53,6 +53,7 @@
     <Compile Include="Experiments.cs" />
     <Compile Include="MessageBusExtensionsTests.cs" />
     <Compile Include="MessageHandlerChain\AppendDecoratorTests.cs" />
+    <Compile Include="MessageHandlerChain\Append\AppendDecoratorTests.cs" />
     <Compile Include="MessageHandlerChain\BranchDecoratorTests.cs" />
     <Compile Include="MessageHandlerChain\Concurrent\ConcurrentDecoratorTests.cs" />
     <Compile Include="MessageHandlerChain\Retry\RetryDecoratorTests.cs" />
