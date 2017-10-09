@@ -53,11 +53,12 @@
     <Compile Include="Experiments.cs" />
     <Compile Include="MessageBusExtensionsTests.cs" />
     <Compile Include="MessageHandlerChain\AppendDecoratorTests.cs" />
-    <Compile Include="MessageHandlerChain\Append\AppendDecoratorTests.cs" />
+    <Compile Include="MessageHandlerChain\Decorators\Append\AppendDecoratorTests.cs" />
     <Compile Include="MessageHandlerChain\BranchDecoratorTests.cs" />
-    <Compile Include="MessageHandlerChain\Concurrent\ConcurrentDecoratorTests.cs" />
-    <Compile Include="MessageHandlerChain\Retry\RetryDecoratorTests.cs" />
-    <Compile Include="MessageHandlerChain\Retry\RetryWireUpTests.cs" />
+    <Compile Include="MessageHandlerChain\Decorators\Concurrent\ConcurrentDecoratorTests.cs" />
+    <Compile Include="MessageHandlerChain\Decorators\Distinct\DistinctWireUpTests.cs" />
+    <Compile Include="MessageHandlerChain\Decorators\Retry\RetryDecoratorTests.cs" />
+    <Compile Include="MessageHandlerChain\Decorators\Retry\RetryWireUpTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MessageHandlerChain\FireAndForgetDecoratorTests.cs" />
     <Compile Include="MessageHandlerChain\LimitedThroughputDecoratorTests.cs" />

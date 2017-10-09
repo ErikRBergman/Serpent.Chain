@@ -7,9 +7,9 @@
 
     public static class ExpressionHelpers
     {
-        public static Delegate CreateGetter<TMessageType>(PropertyInfo property)
+        public static Delegate CreateGetter<TType>(PropertyInfo property)
         {
-            var messageType = typeof(TMessageType);
+            var messageType = typeof(TType);
 
             var parameter = Expression.Parameter(messageType, "m");
 
@@ -21,9 +21,14 @@
             return getterExpression.Compile();
         }
 
-        public static Delegate CreateGetter<TMessageType>(string propertyName)
+        public static Delegate CreateGetter<TType>(string propertyName)
         {
-            var messageType = typeof(TMessageType);
+            return CreateGetter<TType>(GetPropertyInfo<TType>(propertyName));
+        }
+
+        public static PropertyInfo GetPropertyInfo<TType>(string propertyName)
+        {
+            var messageType = typeof(TType);
 
             var property = messageType.GetProperties().FirstOrDefault(p => p.Name == propertyName);
             if (property == null)
@@ -31,7 +36,7 @@
                 throw new Exception($"Property {propertyName} not found");
             }
 
-            return CreateGetter<TMessageType>(property);
+            return property;
         }
     }
 }
