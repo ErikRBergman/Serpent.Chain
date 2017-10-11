@@ -11,7 +11,7 @@ namespace Serpent.Common.MessageBus
 
     public static class DistinctExtensions
     {
-        [ExtensionMethodSelector("DistinctWireUp")]
+        [ExtensionMethodSelector(DistinctWireUp.WireUpExtensionName)]
         public static IMessageHandlerChainBuilder<TMessageType> Distinct<TMessageType, TKeyType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, Func<TMessageType, TKeyType> keySelector)
         {
             return messageHandlerChainBuilder.Add(currentHandler => new DistinctDecorator<TMessageType, TKeyType>(currentHandler, keySelector));

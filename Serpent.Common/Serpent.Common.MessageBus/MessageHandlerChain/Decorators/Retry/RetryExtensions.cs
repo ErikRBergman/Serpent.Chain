@@ -178,7 +178,6 @@ namespace Serpent.Common.MessageBus
         ///     The retry Handler.
         /// </param>
         /// <returns>
-        ///     s
         ///     The subscription builder
         /// </returns>
         public static IMessageHandlerChainBuilder<TMessageType> Retry<TMessageType>(

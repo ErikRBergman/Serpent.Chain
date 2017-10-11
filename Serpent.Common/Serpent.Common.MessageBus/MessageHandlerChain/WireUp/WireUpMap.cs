@@ -8,6 +8,7 @@
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Delay;
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Distinct;
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.LimitedThroughput;
+    using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.NoDuplicates;
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Retry;
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.SoftFireAndForget;
 
@@ -24,6 +25,7 @@
             this.AddWireUp(new SoftFireAndForgetWireUp());
             this.AddWireUp(new LimitedThroughputWireUp());
             this.AddWireUp(new DistinctWireUp());
+            this.AddWireUp(new NoDuplicatesWireUp());
         }
 
         public static WireUpMap Default { get; } = new WireUpMap();

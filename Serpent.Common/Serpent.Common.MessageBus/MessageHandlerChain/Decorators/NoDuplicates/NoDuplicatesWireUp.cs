@@ -1,20 +1,20 @@
-﻿namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Distinct
+﻿namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.NoDuplicates
 {
     using System.Linq;
     using System.Reflection;
 
     using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
-    public class DistinctWireUp : BaseWireUp<DistinctAttribute>
+    public class NoDuplicatesWireUp : BaseWireUp<NoDuplicatesAttribute>
     {
-        public const string WireUpExtensionName = "DistinctWireUp";
+        public const string WireUpExtensionName = "NoDuplicatesWireUp";
 
         public override void WireUp<TMessageType, THandlerType>(
-            DistinctAttribute attribute,
+            NoDuplicatesAttribute attribute,
             IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             THandlerType handler)
         {
-            SelectorSetup<TMessageType, DistinctWireUp>
+            SelectorSetup<TMessageType, NoDuplicatesWireUp>
                 .WireUp(
                     attribute.PropertyName,
                     () =>

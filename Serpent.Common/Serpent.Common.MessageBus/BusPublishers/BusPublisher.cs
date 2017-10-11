@@ -5,8 +5,19 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
-    public abstract class BusPublisher<T>
+    /// <summary>
+    /// Base type for bus publishers
+    /// </summary>
+    /// <typeparam name="TMessageType">The message type</typeparam>
+    public abstract class BusPublisher<TMessageType>
     {
-        public abstract Task PublishAsync(IEnumerable<ISubscription<T>> subscriptions, T message, CancellationToken cancellationToken);
+        /// <summary>
+        /// Publish a message to all subscriptions
+        /// </summary>
+        /// <param name="subscriptions">The subscriptions</param>
+        /// <param name="message">The message to publish</param>
+        /// <param name="cancellationToken">A cancellation token</param>
+        /// <returns>The task</returns>
+        public abstract Task PublishAsync(IEnumerable<ISubscription<TMessageType>> subscriptions, TMessageType message, CancellationToken cancellationToken);
     }
 }

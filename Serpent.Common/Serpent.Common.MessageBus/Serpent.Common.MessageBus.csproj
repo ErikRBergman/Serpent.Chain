@@ -18,6 +18,11 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>TRACE;DEBUG;NETSTANDARD2_0</DefineConstants>
+    <DocumentationFile>bin\Debug\netstandard2.0\Serpent.Common.MessageBus.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\netstandard2.0\Serpent.Common.MessageBus.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
