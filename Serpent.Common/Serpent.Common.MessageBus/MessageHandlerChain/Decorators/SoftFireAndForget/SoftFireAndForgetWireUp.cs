@@ -1,19 +1,20 @@
 ﻿namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.SoftFireAndForget
 {
-    using System;
-
     using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
-    public class SoftFireAndForgetWireUp : IWireUp
+    public class SoftFireAndForgetWireUp : BaseWireUp<SoftFireAndForgetAttribute, SoftFireAndForgetConfiguration>
     {
-        public Type AttributeType { get; } = typeof(WireUpAttribute);
-
-        public void WireUp<TMessageType, THandlerType>(Attribute attribute, IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler)
+        protected override void WireUpFromAttribute<TMessageType, THandlerType>(SoftFireAndForgetAttribute attribute, IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler)
         {
-            if (attribute is SoftFireAndForgetAttribute)
-            {
-                messageHandlerChainBuilder.SoftFireAndForget();
-            }
+            messageHandlerChainBuilder.SoftFireAndForget();
+        }
+
+        protected override void WireUpFromConfiguration<TMessageType, THandlerType>(
+            SoftFireAndForgetConfiguration configuration,
+            IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+            THandlerType handler)
+        {
+            messageHandlerChainBuilder.SoftFireAndForget();
         }
     }
 }

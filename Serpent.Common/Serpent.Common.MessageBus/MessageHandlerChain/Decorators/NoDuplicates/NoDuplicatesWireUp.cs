@@ -5,24 +5,36 @@
 
     using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
-    public class NoDuplicatesWireUp : BaseWireUp<NoDuplicatesAttribute>
+    public class NoDuplicatesWireUp : BaseWireUp<NoDuplicatesAttribute, NoDuplicatesConfiguration>
     {
-        public const string WireUpExtensionName = "NoDuplicatesWireUp";
+        internal const string WireUpExtensionName = "NoDuplicatesWireUp";
 
-        public override void WireUp<TMessageType, THandlerType>(
+        protected override void WireUpFromAttribute<TMessageType, THandlerType>(
             NoDuplicatesAttribute attribute,
             IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             THandlerType handler)
         {
-            SelectorSetup<TMessageType, NoDuplicatesWireUp>
-                .WireUp(
-                    attribute.PropertyName,
-                    () =>
-                        typeof(DistinctExtensions)
-                            .GetMethods()
-                            .FirstOrDefault(
-                                m => m.IsGenericMethodDefinition && m.IsStatic && m.GetCustomAttributes<ExtensionMethodSelectorAttribute>().Any(a => a.Identifier == WireUpExtensionName)),
-                    (methodInfo, selector) => methodInfo.Invoke(null, new object[] { messageHandlerChainBuilder, selector }));
+            var propertyName = attribute.PropertyName;
+
+            WireUp<TMessageType, THandlerType>(messageHandlerChainBuilder, propertyName);
+        }
+
+        protected override void WireUpFromConfiguration<TMessageType, THandlerType>(
+            NoDuplicatesConfiguration configuration,
+            IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+            THandlerType handler)
+        {
+            WireUp<TMessageType, THandlerType>(messageHandlerChainBuilder, configuration.PropertyName);
+        }
+
+        private static void WireUp<TMessageType, THandlerType>(IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, string propertyName)
+        {
+            SelectorSetup<TMessageType, NoDuplicatesWireUp>.WireUp(
+                propertyName,
+                () => typeof(DistinctExtensions).GetMethods()
+                    .FirstOrDefault(
+                        m => m.IsGenericMethodDefinition && m.IsStatic && m.GetCustomAttributes<ExtensionMethodSelectorAttribute>().Any(a => a.Identifier == WireUpExtensionName)),
+                (methodInfo, selector) => methodInfo.Invoke(null, new object[] { messageHandlerChainBuilder, selector }));
         }
     }
 }

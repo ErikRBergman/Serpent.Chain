@@ -2,11 +2,16 @@
 {
     using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
-    public class DelayWireUp : BaseWireUp<DelayAttribute>
+    public class DelayWireUp : BaseWireUp<DelayAttribute, DelayConfiguration>
     {
-        public override void WireUp<TMessageType, THandlerType>(DelayAttribute attribute, IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler)
+        protected override void WireUpFromAttribute<TMessageType, THandlerType>(DelayAttribute attribute, IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler)
         {
             messageHandlerChainBuilder.Delay(attribute.Delay);
+        }
+
+        protected override void WireUpFromConfiguration<TMessageType, THandlerType>(DelayConfiguration configuration, IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler)
+        {
+            messageHandlerChainBuilder.Delay(configuration.Delay);
         }
     }
 }

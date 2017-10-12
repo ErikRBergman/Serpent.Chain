@@ -9,13 +9,13 @@ namespace Serpent.Common.MessageBus
         public static IMessageHandlerChainBuilder<TMessageType> WireUp<TMessageType, TWireUpType, THandlerType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler)
             where THandlerType : IMessageHandler<TMessageType>
         {
-            return WireUpMap.Default.WireUpHandler<TMessageType, TWireUpType, THandlerType>(messageHandlerChainBuilder, handler);
+            return WireUpMap.Default.WireUpHandlerFromAttributes<TMessageType, TWireUpType, THandlerType>(messageHandlerChainBuilder, handler);
         }
 
         public static IMessageHandlerChainBuilder<TMessageType> WireUp<TMessageType, THandlerType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler)
             where THandlerType : IMessageHandler<TMessageType>
         {
-            return WireUpMap.Default.WireUpHandler<TMessageType, THandlerType, THandlerType>(messageHandlerChainBuilder, handler);
+            return WireUpMap.Default.WireUpHandlerFromAttributes<TMessageType, THandlerType, THandlerType>(messageHandlerChainBuilder, handler);
         }
     }
 }

@@ -6,6 +6,10 @@
     {
         Type AttributeType { get; }
 
-        void WireUp<TMessageType, THandlerType>(Attribute attribute, IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler);
+        Type ConfigurationType { get; }
+
+        void WireUpFromAttribute<TMessageType, THandlerType>(Attribute attribute, IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler);
+
+        void WireUpFromConfiguration<TMessageType, THandlerType>(object configuration, IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler);
     }
 }

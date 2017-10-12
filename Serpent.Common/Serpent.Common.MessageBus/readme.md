@@ -687,8 +687,13 @@ If you do not need the feedback chain, you can use `.ConcurrentFireAndForget()`,
 .Concurrent(int maxNumberOfConcurrentMessages);
 ```
 
+##### Attribute wireup
+```csharp
+[Concurrent(maxNumberOfConcurrentMessages)]
+```
+
 ##### Examples
-Let's say you want to send a newsletter to a 5000 of recipients. If you don't parallelize the process, it may take quite a while. 
+Let's say you want to send a newsletter to a 5000 of recipients. If you don't parallelize the process, it may take quite a while. Let's parallelize it.
 
 ```csharp
 var smtpClient = new SmtpClient();

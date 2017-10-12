@@ -51,6 +51,11 @@
                     });
         }
 
+        public void Stop()
+        {
+            this.cancellationTokenSource.Cancel();
+        }
+
         private TimeSpan GetDelayTime()
         {
             if (this.start > DateTime.Now)
@@ -60,11 +65,6 @@
 
             // Get the time aligned to the interval
             return this.interval - TimeSpan.FromTicks((DateTime.Now - this.start).Ticks % this.interval.Ticks);
-        }
-
-        public void Stop()
-        {
-            this.cancellationTokenSource.Cancel();
         }
     }
 }

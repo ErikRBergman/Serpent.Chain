@@ -6,7 +6,7 @@ namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Retry
     /// <summary>
     /// The Retry Wire Up
     /// </summary>
-    public class RetryWireUp : BaseWireUp<RetryAttribute>
+    public class RetryWireUp : BaseWireUp<RetryAttribute, RetryConfiguration>
     {
         /// <summary>
         /// Wire up a retry
@@ -16,7 +16,7 @@ namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Retry
         /// <param name="retryAttribute">The retry attribute</param>
         /// <param name="messageHandlerChainBuilder">The MCH builder</param>
         /// <param name="handler">The message handler</param>
-        public override void WireUp<TMessageType, THandlerType>(RetryAttribute retryAttribute, IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler)
+        protected override void WireUpFromAttribute<TMessageType, THandlerType>(RetryAttribute retryAttribute, IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler)
         {
             if (retryAttribute.UseIMessageHandlerRetry && handler is IMessageHandlerRetry<TMessageType> retryHandler)
             {
@@ -25,6 +25,18 @@ namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Retry
             else
             {
                 messageHandlerChainBuilder.Retry(retryAttribute.MaxNumberOfRetries, retryAttribute.RetryDelay);
+            }
+        }
+
+        protected override void WireUpFromConfiguration<TMessageType, THandlerType>(RetryConfiguration configuration, IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler)
+        {
+            if (configuration.UseIMessageHandlerRetry && handler is IMessageHandlerRetry<TMessageType> retryHandler)
+            {
+                messageHandlerChainBuilder.Retry(configuration.MaxNumberOfRetries, configuration.RetryDelay, retryHandler);
+            }
+            else
+            {
+                messageHandlerChainBuilder.Retry(configuration.MaxNumberOfRetries, configuration.RetryDelay);
             }
         }
     }
