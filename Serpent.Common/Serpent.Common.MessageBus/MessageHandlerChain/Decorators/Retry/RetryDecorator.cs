@@ -47,7 +47,7 @@
 
                     if (this.successFunc != null)
                     {
-                        await this.successFunc(message, i, this.maxNumberOfAttempts, this.retryDelay).ConfigureAwait(false);
+                        await this.successFunc(message, i + 1, this.maxNumberOfAttempts, this.retryDelay).ConfigureAwait(false);
                     }
 
                     return; // success
@@ -56,7 +56,7 @@
                 {
                     if (exceptions == null)
                     {
-                        exceptions = new List<Exception>(this.maxNumberOfAttempts);    
+                        exceptions = new List<Exception>(this.maxNumberOfAttempts);
                     }
 
                     lastException = exception;

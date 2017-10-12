@@ -8,6 +8,10 @@
 
     using Serpent.Common.MessageBus.Models;
 
+    /// <summary>
+    /// The limited throughput message handler chain decorator
+    /// </summary>
+    /// <typeparam name="TMessageType">The message type</typeparam>
     public class LimitedThroughputDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
@@ -22,6 +26,12 @@
 
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(0);
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="handlerFunc">The handler func (or inner decorator)</param>
+        /// <param name="maxMessagesPerPeriod">The maximum number of messages to handle over the period</param>
+        /// <param name="periodSpan">The period span</param>
         public LimitedThroughputDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, int maxMessagesPerPeriod, TimeSpan periodSpan)
         {
             this.handlerFunc = handlerFunc;
@@ -31,6 +41,12 @@
             Task.Run(this.MessageHandlerWorkerAsync);
         }
 
+        /// <summary>
+        /// The message handler
+        /// </summary>
+        /// <param name="message">The incoming message</param>
+        /// <param name="token">the cancellation token</param>
+        /// <returns>A task that succeeds when the message is handled</returns>
         public override Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
             var taskCompletionSource = new TaskCompletionSource<TMessageType>();
@@ -41,7 +57,6 @@
 
         private async Task DispatchMessageAsync(MessageAndCompletionContainer<TMessageType> message)
         {
-            // await Task.Yield();
             try
             {
                 await this.handlerFunc(message.Message, message.CancellationToken).ConfigureAwait(false);

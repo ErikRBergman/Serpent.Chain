@@ -3,16 +3,16 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.40</Version>
+    <Version>0.0.41</Version>
     <Authors>Erik Bergman</Authors>
     <Company>Serpent</Company>
     <Description>An asynchronous message bus</Description>
-    <FileVersion>0.0.40.0</FileVersion>
+    <FileVersion>0.0.41.0</FileVersion>
     <PackageProjectUrl>https://github.com/ErikRBergman/Serpent.Common/tree/master/Serpent.Common/Serpent.Common.MessageBus</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ErikRBergman/Serpent.Common/tree/master/Serpent.Common/Serpent.Common.MessageBus</RepositoryUrl>
     <RepositoryType>Github</RepositoryType>
     <PackageTags>Message bus, event bus, async</PackageTags>
-    <AssemblyVersion>0.0.40.0</AssemblyVersion>
+    <AssemblyVersion>0.0.41.0</AssemblyVersion>
     <PackageReleaseNotes></PackageReleaseNotes>
   </PropertyGroup>
 
