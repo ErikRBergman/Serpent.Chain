@@ -21,12 +21,12 @@
 
         public IMessageHandlerChainBuilder<TNewMessageType> NewMessageHandlerChainBuilder { get; }
 
-        public IMessageBusSubscription Subscribe(Func<TNewMessageType, CancellationToken, Task> invocationFunc)
+        public IMessageBusSubscription Subscribe(Func<TNewMessageType, CancellationToken, Task> handlerFunc)
         {
             return this.outerMessageHandlerChainBuilder.Handler((message, token) =>
                 {
                     var messages = this.selector(message);
-                    return Task.WhenAll(messages.Select(msg => invocationFunc(msg, token)));
+                    return Task.WhenAll(messages.Select(msg => handlerFunc(msg, token)));
                 });
         }
     }

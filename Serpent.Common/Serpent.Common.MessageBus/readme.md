@@ -304,7 +304,61 @@ Example:
 
 #### Workflow
 
-#### Reqiest/response
+#### Request/response service
+
+##### Request messsage/response message
+You send a request message to invoke the service and wait for a response message to get the response / status.
+
+```csharp
+public void Setup(IMessageSubscriptions<MyRequestMessage> requestBus, IMessageBusPublisher<MyResponseMessage> responseBus)
+{
+    var subscription = 
+        requestBus.Subscribe()
+            .SoftFireAndForget()
+            .NoDuplicates(message => message.UserId)
+            .Concurrent(20)
+            .Handler(async (message, token) => 
+            {
+                // Message received, do something and reply
+                responseBus.Publish(new MyResponseMessage());
+            });
+}
+```
+
+Advantages:
+* Multiple requests can translate into a single handler call
+* Reusability
+
+Disadvantages:
+* Added level of complexity
+
+##### Request message/response func
+
+### Anti patterns
+Anti patterns are suboptimal patterns that we are more or less likely to end up in. 
+
+#### Anti Pattern: Mixing names and approaches
+Let's say we have the following workflow:
+
+1. Get file data
+2. Call API to send data / get response
+3. Write feedback file
+4. Delete the original file
+
+It's easy to start mixing Request/Response and Workflow approaches as one, which can lead to a lot of complexity.
+
+Example:
+
+1. `GetMyFileDataRequestMessage` - The `GetMyFileDataRequestMessageHandler` subscribes to `GetMyFileDataRequestMessage` messages and reads the file from disk. Responds with `GetMyFileDataResponseMessage`. So far so good.
+2. `GetMyFileDataResponseMessageHandler` subscribes to `GetMyFileDataResponseMessage` messages and calls the API to send the data. When done, it publishes a `SendMyDataToApiResponseMessage`.
+3. `SendMyDataToApiResponseMessageHandler` writes the feedback file and publishes a `WriteFeedbackFileResponseMessage`.
+...
+
+It's very unintuitive that `GetMyFileDataResponseMessageHandler` is the one calling the API, and we can't really reuse the solution. In addition to this, it's hard to extend and follow the execution flow.
+
+Instead, we can either create 4 micro services with the Request/Response approach and join them with a workflow.
+
+
 
 ### The message handler chain (MHC)
 MHC (Message Handler Chain) is the execution tree where messages pass through. We can easily use this concept to add functionality that normally might require quite some time to write yourself.

@@ -13,9 +13,9 @@
             this.bus = bus;
         }
 
-        public IMessageBusSubscription Subscribe(Func<TMessageType, CancellationToken, Task> invocationFunc)
+        public IMessageBusSubscription Subscribe(Func<TMessageType, CancellationToken, Task> handlerFunc)
         {
-            return this.bus.Subscribe(invocationFunc);
+            return this.bus.Subscribe(handlerFunc);
         }
     }
 }

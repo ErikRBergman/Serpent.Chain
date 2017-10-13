@@ -8,7 +8,7 @@
     {
         public static NullMessageSubscriptions<TMessageType> Default { get; } = new NullMessageSubscriptions<TMessageType>();
 
-        public IMessageBusSubscription Subscribe(Func<TMessageType, CancellationToken, Task> invocationFunc)
+        public IMessageBusSubscription Subscribe(Func<TMessageType, CancellationToken, Task> handlerFunc)
         {
             return new NullMessageBusSubscription();
         }

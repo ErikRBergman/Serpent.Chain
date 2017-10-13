@@ -19,11 +19,11 @@
 
         public IMessageHandlerChainBuilder<TNewMessageType> NewMessageHandlerChainBuilder { get; }
 
-        public IMessageBusSubscription Subscribe(Func<TNewMessageType, CancellationToken, Task> invocationFunc)
+        public IMessageBusSubscription Subscribe(Func<TNewMessageType, CancellationToken, Task> handlerFunc)
         {
             return this.outerMessageHandlerChainBuilder.Handler(async (message, token) =>
                 {
-                    await invocationFunc(await this.selector(message).ConfigureAwait(false), token).ConfigureAwait(false);
+                    await handlerFunc(await this.selector(message).ConfigureAwait(false), token).ConfigureAwait(false);
                 });
         }
     }

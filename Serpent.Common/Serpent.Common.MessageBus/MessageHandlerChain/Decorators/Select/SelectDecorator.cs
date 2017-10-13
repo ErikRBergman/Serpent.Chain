@@ -19,9 +19,9 @@
 
         public IMessageHandlerChainBuilder<TNewMessageType> NewMessageHandlerChainBuilder { get; }
 
-        public IMessageBusSubscription Subscribe(Func<TNewMessageType, CancellationToken, Task> invocationFunc)
+        public IMessageBusSubscription Subscribe(Func<TNewMessageType, CancellationToken, Task> handlerFunc)
         {
-            return this.outerMessageHandlerChainBuilder.Handler((message, token) => invocationFunc(this.selector(message), token));
+            return this.outerMessageHandlerChainBuilder.Handler((message, token) => handlerFunc(this.selector(message), token));
         }
     }
 }

@@ -27,9 +27,9 @@
             return Task.WhenAll(this.handlers.Select(h => h(message, token)));
         }
 
-        public IMessageBusSubscription Subscribe(Func<TMessageType, CancellationToken, Task> invocationFunc)
+        public IMessageBusSubscription Subscribe(Func<TMessageType, CancellationToken, Task> handlerFunc)
         {
-            this.handlers.Add(invocationFunc);
+            this.handlers.Add(handlerFunc);
             return null;
         }
     }

@@ -10,9 +10,9 @@ namespace Serpent.Common.MessageBus.BusPublishers
     {
         public Func<TMessgeType, CancellationToken, Task> InvocationFunc { get; private set; }
 
-        public IMessageBusSubscription Subscribe(Func<TMessgeType, CancellationToken, Task> invocationFunc)
+        public IMessageBusSubscription Subscribe(Func<TMessgeType, CancellationToken, Task> handlerFunc)
         {
-            this.InvocationFunc = invocationFunc;
+            this.InvocationFunc = handlerFunc;
             return new NullMessageBusSubscription();
         }
     }

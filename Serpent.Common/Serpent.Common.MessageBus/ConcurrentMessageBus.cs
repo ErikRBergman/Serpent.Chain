@@ -64,9 +64,9 @@
 
         public Task PublishAsync(TMessageType message, CancellationToken token) => this.publishAsyncFunc(this.subscriptionCache, message, token);
 
-        public IMessageBusSubscription Subscribe(Func<TMessageType, CancellationToken, Task> invocationFunc)
+        public IMessageBusSubscription Subscribe(Func<TMessageType, CancellationToken, Task> handlerFunc)
         {
-            var subscription = this.CreateSubscription(invocationFunc);
+            var subscription = this.CreateSubscription(handlerFunc);
 
             var newSubscriptionId = this.GetNewSubscriptionId();
 
