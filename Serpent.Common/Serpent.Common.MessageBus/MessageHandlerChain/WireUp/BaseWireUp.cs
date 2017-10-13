@@ -6,17 +6,22 @@
         where TAttributeType : WireUpAttribute
     {
         /// <summary>
-        /// Type of the attribute used for attribute wire up
+        ///     Type of the attribute used for attribute wire up
         /// </summary>
         public Type AttributeType { get; } = typeof(TAttributeType);
 
         /// <summary>
-        /// Type of the configuration object used for configuration wire up
+        ///     Type of the configuration object used for configuration wire up
         /// </summary>
         public Type ConfigurationType { get; } = typeof(TConfigurationType);
 
+        public object CreateConfigurationFromDefaultValue(string text)
+        {
+            return this.CreateAndParseConfigurationFromDefaultValue(text);
+        }
+
         /// <summary>
-        /// Wire up from attribute
+        ///     Wire up from attribute
         /// </summary>
         /// <typeparam name="TMessageType"></typeparam>
         /// <typeparam name="THandlerType"></typeparam>
@@ -32,7 +37,7 @@
         }
 
         /// <summary>
-        /// Wire up from configuration
+        ///     Wire up from configuration
         /// </summary>
         /// <typeparam name="TMessageType"></typeparam>
         /// <typeparam name="THandlerType"></typeparam>
@@ -49,6 +54,8 @@
                 this.WireUpFromConfiguration(outConfiguration, messageHandlerChainBuilder, handler);
             }
         }
+
+        protected abstract TConfigurationType CreateAndParseConfigurationFromDefaultValue(string text);
 
         protected abstract void WireUpFromAttribute<TMessageType, THandlerType>(
             TAttributeType attribute,

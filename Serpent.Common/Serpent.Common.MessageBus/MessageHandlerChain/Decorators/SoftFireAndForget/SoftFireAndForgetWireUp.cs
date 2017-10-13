@@ -4,6 +4,11 @@
 
     public class SoftFireAndForgetWireUp : BaseWireUp<SoftFireAndForgetAttribute, SoftFireAndForgetConfiguration>
     {
+        protected override SoftFireAndForgetConfiguration CreateAndParseConfigurationFromDefaultValue(string text)
+        {
+            return new SoftFireAndForgetConfiguration();
+        }
+
         protected override void WireUpFromAttribute<TMessageType, THandlerType>(SoftFireAndForgetAttribute attribute, IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler)
         {
             messageHandlerChainBuilder.SoftFireAndForget();

@@ -9,11 +9,22 @@
     {
         internal const string WireUpExtensionName = "DistinctWireUp";
 
+        protected override DistinctConfiguration CreateAndParseConfigurationFromDefaultValue(string text)
+        {
+            return new DistinctConfiguration();
+        }
+
         protected override void WireUpFromAttribute<TMessageType, THandlerType>(
             DistinctAttribute attribute,
             IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             THandlerType handler)
         {
+            if (string.IsNullOrWhiteSpace(attribute.PropertyName))
+            {
+                messageHandlerChainBuilder.Distinct(msg => false);
+                return;
+            }
+
             SelectorSetup<TMessageType, DistinctWireUp>
                 .WireUp(
                     attribute.PropertyName,
@@ -27,6 +38,12 @@
 
         protected override void WireUpFromConfiguration<TMessageType, THandlerType>(DistinctConfiguration configuration, IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler)
         {
+            if (string.IsNullOrWhiteSpace(configuration.PropertyName))
+            {
+                messageHandlerChainBuilder.Distinct(msg => msg.ToString());
+                return;
+            }
+
             SelectorSetup<TMessageType, DistinctWireUp>
                 .WireUp(
                     configuration.PropertyName,

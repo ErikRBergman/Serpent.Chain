@@ -9,6 +9,14 @@
     {
         internal const string WireUpExtensionName = "NoDuplicatesWireUp";
 
+        protected override NoDuplicatesConfiguration CreateAndParseConfigurationFromDefaultValue(string text)
+        {
+            return new NoDuplicatesConfiguration
+                       {
+                           PropertyName = text
+                       };
+        }
+
         protected override void WireUpFromAttribute<TMessageType, THandlerType>(
             NoDuplicatesAttribute attribute,
             IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
@@ -29,6 +37,12 @@
 
         private static void WireUp<TMessageType, THandlerType>(IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, string propertyName)
         {
+            if (string.IsNullOrWhiteSpace(propertyName))
+            {
+                messageHandlerChainBuilder.NoDuplicates(msg => msg.ToString());
+                return;
+            }
+
             SelectorSetup<TMessageType, NoDuplicatesWireUp>.WireUp(
                 propertyName,
                 () => typeof(DistinctExtensions).GetMethods()

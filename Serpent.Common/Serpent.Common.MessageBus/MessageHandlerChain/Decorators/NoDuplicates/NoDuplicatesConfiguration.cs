@@ -5,6 +5,6 @@
     [WireUpConfigurationName("NoDuplicates")]
     public class NoDuplicatesConfiguration
     {
-        public string PropertyName { get; }
+        public string PropertyName { get; set; }
     }
 }

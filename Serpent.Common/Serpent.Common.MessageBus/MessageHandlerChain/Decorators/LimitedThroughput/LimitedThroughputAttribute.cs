@@ -14,6 +14,12 @@ namespace Serpent.Common.MessageBus.MessageHandlerChain
             this.Period = TimeSpan.Parse(periodText);
         }
 
+        public LimitedThroughputAttribute(int maxNumberOfMessagesPerPeriod)
+        {
+            this.MaxNumberOfMessagesPerPeriod = maxNumberOfMessagesPerPeriod;
+            this.Period = TimeSpan.FromSeconds(1);
+        }
+
         public int MaxNumberOfMessagesPerPeriod { get; }
 
         public TimeSpan Period { get; }

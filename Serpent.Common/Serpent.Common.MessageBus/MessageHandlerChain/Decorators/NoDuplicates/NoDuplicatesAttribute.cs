@@ -19,6 +19,10 @@ namespace Serpent.Common.MessageBus
             this.PropertyName = propertyName;
         }
 
+        public NoDuplicatesAttribute()
+        {
+        }
+
         public string PropertyName { get; }
     }
 }

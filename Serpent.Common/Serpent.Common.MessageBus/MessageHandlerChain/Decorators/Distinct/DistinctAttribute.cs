@@ -17,6 +17,10 @@ namespace Serpent.Common.MessageBus
             this.PropertyName = propertyName;
         }
 
+        public DistinctAttribute()
+        {
+        }
+
         /// <summary>
         /// The property name
         /// </summary>

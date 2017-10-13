@@ -1,9 +1,25 @@
 ﻿namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.LimitedThroughput
 {
+    using System;
+
     using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
     public class LimitedThroughputWireUp : BaseWireUp<LimitedThroughputAttribute, LimitedThroughputConfiguration>
     {
+        protected override LimitedThroughputConfiguration CreateAndParseConfigurationFromDefaultValue(string text)
+        {
+            if (int.TryParse(text, out var maxNumberOfMessagesPerPeriod))
+            {
+                return new LimitedThroughputConfiguration
+                           {
+                               MaxNumberOfMessagesPerPeriod = maxNumberOfMessagesPerPeriod,
+                               Period = TimeSpan.FromSeconds(1)
+                           };
+            }
+
+            throw new Exception("LimitedThroughput: Could not convert text to integer " + text);
+        }
+
         protected override void WireUpFromAttribute<TMessageType, THandlerType>(
             LimitedThroughputAttribute attribute,
             IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,

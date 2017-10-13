@@ -1,7 +1,8 @@
 ﻿namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Delay
 {
-    using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
     using System;
+
+    using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
     [WireUpConfigurationName("Delay")]
     public class DelayConfiguration
