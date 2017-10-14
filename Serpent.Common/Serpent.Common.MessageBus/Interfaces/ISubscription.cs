@@ -5,8 +5,15 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
-    public interface ISubscription<T>
+    /// <summary>
+    /// A message bus subscription
+    /// </summary>
+    /// <typeparam name="TMessageType">The message type</typeparam>
+    public interface ISubscription<in TMessageType>
     {
-        Func<T, CancellationToken, Task> SubscriptionHandlerFunc { get; }
+        /// <summary>
+        /// The method to invoke for messages
+        /// </summary>
+        Func<TMessageType, CancellationToken, Task> SubscriptionHandlerFunc { get; }
     }
 }

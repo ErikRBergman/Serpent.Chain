@@ -2,7 +2,7 @@
 {
     using System;
 
-    public static class ActionHelpers
+    internal static class ActionHelpers
     {
         public static Action NoAction { get; } = () => { };
     }

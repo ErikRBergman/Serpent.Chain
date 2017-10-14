@@ -5,9 +5,5 @@
         public void Dispose()
         {
         }
-
-        public void Unsubscribe()
-        {
-        }
     }
 }

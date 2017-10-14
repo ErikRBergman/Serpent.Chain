@@ -4,7 +4,7 @@
 
     using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
-    public class DelayWireUp : BaseWireUp<DelayAttribute, DelayConfiguration>
+    internal class DelayWireUp : BaseWireUp<DelayAttribute, DelayConfiguration>
     {
         protected override DelayConfiguration CreateAndParseConfigurationFromDefaultValue(string text)
         {

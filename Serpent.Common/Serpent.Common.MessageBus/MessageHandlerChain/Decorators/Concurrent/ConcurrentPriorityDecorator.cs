@@ -8,7 +8,7 @@
 
     using Serpent.Common.MessageBus.Models;
 
-    public class ConcurrentPriorityDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
+    internal class ConcurrentPriorityDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 

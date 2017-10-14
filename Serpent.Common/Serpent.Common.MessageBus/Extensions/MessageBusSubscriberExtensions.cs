@@ -142,15 +142,5 @@ namespace Serpent.Common.MessageBus
         {
             return subscriptions.Subscribe((message, token) => handlerFunc(message));
         }
-
-        private static Task MapSubscriptionHandlerAsync<T>(IReadOnlyDictionary<Type, Func<T, CancellationToken, Task>> map, T message, CancellationToken token)
-        {
-            if (map.TryGetValue(message.GetType(), out var handler))
-            {
-                return handler(message, token);
-            }
-
-            return Task.CompletedTask;
-        }
     }
 }

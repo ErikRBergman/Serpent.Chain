@@ -4,7 +4,7 @@
 
     using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
-    public class ConcurrentWireUp : BaseWireUp<ConcurrentAttribute, ConcurrentConfiguration>
+    internal class ConcurrentWireUp : BaseWireUp<ConcurrentAttribute, ConcurrentConfiguration>
     {
         protected override ConcurrentConfiguration CreateAndParseConfigurationFromDefaultValue(string text)
         {

@@ -3,16 +3,20 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public struct PublisherBridge<T> : IMessageBusPublisher<T>
+    /// <summary>
+    /// A bridge to allow registering IMessageBusPublisher to the same IMessageBus with simpler IOC containers, like the one in ASP NET Core
+    /// </summary>
+    /// <typeparam name="TMessageType">The message type</typeparam>
+    public struct PublisherBridge<TMessageType> : IMessageBusPublisher<TMessageType>
     {
-        private readonly IMessageBus<T> bus;
+        private readonly IMessageBus<TMessageType> bus;
 
-        public PublisherBridge(IMessageBus<T> bus)
+        public PublisherBridge(IMessageBus<TMessageType> bus)
         {
             this.bus = bus;
         }
 
-        public Task PublishAsync(T message, CancellationToken cancellationToken)
+        public Task PublishAsync(TMessageType message, CancellationToken cancellationToken)
         {
             return this.bus.PublishAsync(message, cancellationToken);
         }

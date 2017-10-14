@@ -11,11 +11,17 @@ namespace Serpent.Common.MessageBus
     public interface IMessageBusPublisher<in TMessageType>
     {
         /// <summary>
-        /// Used to publish messages to the message bus
+        /// Publishes a message
         /// </summary>
-        /// <param name="message">The message</param>
-        /// <param name="cancellationToken">The cancellation token</param>
-        /// <returns>A task</returns>
+        /// <param name="message">
+        /// The message
+        /// </param>
+        /// <param name="cancellationToken">
+        /// The cancellation token
+        /// </param>
+        /// <returns>
+        /// The <see cref="Task"/>.
+        /// </returns>
         Task PublishAsync(TMessageType message, CancellationToken cancellationToken);
     }
 }

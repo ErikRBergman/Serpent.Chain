@@ -4,7 +4,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class DelayDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
+    internal class DelayDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 
