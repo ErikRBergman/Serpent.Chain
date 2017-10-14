@@ -20,7 +20,7 @@
 
         public ConcurrentDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, int concurrencyLevel = -1)
         {
-            if (concurrencyLevel < 0)
+            if (concurrencyLevel <= 0)
             {
                 concurrencyLevel = Environment.ProcessorCount * 2;
             }

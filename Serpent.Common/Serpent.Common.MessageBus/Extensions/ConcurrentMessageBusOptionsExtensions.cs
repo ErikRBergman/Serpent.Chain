@@ -8,6 +8,12 @@ namespace Serpent.Common.MessageBus
 
     public static class ConcurrentMessageBusOptionsExtensions
     {
+        /// <summary>
+        /// Disables the weak reference garbage collection process
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="options">The bus options</param>
+        /// <returns>Options</returns>
         public static ConcurrentMessageBusOptions<TMessageType> DisableWeakReferenceGarbageCollection<TMessageType>(
             this ConcurrentMessageBusOptions<TMessageType> options)
         {
@@ -20,7 +26,13 @@ namespace Serpent.Common.MessageBus
             return options;
         }
 
-        public static ConcurrentMessageBusOptions<TMessageType> EnableWeakReferenceGarbageCollection<TMessageType>(
+        /// <summary>
+        /// Disables the weak reference garbage collection process
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="options">The bus options</param>
+        /// <returns>Options</returns>
+         public static ConcurrentMessageBusOptions<TMessageType> EnableWeakReferenceGarbageCollection<TMessageType>(
             this ConcurrentMessageBusOptions<TMessageType> options,
             TimeSpan? interval = null)
         {

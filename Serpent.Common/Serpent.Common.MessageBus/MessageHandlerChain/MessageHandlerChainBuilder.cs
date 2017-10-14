@@ -35,42 +35,12 @@ namespace Serpent.Common.MessageBus
             return this;
         }
 
-        public IMessageBusSubscription Factory<THandler>(Func<THandler> handlerFactory)
-            where THandler : IMessageHandler<TMessageType>
-        {
-            if (typeof(IDisposable).IsAssignableFrom(typeof(THandler)))
-            {
-                return this.subscriptions.Subscribe(
-                    this.Build(
-                        async (message, token) =>
-                            {
-                                var handler = handlerFactory();
-                                try
-                                {
-                                    await handler.HandleMessageAsync(message, token);
-                                }
-                                finally
-                                {
-                                    ((IDisposable)handler).Dispose();
-                                }
-                            }));
-            }
-
-            return this.subscriptions.Subscribe(
-                this.Build(
-                    (message, token) =>
-                        {
-                            var handler = handlerFactory();
-                            return handler.HandleMessageAsync(message, token);
-                        }));
-        }
-
         public IMessageBusSubscription Handler(Func<TMessageType, CancellationToken, Task> handlerFunc)
         {
             return this.subscriptions.Subscribe(this.Build(handlerFunc));
         }
 
-        internal Func<TMessageType, CancellationToken, Task> Build(Func<TMessageType, CancellationToken, Task> handlerFunc)
+        public Func<TMessageType, CancellationToken, Task> Build(Func<TMessageType, CancellationToken, Task> handlerFunc)
         {
             if (this.handlerSetupFuncs == null || this.handlerSetupFuncs.Count == 0)
             {

@@ -10,10 +10,17 @@ namespace Serpent.Common.MessageBus
     using Serpent.Common.MessageBus.MessageHandlerChain;
 
     /// <summary>
-    /// Extensions for IMessageHandlerChainBuilder
+    ///     Extensions for IMessageHandlerChainBuilder
     /// </summary>
     public static class MessageHandlerChainBuilderExtensions
     {
+        /// <summary>
+        /// Add a decorator to the message handler chain builder
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="messageHandlerChainBuilder">The mhc builder</param>
+        /// <param name="addFunc">The method that returns the </param>
+        /// <returns>The mhc builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Add<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<Func<TMessageType, CancellationToken, Task>, MessageHandlerChainDecorator<TMessageType>> addFunc)
@@ -22,7 +29,46 @@ namespace Serpent.Common.MessageBus
         }
 
         /// <summary>
-        /// Set the chain handler method or lambda method. Use this overload if your handler has no need for async or cancellationToken
+        ///     Use a factory method to provide a message handler instance for each message passing through
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <typeparam name="THandler">The handler type</typeparam>
+        /// <param name="messageHandlerChainBuilder">The mhc builder</param>
+        /// <param name="handlerFactory">The handler factory method</param>
+        /// <returns>The mhc builder</returns>
+        public static IMessageBusSubscription Factory<TMessageType, THandler>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+            Func<THandler> handlerFactory)
+            where THandler : IMessageHandler<TMessageType>
+        {
+            if (typeof(IDisposable).IsAssignableFrom(typeof(THandler)))
+            {
+                return messageHandlerChainBuilder.Handler(
+                    async (message, token) =>
+                        {
+                            var handler = handlerFactory();
+                            try
+                            {
+                                await handler.HandleMessageAsync(message, token);
+                            }
+                            finally
+                            {
+                                ((IDisposable)handler).Dispose();
+                            }
+                        });
+            }
+
+            return messageHandlerChainBuilder.Handler(
+                (message, token) =>
+                    {
+                        var handler = handlerFactory();
+                        return handler.HandleMessageAsync(message, token);
+                    });
+        }
+
+        /// <summary>
+        ///     Set the chain handler method or lambda method. Use this overload if your handler has no need for async or
+        ///     cancellationToken
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The mhc builder</param>
@@ -38,9 +84,8 @@ namespace Serpent.Common.MessageBus
                     });
         }
 
-
         /// <summary>
-        /// Set the chain handler method or lambda method. Use this overload if you need async but no cancellation token
+        ///     Set the chain handler method or lambda method. Use this overload if you need async but no cancellation token
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The mhc builder</param>
@@ -51,9 +96,8 @@ namespace Serpent.Common.MessageBus
             return messageHandlerChainBuilder.Handler((message, token) => handlerFunc(message));
         }
 
-
         /// <summary>
-        /// Set the chain handler method to a ISimpleMessageHandler
+        ///     Set the chain handler method to a ISimpleMessageHandler
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The mhc builder</param>
@@ -67,7 +111,7 @@ namespace Serpent.Common.MessageBus
         }
 
         /// <summary>
-        /// Set the chain message handler
+        ///     Set the chain message handler
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The mhc builder</param>
@@ -81,7 +125,7 @@ namespace Serpent.Common.MessageBus
         }
 
         /// <summary>
-        /// Create a message handler chain to set up a subscription
+        ///     Create a message handler chain to set up a subscription
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="subscriptions">The subscriptions interface</param>
