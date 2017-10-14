@@ -8,7 +8,7 @@ namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Retry
     /// <summary>
     /// The Retry Wire Up
     /// </summary>
-    public class RetryWireUp : BaseWireUp<RetryAttribute, RetryConfiguration>
+    internal class RetryWireUp : BaseWireUp<RetryAttribute, RetryConfiguration>
     {
         protected override RetryConfiguration CreateAndParseConfigurationFromDefaultValue(string text)
         {

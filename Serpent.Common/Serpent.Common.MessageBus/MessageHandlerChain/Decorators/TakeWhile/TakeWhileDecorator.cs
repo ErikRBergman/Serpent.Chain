@@ -4,7 +4,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class TakeWhileDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
+    internal class TakeWhileDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 

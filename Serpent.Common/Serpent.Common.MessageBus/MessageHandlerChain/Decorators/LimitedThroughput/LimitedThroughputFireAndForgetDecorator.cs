@@ -6,7 +6,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class LimitedThroughputFireAndForgetDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
+    internal class LimitedThroughputFireAndForgetDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 

@@ -1,4 +1,5 @@
-﻿namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Retry
+﻿// ReSharper disable once CheckNamespace
+namespace Serpent.Common.MessageBus
 {
     using System;
     using System.Threading;

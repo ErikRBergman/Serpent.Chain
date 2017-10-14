@@ -9,7 +9,7 @@
     /// <summary>
     /// The branch out decorator - used bu the branch out extensions
     /// </summary>
-    /// <typeparam name="TMessageType"></typeparam>
+    /// <typeparam name="TMessageType">The message type</typeparam>
     internal class BranchOutDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>, IMessageBusSubscriptions<TMessageType>
     {
         private readonly List<Func<TMessageType, CancellationToken, Task>> handlers;

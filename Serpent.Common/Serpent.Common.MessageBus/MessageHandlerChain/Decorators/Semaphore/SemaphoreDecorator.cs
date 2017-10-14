@@ -4,7 +4,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class SemaphoreDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
+    internal class SemaphoreDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 

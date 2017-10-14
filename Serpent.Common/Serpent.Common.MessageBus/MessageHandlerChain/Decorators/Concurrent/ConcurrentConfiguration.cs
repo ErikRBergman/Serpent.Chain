@@ -2,6 +2,9 @@
 {
     using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
+    /// <summary>
+    /// Configuration to wire up ".Concurrent()" 
+    /// </summary>
     [WireUpConfigurationName("Concurrent")]
     public class ConcurrentConfiguration
     {

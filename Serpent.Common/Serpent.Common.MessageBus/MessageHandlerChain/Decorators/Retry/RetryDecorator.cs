@@ -7,7 +7,7 @@
 
     using Serpent.Common.MessageBus.Exceptions;
 
-    public class RetryDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
+    internal class RetryDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 

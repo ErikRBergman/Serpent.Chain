@@ -5,7 +5,7 @@
 
     using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
-    public class NoDuplicatesWireUp : BaseWireUp<NoDuplicatesAttribute, NoDuplicatesConfiguration>
+    internal class NoDuplicatesWireUp : BaseWireUp<NoDuplicatesAttribute, NoDuplicatesConfiguration>
     {
         internal const string WireUpExtensionName = "NoDuplicatesWireUp";
 

@@ -817,7 +817,7 @@ var subscription = bus
 ```
 
 #### `.Delay()`
-Delay the message handler chain a specified time.
+Delay the message handler chain a specified period. This can be useful when you want the message handler to be invoked some time after the message was sent, for example, if you want to process a file after it's written to a path that you monitor, and you want the process writing the file to be able to finish before you start processing it.
 
 ##### Overloads
 ```csharp

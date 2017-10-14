@@ -29,9 +29,18 @@ namespace Serpent.Common.MessageBus
         /// <summary>
         /// Disables the weak reference garbage collection process
         /// </summary>
-        /// <typeparam name="TMessageType">The message type</typeparam>
-        /// <param name="options">The bus options</param>
-        /// <returns>Options</returns>
+        /// <typeparam name="TMessageType">
+        /// The message type
+        /// </typeparam>
+        /// <param name="options">
+        /// The bus options
+        /// </param>
+        /// <param name="interval">
+        /// The interval.
+        /// </param>
+        /// <returns>
+        /// Options
+        /// </returns>
          public static ConcurrentMessageBusOptions<TMessageType> EnableWeakReferenceGarbageCollection<TMessageType>(
             this ConcurrentMessageBusOptions<TMessageType> options,
             TimeSpan? interval = null)

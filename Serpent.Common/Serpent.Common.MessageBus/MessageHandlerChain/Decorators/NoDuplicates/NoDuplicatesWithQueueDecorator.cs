@@ -7,7 +7,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class NoDuplicatesWithQueueDecorator<TMessageType, TKeyType> : MessageHandlerChainDecorator<TMessageType>
+    internal class NoDuplicatesWithQueueDecorator<TMessageType, TKeyType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 

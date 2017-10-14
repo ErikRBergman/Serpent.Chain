@@ -5,7 +5,7 @@
 
     using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
-    public class DistinctWireUp : BaseWireUp<DistinctAttribute, DistinctConfiguration>
+    internal class DistinctWireUp : BaseWireUp<DistinctAttribute, DistinctConfiguration>
     {
         internal const string WireUpExtensionName = "DistinctWireUp";
 

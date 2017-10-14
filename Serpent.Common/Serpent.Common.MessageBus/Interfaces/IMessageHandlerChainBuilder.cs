@@ -6,8 +6,6 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Serpent.Common.MessageBus.Interfaces;
-
     /// <summary>
     /// The message handler chain builder interface
     /// </summary>

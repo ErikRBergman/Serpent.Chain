@@ -4,7 +4,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class ExceptionDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
+    internal class ExceptionDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly Func<TMessageType, Exception, CancellationToken, Task<bool>> exceptionHandlerFunc;
 

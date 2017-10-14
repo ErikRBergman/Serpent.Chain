@@ -12,7 +12,7 @@
     /// The limited throughput message handler chain decorator
     /// </summary>
     /// <typeparam name="TMessageType">The message type</typeparam>
-    public class LimitedThroughputDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
+    internal class LimitedThroughputDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 

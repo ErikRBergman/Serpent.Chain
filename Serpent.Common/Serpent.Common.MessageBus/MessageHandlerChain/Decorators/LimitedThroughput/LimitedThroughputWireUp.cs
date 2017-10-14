@@ -4,7 +4,7 @@
 
     using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
-    public class LimitedThroughputWireUp : BaseWireUp<LimitedThroughputAttribute, LimitedThroughputConfiguration>
+    internal class LimitedThroughputWireUp : BaseWireUp<LimitedThroughputAttribute, LimitedThroughputConfiguration>
     {
         protected override LimitedThroughputConfiguration CreateAndParseConfigurationFromDefaultValue(string text)
         {

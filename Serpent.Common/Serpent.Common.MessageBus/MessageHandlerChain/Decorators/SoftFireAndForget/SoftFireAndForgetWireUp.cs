@@ -2,7 +2,7 @@
 {
     using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
-    public class SoftFireAndForgetWireUp : BaseWireUp<SoftFireAndForgetAttribute, SoftFireAndForgetConfiguration>
+    internal class SoftFireAndForgetWireUp : BaseWireUp<SoftFireAndForgetAttribute, SoftFireAndForgetConfiguration>
     {
         protected override SoftFireAndForgetConfiguration CreateAndParseConfigurationFromDefaultValue(string text)
         {

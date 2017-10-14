@@ -7,7 +7,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class DistinctAsyncDecorator<TMessageType, TKeyType> : MessageHandlerChainDecorator<TMessageType>
+    internal class DistinctAsyncDecorator<TMessageType, TKeyType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 
