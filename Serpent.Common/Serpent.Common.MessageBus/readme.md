@@ -8,6 +8,8 @@ The message bus is implemeted `by` `ConcurrentMessageBus<TMessageType>` and has 
 * `IMessageBusPublisher<TMessageType>` used to publish messages to the bus
 * `IMessageBusSubscriber<TMessageType>` used to subscribe to messages
 
+A message bus communicates using messages. A message can be a simple type like an `integer`, a `struct` or a `class`. 
+
 Feel free to fork the project, make changes and send pull requests, report errors, suggestions, ideas, ask questions etc.
 
 ## Why?
@@ -54,8 +56,8 @@ public class Program
         var subscription = bus
                 .Subscribe()
                 // .SoftFireAndForget() // De-couple the publisher from the subscriber execution chain
+                // .Retry(3, TimeSpan.FromSeconds(30)) // Try up to 3 times with 30 sec. delay in between
                 // .Concurrent(16) // Up to 16 concurrent tasks will handle messges
-                // .Retry(3, TimeSpan.FromSeconds(30)) // Try up to 3 times with 30 sec. delay between
                 .Handler(message => Console.WriteLine(message.Id));
 
         // Add an asynchronous subscriber
@@ -78,9 +80,9 @@ public class Program
 ```
 
 ## Subscribing to messages
-When you subscribe to a bus, you need to specify a message handler. You can have an inline function handling messages, a function of your choice, a type that implements `IMessageHandler<TMessageType>` or a factory instantiating a type that implements `IMessageHandler<TMessageType>`.
+When you subscribe to a bus, you need to specify a message handler. The handler is what does something when a message is published (sent to the bus).
 
-#### Subscribe and handle synchronously
+This is a simple synchronous subscription:
 ```csharp
 var subscription = bus
     .Subscribe()
@@ -89,7 +91,22 @@ var subscription = bus
             Console.WriteLine(message.Id);
         });
 ```
-Note! The message bus works internally fully with TPL, but if you do not have a need for any async operations, like I/O, you can use one of the handler extensions to make your code more readable.
+Note! The message bus works internally fully with TPL and if you need asynchronous code (like I/O), use one of the overloads returning a `Task`. If you don't need any async operations, and you want to log stuff (to a logger that is already asynchronous), you can create a synchronous subscription.
+
+
+A message handler can be one of the following:
+* An inline method with one of the following signatures
+  * `message => { .. }`
+  * `message => { return Task.CompletedTask; }`
+  * `(message, cancellationToken) => { return Task.CompletedTask; }`
+* A method of your choice that has one of the following signatures (but you can pick the name yourself):
+  * `void MyMethodOfChoice(MyMessageType message)`
+  * `Task MyMethodOfChoiceAsync(MyMessageType message)`
+  * `Task MyMethodOfChoiceasync(MyMessageType message, CancellationToken cancellationToken)`
+* A type that implements `IMessageHandler<TMessageType>`
+* A type that implements `ISimpleMessageHandler<TMessageType>`
+* A factory instantiating (or returning) a type that implements `IMessageHandler<TMessageType>`.
+
 
 #### Subscribe and handle messages asynchronously
 ```csharp
@@ -100,6 +117,11 @@ var subscription = bus
             await this.SomeMethodAsync();
             Console.WriteLine(message.Id);
         });
+
+// ...
+
+// Unsubscribe
+subscription.Dispose();
 ```
 `.Handler()` returns an `IMessageBusSubscription` subscription that you call to unsubscribe.
 
@@ -115,8 +137,6 @@ var subscription = bus
             Console.WriteLine(message.Id);
         });
 ```
-
-The `.Handler()` method returns a subscription that you can call to unsubscribe.
 
 #### Subscribe and handle with IMessageHandler
 
@@ -154,7 +174,9 @@ var subscription = bus
             await this.SomeMethodAsync();
             Console.WriteLine(message.Id);
         });
+
 ...
+
 subscription.Dispose();
 ```
 You can also use a SubscriptionWrapper that unsubscribes when it goes out of scope.
@@ -174,25 +196,33 @@ public class HandlerClass
                     Console.WriteLine(message.Id);
                 })
             .Wrapper();
-	}
-}
+	}}
 ```
 
 ### Using a `.Factory()` to instantiate a handler for each message
-Note! The handler in this example implements IDisposable, but it is not a requirement. When using a factory to instantiate an IDisposable type, the type is automatically disposed when the message has been handled.
+Note! The handler in this example implements IDisposable, but it is not a requirement. When using a factory to instantiate an IDisposable type, the type is automatically disposed when the message has been handled (unless you specify neverDispose:true).
 This approach can come in handy and simplify your code if, for example, your handler class use resources that can can only be used for a short period of time.
+
+#### Overloads
+```csharp
+.Factory<THandler>(Func<THandler> handlerFactory, bool neverDispose = false);
+```
+* `handlerFactory` is the method that returns the factory
+* `neverDispose` set this to true to prevent the `.Factory()` to dispose the handler after each message. This is for situations when for example you want to wait until the messages start comming before you instantiate the handler. 
+
+#### Example
 
 ```csharp
 internal class ReadmeFactoryHandler : IMessageHandler<ExampleMessage>, IDisposable
 {
     public void Dispose()
     {
-        // And if the type implements IDisposable, the Dispose method is called secondly
+        // If the type implements IDisposable, the Dispose method is called as soon as the HandleMessageAsync is done
     }
 
     public async Task HandleMessageAsync(ExampleMessage message)
     {
-        // The HandleMessageAsync method is called first
+        // Do something with the message
     }
 }
 
@@ -214,7 +244,7 @@ You can easily have your favorite dependency injection container produce the han
 ##### Resolving with ASP.NET Core dependency injection
 Note! There is a passage later in this document about how to use Serpent.Common.MessageBus with ASP.NET Core.
 
-Registering the services 
+###### Registering the bus and the sample service
 ```csharp
 using Serpent.Common.MessageBus;
 using Serpent.Common.MessageBus.Extras;
@@ -237,7 +267,7 @@ public void ConfigureServices(IServiceCollection services)
     services.AddSingleton<ReadmeService, IMessageHandler<ReadmeMessage>>();
 }
 ```
-Resolving a service
+###### Resolving a handler by using the factory method
 ```csharp
 public void SetupSubscriptions(IMesssageBusSubscriptions<ReadmeMessage> bus, IServiceProvider services)
 {
@@ -254,7 +284,9 @@ public void SetupSubscriptions(IMesssageBusSubscriptions<ReadmeMessage> bus, ISe
         .Factory(() => services.GetService<IMessageHandler<ReadmeMessage>>());
 }
 ```
-##### Resolving services with Autofac
+##### Resolving handlers with Autofac
+
+###### Register the generic bus and the sample handler
 ```csharp
 public void ConfigureServices(IRegistrationBuilder builder)
 {
@@ -272,7 +304,7 @@ public void ConfigureServices(IRegistrationBuilder builder)
             .As<IMessageHandler<ReadmeService>>();
 }
 ```
-And to resolve
+###### Resolving a handler by using the factory method
 ```csharp
 public void SetupSubscriptions(IMesssageBusSubscriptions<ReadmeMessage> bus, IComponentContext services)
 {
@@ -298,16 +330,238 @@ There are a lot of approaches to using a messages bus. I've picked a few that yo
 * Request/Response
 
 #### Event/notification
-You may want to subscribe to notifications to carry out operations.
+This is probably the simplest way to use a message bus. 
 
-Example:
+Some example events:
+* Data is updated (for example, in a server application, data can be sent to connected web sockets or in a client application, the UI can be refreshed)
+* A button was pressed, or the user has dragged and dropped files in a window
+
+In a solution i worked with a few years back, we sent an event message when data in an object in memory was updated and the event handler was responsible for presisting the data to a database.
+
+##### Event/notification message naming
+Let the name of the message describe what has happend, instead of what you want to happen (which is workflow or request/response)
+Examples:
+* UserUpdatedMessage or UserUpdatedEvent
+* FilesDroppedInMainWindowMessage or FilesDroppedInMainWindowEvent
 
 #### Workflow
+You can create a workflow and publishing a single message starts the workflow. The workflow can be a chain or a tree of messages and message handlers 
+
+A simple backup workflow example:
+1. Message: `StartFileBackupWorkflowMessage`. The message is just an entry point of the workflow. The handler just publishes a `CheckForNewFilesToBackupMessage`.
+2. Message: `CheckForNewFilesToBackupMessage`. The handler checks for files modified or created since last check and publishes a `SendBackupFileToCloudStorageMessage` for each of the files.
+3. Message: `SendBackupFileToCloudStorageMessage`. The handler sends the file to your favourite cloud storage and posts a `TweetAboutTheBackupMessage`.
+4. Message: `TweetAboutTheBackupMessage`. The handler tweets about backing up your file.
+
+For simple workflows like this you may want to merge step 1 & 2.
+
+Without using decorators (you will know about the decorators very soon), this is just an awkward way to write code. 
+
+Usually, you will want to implement the services used by the workflow the traditional way (or using their own workflows).
+
+Here is what the workflow may look like in code. Notice that I use ASP NET Core's DI service provider to resolve references to the message bus and I created some extensions to make the code more readable.
+The workflow below will backup all our files concurrently. We have created parallelism.
+
+```csharp
+public class StartFileBackupWorkflowMessage
+{
+}
+
+public class CheckForNewFilesToBackupMessage
+{
+}
+
+public class SendBackupFileToCloudStorageMessage
+{
+    public string Filename { get; set; }
+}
+
+public class TweetAboutTheBackupMessage
+{
+    public string Filename { get; set; }
+}
+
+public static class ServiceProviderExtensions
+{
+    public static IMessageBusPublisher<TMessageType> Publisher<TMessageType>(this IServiceProvider serviceProvider) => serviceProvider.GetService<IMessageBusPublisher<TMessageType>();
+    public static IMessageBusSubscriptions<TMessageType> Subscriptions<TMessageType>(this IServiceProvider serviceProvider) => serviceProvider.GetService<IMessageBusSubscriptions<TMessageType>();
+}
+
+public class BackupWorkflowSetup
+{
+    public void SetupWorkflow(IServiceProvider services, IGetNewfilenamesService getUpdatedFilesService, ISendFileToCloudStorageService sendFileToCloudStorageService, ITwitterApi twitterApi)
+    {
+        // Step #1
+        var checkForBackupPublisher = services.Publisher<CheckForNewFilesToBackupMessage>();
+
+        var startWorkflowSubscription = 
+            services
+                .Subscriptions<StartFileBackupWorkflowMessage>()
+                    .Subscribe()
+                    .Handler(message => checkForBackupPublisher.Publish(new CheckForNewFilesToBackupMessage()));
+
+        // Step #2
+        var sendBackupFileToCloudStoragePublisher = services.Publisher<SendBackupFileToCloudStorageMessage>();
+
+        var checkForBackupSubscription =
+            services
+                .Subscriptions<CheckForNewFilesToBackupMessage>()
+                    .Subscribe()
+                    .Handler(async message => 
+                        {
+                            var files = await getUpdatedFilesService.GetUpdatedFilesAsync();
+                            sendBackupFileToCloudStoragePublisher.PublishRange(files.Filenames.Select(filename => new SendBackupFileToCloudStorageMessage { Filename = filename } ));
+                        });
+
+        // Step #3
+        var tweetAboutTheBackupPublisher = services.Publisher<TweetAboutTheBackupMessage>();
+                
+        var sendBackupFileToCloudStorageSubscription =
+            services
+                .Subscriptions<SendBackupFileToCloudStorageMessage>()
+                    .Subscribe()
+                    .Handler(async message => 
+                        {
+                            await sendFileToCloudStorageService.SendFileToMyCloud(message.Filename);
+                            tweetAboutTheBackupPublisher.Publish(new TweetAboutTheBackupMessage { Filename = message.Filename });
+                        });
+
+        // Step #4
+        var tweetAboutTheBackupSubscription =
+            services
+                .Subscriptions<TweetAboutTheBackupMessage>()
+                    .Subscribe()
+                    .Handler(async message => 
+                        {
+                            await twitterApi.Tweet("We've just backed up " + message.Filename);
+                        });
+    }
+}
+
+```
+Assuming there are actual implementations behind `IGetNewfilenamesService`, `ISendFileToCloudStorageService` and `ITwitterApi`, we've gotten ourselves a little workflow.
+Posting a `StartFileBackupWorkflowMessage` to the bus starts the workflow. If there are 5000 new/updated files, 5000 messages are posted to the `SendBackupFileToCloudStorageMessage` bus, and 5000 files are concurrently sent to the cloud storage.
+Usually, a degree of parallelism is good in situations like this, but sending 5000 files simultaneously may introduce all sorts of problems, like your cloud provider blocking you or the high level of concurrency ruins your system's performance. 
+
+The decorators I promissed you to write about can do some magic for us. Let's use a decorator to set the fixed (maximum) level of concurrency for step #3 to 16 simulataneous files being backed up.
+```csharp
+ // Step #3
+var sendBackupFileToCloudStorageSubscription =
+    services
+        .Subscriptions<SendBackupFileToCloudStorageMessage>()
+            .Subscribe()
+            .SoftFireAndForget()
+            .Concurrent(16)
+            .Handler(async message => 
+                {
+                    await sendFileToCloudStorageService.SendFileToMyCloud(message.Filename);
+                    tweetAboutTheBackupPublisher.Publish(new TweetAboutTheBackupMessage { Filename = message.Filename });
+                });
+```
+The `.SoftFireAndForget()` is used to drop the feedback chain, which means that a caller publishing the a message using PublishAsync can't await the message being handled.
+
+The same goes for our tweeting, but our twitter api allows only 2 simultaneous tweets. I'm sure the Twitter API allows a lot more, but this is for the sake of the example.
+```csharp
+// Step #4
+var tweetAboutTheBackupSubscription =
+    services
+        .Subscriptions<TweetAboutTheBackupMessage>()
+            .Subscribe()
+            .SoftFireAndForget()
+            .Concurrent(2)
+            .Handler(async message => 
+                {
+                    await twitterApi.Tweet("We've just backed up " + message.Filename);
+                });
+```
+Notice that unless the Twitter API is really fast, TweetAboutTheBackupMessage messages are queued inside `.Concurrent(2)` and processed by two worker tasks. 
+This is actually pretty cool, that the workflow will allow the faster parts of your workflow to do as much as they can as quickly as they can, while the slower do things at their own pace.
+You may want to set the level of concurrency of the different parts of your workflow from configuration. 
+
+That was the `.Concurrent()` decorator. Now, let's add some retry functionality for both the cloud backup and the tweeting, if the services throws exceptions.
+```csharp
+// Step #3
+var sendBackupFileToCloudStorageSubscription =
+    services
+        .Subscriptions<SendBackupFileToCloudStorageMessage>()
+            .Subscribe()
+            .SoftFireAndForget()
+            .Retry(
+                5, 
+                TimeSpan.FromMinutes(1),
+                (msg, exception, attempt, maxAttempts, delay, cancellationToken) => {
+                        Console.WriteLine("Sending " + msg.Filename + " to cloud backup, attempt " + attempt + " of " + maxattempts + " failed. " + ((attempt != maxAttempts) ? "Will retry in " + delay : "No more retries.") + " Exception: " + exception.ToString());
+                    },
+                (msg, exception, attempt, maxAttempts, delay) => {
+                        Console.WriteLine("Sending " + msg.Filename + " to cloud backup, attempt " + attempt + " of " + maxattempts + " succeeded.");
+                    },
+                )
+            .Concurrent(16)
+            .Handler(async message => 
+                {
+                    await sendFileToCloudStorageService.SendFileToMyCloud(message.Filename);
+                    tweetAboutTheBackupPublisher.Publish(new TweetAboutTheBackupMessage { Filename = message.Filename });
+                });
+   
+// Step #4
+var tweetAboutTheBackupSubscription =
+    services
+        .Subscriptions<TweetAboutTheBackupMessage>()
+            .Subscribe()
+            .SoftFireAndForget()
+            .Retry(3, TimeSpan.FromSeconds(10))
+            .Concurrent(2)
+            .Handler(async message => 
+                {
+                    await twitterApi.Tweet("We've just backed up " + message.Filename);
+                });
+```
+When sending the file to cloud backup, we want to make 5 attempts, with 1 minute waiting between them and log any errors. When tweeting, we just want 3 retries and no logging.
+As you have noticed already, we put `.Retry()` before `.Concurrent()`. It does not have to be that way. If we put `.Retry()` before `.Concurrent()`, every attempt is queued and handled as soon as the `.Concurrent()` workers can. 
+If we put `.Retry()` after `.Concurrent()`, the `.Concurrent()` worker that handled the message that threw the exception is busy waiting to retry for a full minute before retrying. It's based on your requirements.
+
+We can use a decorator more than once to make the functionality even more advanced. Let's put `.Retry()` both before and after `.Concurrent()` and add some more logging:
+```csharp
+// Step #3
+var sendBackupFileToCloudStorageSubscription =
+    services
+        .Subscriptions<SendBackupFileToCloudStorageMessage>()
+            .Subscribe()
+            .SoftFireAndForget()
+            .Exception((message, exception) => Console.WriteLine("All attempts failed to send " + messge.Filename + "!" + exception));
+            .Filter(
+                beforeMessage => Console.WriteLine("Sending " + beforeMessage.Filename + " to cloud"),
+                afterMessage => Console.WriteLine(afterMessage.Filename + " sent successfully to cloud"))    
+            .Retry(
+                5, 
+                TimeSpan.FromMinutes(1),
+                (msg, exception, attempt, maxAttempts, delay, cancellationToken) => {
+                        Console.WriteLine("Sending " + msg.Filename + " to cloud backup, attempt " + attempt + " of " + maxattempts + " failed. " + ((attempt != maxAttempts) ? "Will retry in " + delay : "No more retries.") + " Exception: " + exception.ToString());
+                    },
+                (msg, exception, attempt, maxAttempts, delay) => {
+                        Console.WriteLine("Sending " + msg.Filename + " to cloud backup, attempt " + attempt + " of " + maxattempts + " succeeded.");
+                    },
+                )
+            .Concurrent(16)
+            .Retry(2, TimeSpan.FromSeconds(1))
+            .Handler(async message => 
+                {
+                    await sendFileToCloudStorageService.SendFileToMyCloud(message.Filename);
+                    tweetAboutTheBackupPublisher.Publish(new TweetAboutTheBackupMessage { Filename = message.Filename });
+                });
+```
+Now, if an exception is thrown in the handler, the call will be retried after 1 second, and if that fails as well, it will be retried a minute later. 
+
+There are quite a few out of the box decorators and a whole chapter in this readme that describes them. It's pretty neat to be able to add cross cutting concerns to all message handlers with just a line of code.
+
+##### Workflow message naming
+I suggest the name of your workflow messages describe what the step does. Not in detail but what you want to happen. A workflow can also be based entirely on events/notifications. Be warned though, my experience of this is that it's a lot less intuitive and harder to debug and follow the workflow. Especially when using message handlers in separate classes.
 
 #### Request/response service
 
 ##### Request messsage/response message
 You send a request message to invoke the service and wait for a response message to get the response / status.
+Someone who wants to use your service, publishes a Request message, and then waits for a response message.
 
 ```csharp
 public void Setup(IMessageSubscriptions<MyRequestMessage> requestBus, IMessageBusPublisher<MyResponseMessage> responseBus)
@@ -327,7 +581,7 @@ public void Setup(IMessageSubscriptions<MyRequestMessage> requestBus, IMessageBu
 
 Advantages:
 * Multiple requests can translate into a single handler call
-* Reusability
+* Reusability in other parts of the application and other projects
 
 Disadvantages:
 * Added level of complexity
@@ -457,8 +711,8 @@ Using the decorators when configuring a subscription
                         throw new Exception("Fail!");
                     });
 ```
-#### Message handler chain decorators list
-To customize the way your subscription is handled, you can add one or many subscription decorators. 
+#### Message handler chain decorators reference
+To customize the way your subscription is handled (or the way the bus publishes messages), you can add one or more decorators. 
 
 Here's a summary of the currently available decorators. If you have requirements that these decorators does not support, you can write your own decorators (see the chapter Custom MHC Decorators). 
 
@@ -466,6 +720,7 @@ Here's a summary of the currently available decorators. If you have requirements
 * `.AppendMany()` - Append a range of messages based on an incoming message. Supports recursive unwrapping of trees and such.
 * `.Branch()` - Split the MHC into two or more parallel trees. 
 * `.BranchOut()` - Branch the MHC tree into one or more MHC trees parallel to the normal MHC tree.
+* `.Cast()` - Cast each message to a specific type.
 * `.Concurrent()` - Parallelize and handle X concurrent messages.
 * `.ConcurrentFireAndForget()` - Parallelize and handle X concurrent messages but does not provide delivery feedback and does not pass through exceptions.
 * `.Delay()` - Delay the execution of the message handler.
@@ -477,14 +732,15 @@ Here's a summary of the currently available decorators. If you have requirements
 * `.LimitedThroughput()` - Limit the throughput to X messages per period. For example, 100 messages per second. Or 10 messages per 100 ms.
 * `.LimitedThroughputFireAndForget()` - Same as `.LimitedThroughput()` but break the feedback chain.
 * `.NoDuplicates()` - Drop all duplicate messages by key. Duplicate messages are dropped.
+* `.OfType()` - Only pass on messages of a certain type. 
 * `.Prepend()` - Prepend a message for each message handled. Like LINQ `.Prepend()`.
 * `.Retry()` - Retry after TimeSpan, X times to deliver a message if the message handler fails (throws an exception)
 * `.Select()` - Change message message type for the remaining message handler chain. Like LINQ `.Select()`.
 * `.SelectMany()` - Change message message type for the remaining message handler chain and extract messages from an enumerable. Like LINQ `.SelectMany()`.
 * `.Semaphore()` - Limit the number of concurrent messages being handled by this subscription.
-* `.SoftFireAndForget()` - Executes the synchronous parts of the next MHCD or Handler, synchronous but everything asynchronous is executed without feedback. 
 * `.Skip()` - Skip the first X messages. Like LINQ `.Skip()`.
 * `.SkipWhile()` - Skip messages as long as the predicate succeeds. Like LINQ `.SkipWhile()`.
+* `.SoftFireAndForget()` - Executes the synchronous parts of the next MHCD or Handler, synchronous but everything asynchronous is executed without feedback. 
 * `.Take()` - Only let X messages pass through. Like LINQ `.Take()`.
 * `.TakeWhile()` - Only let messages pass through as long as a predicate succeeds. The same as `.Where().Take()`. Like LINQ `.TakeWhere()`.
 * `.TaskScheduler()` - Have the messages despatched to a new Task on a specified Task Scheduler. For example, to have all messages handled by the UI thread.
@@ -519,6 +775,8 @@ bus
     .FireAndForget()
     .Handler(message => Console.WriteLine("I handle all messages"));
 ```
+`.FireAndForget()` will return immediately and render `.Concurrent()` useless.
+
 
 #### `.Append()`
 Appends a message to the subscription right after the current message is handled.
@@ -1241,42 +1499,42 @@ The exception delay starts after the invokation of an `exceptionFunc` or `except
 
 // Try up to maxNumberOfAttempts if the handler fails. Wait retryDelay between the attempts.
 .Retry<TMessageType>(
-            int maxNumberOfAttempts,
-            TimeSpan retryDelay);
+    int maxNumberOfAttempts,
+    TimeSpan retryDelay);
 
 // Call an exceptionHandler for each failure and a sucess handler when an attempt succeeds
 .Retry<TMessageType>(
-            int maxNumberOfAttempts,
-            TimeSpan retryDelay,
-            Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task> exceptionFunc = null,
-            Func<TMessageType, int, int, TimeSpan, Task> successFunc = null);
+    int maxNumberOfAttempts,
+    TimeSpan retryDelay,
+    Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task> exceptionFunc = null,
+    Func<TMessageType, int, int, TimeSpan, Task> successFunc = null);
 
 // Call an exceptionHandler for each failure and a sucess handler when an attempt succeeds
 .Retry<TMessageType>(
-            int maxNumberOfAttempts,
-            TimeSpan retryDelay,
-            Func<TMessageType, Exception, int, int, TimeSpan, Task> exceptionFunc = null,
-            Func<TMessageType, int, int, TimeSpan, Task> successFunc = null);
+    int maxNumberOfAttempts,
+    TimeSpan retryDelay,
+    Func<TMessageType, Exception, int, int, TimeSpan, Task> exceptionFunc = null,
+    Func<TMessageType, int, int, TimeSpan, Task> successFunc = null);
 
 // Call an exceptionHandler for each failure and a sucess handler when an attempt succeeds
 .Retry<TMessageType>(
-            int maxNumberOfAttempts,
-            TimeSpan retryDelay,
-            Func<TMessageType, Exception, int, int, Task> exceptionFunc = null,
-            Func<TMessageType, Task> successFunc = null);
+    int maxNumberOfAttempts,
+    TimeSpan retryDelay,
+    Func<TMessageType, Exception, int, int, Task> exceptionFunc = null,
+    Func<TMessageType, Task> successFunc = null);
 
 // Call an exceptionHandler for each failure and a sucess handler when an attempt succeeds
 .Retry<TMessageType>(
-            int maxNumberOfAttempts,
-            TimeSpan retryDelay,
-            Action<TMessageType, Exception, int, int> exceptionAction,
-            Action<TMessageType> successAction = null)
+    int maxNumberOfAttempts,
+    TimeSpan retryDelay,
+    Action<TMessageType, Exception, int, int> exceptionAction,
+    Action<TMessageType> successAction = null)
 
 // Call an exceptionHandler for each failure and a sucess handler when an attempt succeeds
 .Retry<TMessageType>(
-            int maxNumberOfAttempts,
-            TimeSpan retryDelay,
-            IMessageHandler<TMessageType> retryHandler);
+    int maxNumberOfAttempts,
+    TimeSpan retryDelay,
+    IMessageHandler<TMessageType> retryHandler);
 
 ```
 * `numberOfAttemps` - The total number of attemps to make.
@@ -1604,6 +1862,109 @@ services.AddSingleton(services =>
     new ConcurrentMessageBusOptions<MyMessage>()
         .UseWeakReferences());
 ```
+
+
+## Creating your own custom MHC decorator
+When you have requirements that can not be fullfilled using the existing decorators, it might be time to write your very own.
+
+This first example is what the source code to the very simple `.Where()` decorator looks like:
+
+```csharp
+public static class WhereExtensions
+{
+    /// <summary>
+    /// Filter messages by a predicate
+    /// </summary>
+    /// <typeparam name="TMessageType">The message type</typeparam>
+    /// <param name="messageHandlerChainBuilder">The builder</param>
+    /// <param name="predicate">The predicate</param>
+    /// <returns>The builder</returns>
+    public static IMessageHandlerChainBuilder<TMessageType> Where<TMessageType>(
+        this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+        Func<TMessageType, bool> predicate)
+    {
+        if (predicate == null)
+        {
+            return messageHandlerChainBuilder;
+        }
+
+        return messageHandlerChainBuilder.Add(innerMessageHandler => (message, cancellationToken) =>
+            {
+                if (predicate(message))
+                {
+                    return innerMessageHandler(message, cancellationToken);
+                }
+
+                return Task.CompletedTask;
+            });
+    }
+```
+
+To make the decorator stackable, we must return the same type as our extension parameter, 
+```IMessageHandlerChainBuilder<TMessageType>```.
+
+The `.Add()` method on `IMessagesHandlerChainBuilder` takes a single parameter - a method that is executed with the reference to the inner message handler/decorator (one step closer to the real message handler).
+Consider this setup:
+```csharp
+    bus
+        .Subscribe()
+        .Where(message => message.IsPolite)         // Only polite messages ;)
+        .SoftFireAndForget()
+        .Exception((message, exception) => Console.WriteLine("Failed delivering Message created " + message.MessageDate + ":" + exception))
+        .Retry(5, TimeSpan.FromSeconds(60))
+        .Handler((message, token) => {
+                Console.WriteLine("The handler!");
+                return Task.CompletedTask;
+            })
+```
+When the message handler chain is built, the decorators are set up in this order:
+* `Retry` is called with the message handler as parameter
+* `Exception` is called with the `Retry` handler as parameter
+* `SoftFireAndForget` is called with `Exception`
+* `Where` is called with `SoftFireAndForget` as parameter
+
+
+You can also make the decorator a separate type. It's easier for more complicated decorators.
+Here is the extension method for `.Delay()`:
+```csharp
+public static class DelayExtensions
+{
+    /// <summary>
+    /// Delay handling each message by a specified time
+    /// </summary>
+    /// <typeparam name="TMessageType">The message type</typeparam>
+    /// <param name="messageHandlerChainBuilder">The builder</param>
+    /// <param name="timeToWait">The timespan to await</param>
+    /// <returns>The builder</returns>
+    public static IMessageHandlerChainBuilder<TMessageType> Delay<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, TimeSpan timeToWait)
+    {
+        return messageHandlerChainBuilder.Add(currentHandler => new DelayDecorator<TMessageType>(currentHandler, timeToWait).HandleMessageAsync);
+    }
+}
+```
+And here is the decorator:
+```csharp
+internal class DelayDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
+{
+    private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
+
+    private readonly TimeSpan timeToWait;
+
+    public DelayDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, TimeSpan timeToWait)
+    {
+        this.handlerFunc = handlerFunc;
+        this.timeToWait = timeToWait;
+    }
+
+    public override async Task HandleMessageAsync(TMessageType message, CancellationToken token)
+    {
+        await Task.Delay(this.timeToWait, token).ConfigureAwait(true);
+        await this.handlerFunc(message, token).ConfigureAwait(true);
+    }
+}
+```
+
+
 
 
 

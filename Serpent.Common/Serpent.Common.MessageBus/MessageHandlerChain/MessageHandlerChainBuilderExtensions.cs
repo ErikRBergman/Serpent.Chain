@@ -35,13 +35,15 @@ namespace Serpent.Common.MessageBus
         /// <typeparam name="THandler">The handler type</typeparam>
         /// <param name="messageHandlerChainBuilder">The mhc builder</param>
         /// <param name="handlerFactory">The handler factory method</param>
+        /// <param name="neverDispose">Prevent the subscription from disposing the message handler</param>
         /// <returns>The mhc builder</returns>
         public static IMessageBusSubscription Factory<TMessageType, THandler>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
-            Func<THandler> handlerFactory)
+            Func<THandler> handlerFactory, 
+            bool neverDispose = false)
             where THandler : IMessageHandler<TMessageType>
         {
-            if (typeof(IDisposable).IsAssignableFrom(typeof(THandler)))
+            if (neverDispose == false && typeof(IDisposable).IsAssignableFrom(typeof(THandler)))
             {
                 return messageHandlerChainBuilder.Handler(
                     async (message, token) =>

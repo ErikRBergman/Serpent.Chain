@@ -7,6 +7,13 @@ namespace Serpent.Common.MessageBus
 
     public static class WhereExtensions
     {
+        /// <summary>
+        /// Filter messages by a predicate
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="messageHandlerChainBuilder">The builder</param>
+        /// <param name="asyncPredicate">The asynchronous predicate</param>
+        /// <returns>The builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Where<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Task<bool>> asyncPredicate)
@@ -28,6 +35,13 @@ namespace Serpent.Common.MessageBus
                 });
         }
 
+        /// <summary>
+        /// Filter messages by a predicate
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="messageHandlerChainBuilder">The builder</param>
+        /// <param name="predicate">The predicate</param>
+        /// <returns>The builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Where<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, bool> predicate)
@@ -37,11 +51,11 @@ namespace Serpent.Common.MessageBus
                 return messageHandlerChainBuilder;
             }
 
-            return messageHandlerChainBuilder.Add(innerMessageHandler => (message, token) =>
+            return messageHandlerChainBuilder.Add(innerMessageHandler => (message, cancellationToken) =>
                 {
                     if (predicate(message))
                     {
-                        return innerMessageHandler(message, token);
+                        return innerMessageHandler(message, cancellationToken);
                     }
 
                     return Task.CompletedTask;
