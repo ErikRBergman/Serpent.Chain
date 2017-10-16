@@ -347,8 +347,8 @@ Examples:
 #### Workflow
 You can create a workflow and publishing a single message starts the workflow. The workflow can be a chain or a tree of messages and message handlers 
 
-A simple backup workflow example:
-1. Message: `StartFileBackupWorkflowMessage`. The message is just an entry point of the workflow. The handler just publishes a `CheckForNewFilesToBackupMessage`.
+A simple cloud file backup workflow example:
+1. Message: `StartFileBackupWorkflowMessage`. The message is just the entry point of the workflow. The handler just publishes a `CheckForNewFilesToBackupMessage`.
 2. Message: `CheckForNewFilesToBackupMessage`. The handler checks for files modified or created since last check and publishes a `SendBackupFileToCloudStorageMessage` for each of the files.
 3. Message: `SendBackupFileToCloudStorageMessage`. The handler sends the file to your favourite cloud storage and posts a `TweetAboutTheBackupMessage`.
 4. Message: `TweetAboutTheBackupMessage`. The handler tweets about backing up your file.
@@ -357,10 +357,11 @@ For simple workflows like this you may want to merge step 1 & 2.
 
 Without using decorators (you will know about the decorators very soon), this is just an awkward way to write code. 
 
-Usually, you will want to implement the services used by the workflow the traditional way (or using their own workflows).
+Usually, you will want to implement the services used by the workflow the traditional way (or using their own workflows). 
+For example, instead of using `System.Net.Http.HttpClient` to call a web api, create interface and implementation and have the logic there.
 
-Here is what the workflow may look like in code. Notice that I use ASP NET Core's DI service provider to resolve references to the message bus and I created some extensions to make the code more readable.
-The workflow below will backup all our files concurrently. We have created parallelism.
+Here is what the workflow may look like in code. Notice that I use ASP.NET Core's `IServiceProvider` to resolve references to the message bus and I created some extensions to make the code more readable.
+The workflow below will backup all files updated since last transfer files concurrently. We have created parallelism.
 
 ```csharp
 public class StartFileBackupWorkflowMessage
@@ -383,26 +384,28 @@ public class TweetAboutTheBackupMessage
 
 public static class ServiceProviderExtensions
 {
-    public static IMessageBusPublisher<TMessageType> Publisher<TMessageType>(this IServiceProvider serviceProvider) => serviceProvider.GetService<IMessageBusPublisher<TMessageType>();
+    public static IMessageBusPublisher<TMessageType> Publisher<TMessageType>(this IServiceProvider serviceProvider) => serviceProvider.GetService<IMessageBusPublisher<TMessageType>>();
+    public static void Publish<TMessageType>(this IServiceProvider serviceProvider, TMessageType message) => serviceProvider.Publisher<TMessageType>().Publish(message);
+    public static void PublishRange<TMessageType>(this IServiceProvider serviceProvider, IEnumerable<TMessageType> messages) => serviceProvider.Publisher<TMessageType>().PublishRange(messages);
     public static IMessageBusSubscriptions<TMessageType> Subscriptions<TMessageType>(this IServiceProvider serviceProvider) => serviceProvider.GetService<IMessageBusSubscriptions<TMessageType>();
 }
 
 public class BackupWorkflowSetup
 {
-    public void SetupWorkflow(IServiceProvider services, IGetNewfilenamesService getUpdatedFilesService, ISendFileToCloudStorageService sendFileToCloudStorageService, ITwitterApi twitterApi)
+    public void SetupWorkflow(
+        IServiceProvider services, 
+        IGetUpdatedfilesService getUpdatedFilesService, 
+        ISendFileToCloudStorageService sendFileToCloudStorageService, 
+        ITwitterApi twitterApi)
     {
         // Step #1
-        var checkForBackupPublisher = services.Publisher<CheckForNewFilesToBackupMessage>();
-
         var startWorkflowSubscription = 
             services
                 .Subscriptions<StartFileBackupWorkflowMessage>()
                     .Subscribe()
-                    .Handler(message => checkForBackupPublisher.Publish(new CheckForNewFilesToBackupMessage()));
+                    .Handler(message => services.Publish(new CheckForNewFilesToBackupMessage()));
 
         // Step #2
-        var sendBackupFileToCloudStoragePublisher = services.Publisher<SendBackupFileToCloudStorageMessage>();
-
         var checkForBackupSubscription =
             services
                 .Subscriptions<CheckForNewFilesToBackupMessage>()
@@ -410,7 +413,7 @@ public class BackupWorkflowSetup
                     .Handler(async message => 
                         {
                             var files = await getUpdatedFilesService.GetUpdatedFilesAsync();
-                            sendBackupFileToCloudStoragePublisher.PublishRange(files.Filenames.Select(filename => new SendBackupFileToCloudStorageMessage { Filename = filename } ));
+                            services.PublishRange(files.Filenames.Select(filename => new SendBackupFileToCloudStorageMessage { Filename = filename } ));
                         });
 
         // Step #3
@@ -437,6 +440,8 @@ public class BackupWorkflowSetup
                         });
     }
 }
+
+
 
 ```
 Assuming there are actual implementations behind `IGetNewfilenamesService`, `ISendFileToCloudStorageService` and `ITwitterApi`, we've gotten ourselves a little workflow.
