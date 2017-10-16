@@ -24,11 +24,11 @@ namespace Serpent.Common.MessageBus
         /// <returns>Bus options</returns>
         public static ConcurrentMessageBusOptions<TMessageType> Dispatch<TMessageType>(
             this ConcurrentMessageBusOptions<TMessageType> options,
-            Action<MessageHandlerChainBuilder<MessageAndSubscription<TMessageType>>, Func<MessageAndSubscription<TMessageType>, CancellationToken, Task>> setupMessageHandlerChainAction)
+            Action<MessageHandlerChainBuilder<MessageAndHandler<TMessageType>>, Func<MessageAndHandler<TMessageType>, CancellationToken, Task>> setupMessageHandlerChainAction)
         {
-            var dispatch = new MessageHandlerPublishDispatch<MessageAndSubscription<TMessageType>>();
+            var dispatch = new MessageHandlerPublishDispatch<MessageAndHandler<TMessageType>>();
 
-            var builder = new MessageHandlerChainBuilder<MessageAndSubscription<TMessageType>>(dispatch);
+            var builder = new MessageHandlerChainBuilder<MessageAndHandler<TMessageType>>(dispatch);
             setupMessageHandlerChainAction(builder, PublishToSubscription.PublishAsync<TMessageType>);
 
             if (dispatch.InvocationFunc == null)

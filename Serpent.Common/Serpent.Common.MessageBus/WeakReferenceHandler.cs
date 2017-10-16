@@ -6,26 +6,23 @@
 
     using Serpent.Common.MessageBus.Interfaces;
 
-    internal struct WeakReferenceSubscription<TMessageType> : ISubscription<TMessageType>
+    internal struct WeakReferenceHandler<TMessageType> : IMessageHandler<TMessageType>
     {
         private readonly WeakReference<Func<TMessageType, CancellationToken, Task>> subscriptionHandlerFunc;
 
-        public WeakReferenceSubscription(Func<TMessageType, CancellationToken, Task> subscriptionHandlerFunc)
+        public WeakReferenceHandler(Func<TMessageType, CancellationToken, Task> subscriptionHandlerFunc)
         {
             this.subscriptionHandlerFunc = new WeakReference<Func<TMessageType, CancellationToken, Task>>(subscriptionHandlerFunc);
         }
 
-        public Func<TMessageType, CancellationToken, Task> SubscriptionHandlerFunc
+        public Task HandleMessageAsync(TMessageType message, CancellationToken cancellationToken)
         {
-            get
+            if (this.subscriptionHandlerFunc.TryGetTarget(out var target))
             {
-                if (this.subscriptionHandlerFunc.TryGetTarget(out var target))
-                {
-                    return target;
-                }
-
-                return null;
+                return target(message, cancellationToken);
             }
+
+            return Task.CompletedTask;
         }
     }
 }

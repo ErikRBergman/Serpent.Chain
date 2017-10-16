@@ -7,12 +7,9 @@
 
     public class PublishToSubscription
     {
-        public static Task PublishAsync<TMessageType>(MessageAndSubscription<TMessageType> messageAndSubscription, CancellationToken cancellationToken)
+        public static Task PublishAsync<TMessageType>(MessageAndHandler<TMessageType> messageAndHandler, CancellationToken cancellationToken)
         {
-            var subscriptionHandlerFunc = messageAndSubscription.Subscription.SubscriptionHandlerFunc;
-
-            // subscriptionHandlerFunc is null when refering to a weak reference that has been garbage collected
-            return subscriptionHandlerFunc == null ? Task.CompletedTask : subscriptionHandlerFunc(messageAndSubscription.Message, cancellationToken);
+            return messageAndHandler.Subscription.HandleMessageAsync(messageAndHandler.Message, cancellationToken);
         }
     }
 }

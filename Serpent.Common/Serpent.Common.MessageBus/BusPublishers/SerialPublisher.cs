@@ -5,19 +5,17 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.Common.MessageBus.Interfaces;
+
     public class SerialPublisher<T> : BusPublisher<T>
     {
         public static BusPublisher<T> Default { get; } = new SerialPublisher<T>();
 
-        public override async Task PublishAsync(IEnumerable<ISubscription<T>> subscriptions, T message, CancellationToken cancellationToken)
+        public override async Task PublishAsync(IEnumerable<IMessageHandler<T>> subscriptions, T message, CancellationToken cancellationToken)
         {
             foreach (var subscription in subscriptions)
             {
-                var subscriptionHandlerFunc = subscription.SubscriptionHandlerFunc;
-                if (subscriptionHandlerFunc != null)
-                {
-                    await subscriptionHandlerFunc(message, cancellationToken).ConfigureAwait(false);
-                }
+                await subscription.HandleMessageAsync(message, cancellationToken).ConfigureAwait(false);
             }
         }
     }

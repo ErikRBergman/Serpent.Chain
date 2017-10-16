@@ -6,19 +6,17 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.Common.MessageBus.Interfaces;
+
     public class ParallelPublisher<T> : BusPublisher<T>
     {
         public static BusPublisher<T> Default { get; } = new ParallelPublisher<T>();
 
-        public override Task PublishAsync(IEnumerable<ISubscription<T>> subscriptions, T message, CancellationToken token)
+        public override Task PublishAsync(IEnumerable<IMessageHandler<T>> subscriptions, T message, CancellationToken token)
         {
             return Task.WhenAll(
                 subscriptions.Select(
-                    s =>
-                        {
-                            var subscriptionHandlerFunc = s.SubscriptionHandlerFunc;
-                            return subscriptionHandlerFunc == null ? Task.CompletedTask : subscriptionHandlerFunc(message, token);
-                        }));
+                    s => s.HandleMessageAsync(message, token)));
         }
     }
 }

@@ -7,19 +7,21 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.Common.MessageBus.Interfaces;
+
     public class SingleReceiverPublisher<TMessageType> : BusPublisher<TMessageType>
     {
-        private readonly Func<ISubscription<TMessageType>, TMessageType, CancellationToken, Task> handlerFunc;
+        private readonly Func<IMessageHandler<TMessageType>, TMessageType, CancellationToken, Task> handlerFunc;
 
         private int nextSubscriptionIndex = -1;
 
-        public SingleReceiverPublisher(Func<ISubscription<TMessageType>, TMessageType, CancellationToken, Task> customHandlerMethod = null)
+        public SingleReceiverPublisher(Func<IMessageHandler<TMessageType>, TMessageType, CancellationToken, Task> customHandlerMethod = null)
         {
-            this.handlerFunc = customHandlerMethod ?? ((subscription, message, token) => subscription.SubscriptionHandlerFunc(message, token));
+            this.handlerFunc = customHandlerMethod ?? ((subscription, message, token) => subscription.HandleMessageAsync(message, token));
         }
 
         // This publisher assumes the subscriptions always come in the same order
-        public override Task PublishAsync(IEnumerable<ISubscription<TMessageType>> subscriptions, TMessageType message, CancellationToken token)
+        public override Task PublishAsync(IEnumerable<IMessageHandler<TMessageType>> subscriptions, TMessageType message, CancellationToken token)
         {
             while (true)
             {

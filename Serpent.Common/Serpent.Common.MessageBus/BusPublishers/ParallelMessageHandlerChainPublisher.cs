@@ -8,33 +8,31 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.Common.MessageBus.Interfaces;
     using Serpent.Common.MessageBus.Models;
 
     public class ParallelMessageHandlerChainPublisher<TMessageType> : BusPublisher<TMessageType>
     {
-        private readonly Func<MessageAndSubscription<TMessageType>, CancellationToken, Task> publisher;
+        private readonly Func<MessageAndHandler<TMessageType>, CancellationToken, Task> publisher;
 
-        public ParallelMessageHandlerChainPublisher(MessageHandlerChainBuilder<MessageAndSubscription<TMessageType>> messageHandlerChainBuilder)
+        public ParallelMessageHandlerChainPublisher(MessageHandlerChainBuilder<MessageAndHandler<TMessageType>> messageHandlerChainBuilder)
         {
             this.publisher = messageHandlerChainBuilder.Build(this.PublishAsync);
         }
 
-        public ParallelMessageHandlerChainPublisher(Func<MessageAndSubscription<TMessageType>, CancellationToken, Task> handlerFunc)
+        public ParallelMessageHandlerChainPublisher(Func<MessageAndHandler<TMessageType>, CancellationToken, Task> handlerFunc)
         {
             this.publisher = handlerFunc;
         }
 
-        public override Task PublishAsync(IEnumerable<ISubscription<TMessageType>> subscriptions, TMessageType message, CancellationToken token)
+        public override Task PublishAsync(IEnumerable<IMessageHandler<TMessageType>> subscriptions, TMessageType message, CancellationToken token)
         {
-            return Task.WhenAll(subscriptions.Select(subscription => this.publisher(new MessageAndSubscription<TMessageType>(message, subscription), token)));
+            return Task.WhenAll(subscriptions.Select(subscription => this.publisher(new MessageAndHandler<TMessageType>(message, subscription), token)));
         }
 
-        private Task PublishAsync(MessageAndSubscription<TMessageType> messageAndSubscription, CancellationToken token)
+        private Task PublishAsync(MessageAndHandler<TMessageType> messageAndHandler, CancellationToken token)
         {
-            var subscriptionHandlerFunc = messageAndSubscription.Subscription.SubscriptionHandlerFunc;
-            
-            // subscriptionHandlerFunc is null when refering to a weak reference that has been garbage collected
-            return subscriptionHandlerFunc == null ? Task.CompletedTask : subscriptionHandlerFunc(messageAndSubscription.Message, token);
+            return messageAndHandler.Subscription.HandleMessageAsync(messageAndHandler.Message, token);
         }
     }
 }

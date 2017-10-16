@@ -7,6 +7,7 @@
     using System.Threading.Tasks;
 
     using Serpent.Common.MessageBus.Helpers;
+    using Serpent.Common.MessageBus.Interfaces;
 
     /// <summary>
     ///     The message bus
@@ -20,13 +21,13 @@
 
         private readonly ConcurrentMessageBusOptions<TMessageType> options = ConcurrentMessageBusOptions<TMessageType>.Default;
 
-        private readonly Func<IEnumerable<ISubscription<TMessageType>>, TMessageType, CancellationToken, Task> publishAsyncFunc;
+        private readonly Func<IEnumerable<IMessageHandler<TMessageType>>, TMessageType, CancellationToken, Task> publishAsyncFunc;
 
         private readonly ConcurrentQueue<int> recycledSubscriptionIds = new ConcurrentQueue<int>();
 
-        private readonly ConcurrentDictionary<int, ISubscription<TMessageType>> subscriptions = new ConcurrentDictionary<int, ISubscription<TMessageType>>();
+        private readonly ConcurrentDictionary<int, IMessageHandler<TMessageType>> subscriptions = new ConcurrentDictionary<int, IMessageHandler<TMessageType>>();
 
-        private IEnumerable<ISubscription<TMessageType>> subscriptionCache = Array.Empty<ISubscription<TMessageType>>();
+        private IEnumerable<IMessageHandler<TMessageType>> subscriptionCache = Array.Empty<IMessageHandler<TMessageType>>();
 
         /// <summary>
         ///     Creates a new instance of the message bus, providing an options object
@@ -115,11 +116,11 @@
             return new ConcurrentMessageBusSubscription(() => this.Unsubscribe(newSubscriptionId));
         }
 
-        private ISubscription<TMessageType> CreateSubscription(Func<TMessageType, CancellationToken, Task> subscriptionHandlerFunc)
+        private IMessageHandler<TMessageType> CreateSubscription(Func<TMessageType, CancellationToken, Task> subscriptionHandlerFunc)
         {
             return this.options.SubscriptionReferenceType != SubscriptionReferenceTypeType.WeakReferences
-                       ? new StrongReferenceSubscription<TMessageType>(subscriptionHandlerFunc)
-                       : (ISubscription<TMessageType>)new WeakReferenceSubscription<TMessageType>(subscriptionHandlerFunc);
+                       ? new StrongReferenceHandler<TMessageType>(subscriptionHandlerFunc)
+                       : (IMessageHandler<TMessageType>)new WeakReferenceHandler<TMessageType>(subscriptionHandlerFunc);
         }
 
         private int GetNewSubscriptionId()
