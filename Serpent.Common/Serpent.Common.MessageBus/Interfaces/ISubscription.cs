@@ -12,7 +12,7 @@ namespace Serpent.Common.MessageBus
     public interface ISubscription<in TMessageType>
     {
         /// <summary>
-        /// The method to invoke for messages
+        /// Returns the message handler method, or null if it's no longer available
         /// </summary>
         Func<TMessageType, CancellationToken, Task> SubscriptionHandlerFunc { get; }
     }

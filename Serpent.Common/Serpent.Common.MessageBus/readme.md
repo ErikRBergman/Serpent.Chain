@@ -360,7 +360,7 @@ Without using decorators (you will know about the decorators very soon), this is
 Usually, you will want to implement the services used by the workflow the traditional way (or using their own workflows). 
 For example, instead of using `System.Net.Http.HttpClient` to call a web api, create interface and implementation and have the logic there.
 
-Here is what the workflow may look like in code. Notice that I use ASP.NET Core's `IServiceProvider` to resolve references to the message bus and I created some extensions to make the code more readable.
+Here is what the workflow may look like in code. Notice that I use .NET's `IServiceProvider`, used in ASP.NET core for resolving instances.
 The workflow below will backup all files updated since last transfer files concurrently. We have created parallelism.
 
 ```csharp
@@ -382,12 +382,14 @@ public class TweetAboutTheBackupMessage
     public string Filename { get; set; }
 }
 
+// These are in the Serpent.Common.MessageBus nuget package already. They are only here for clarity
 public static class ServiceProviderExtensions
 {
     public static IMessageBusPublisher<TMessageType> Publisher<TMessageType>(this IServiceProvider serviceProvider) => serviceProvider.GetService<IMessageBusPublisher<TMessageType>>();
     public static void Publish<TMessageType>(this IServiceProvider serviceProvider, TMessageType message) => serviceProvider.Publisher<TMessageType>().Publish(message);
     public static void PublishRange<TMessageType>(this IServiceProvider serviceProvider, IEnumerable<TMessageType> messages) => serviceProvider.Publisher<TMessageType>().PublishRange(messages);
-    public static IMessageBusSubscriptions<TMessageType> Subscriptions<TMessageType>(this IServiceProvider serviceProvider) => serviceProvider.GetService<IMessageBusSubscriptions<TMessageType>();
+    public static IMessageBusSubscriptions<TMessageType> Subscriptions<TMessageType>(this IServiceProvider serviceProvider) => serviceProvider.GetService<IMessageBusSubscriptions<TMessageType>>();
+    public static IMessageHandlerChainBuilder<TMessageType> Subscribe<TMessageType>(this IServiceProvider serviceProvider) => serviceProvider.Subscriptions<TMessageType>().Subscribe();
 }
 
 public class BackupWorkflowSetup
@@ -400,44 +402,36 @@ public class BackupWorkflowSetup
     {
         // Step #1
         var startWorkflowSubscription = 
-            services
-                .Subscriptions<StartFileBackupWorkflowMessage>()
-                    .Subscribe()
+            services.Subscribe<StartFileBackupWorkflowMessage>()
                     .Handler(message => services.Publish(new CheckForNewFilesToBackupMessage()));
 
         // Step #2
         var checkForBackupSubscription =
-            services
-                .Subscriptions<CheckForNewFilesToBackupMessage>()
-                    .Subscribe()
-                    .Handler(async message => 
-                        {
-                            var files = await getUpdatedFilesService.GetUpdatedFilesAsync();
-                            services.PublishRange(files.Filenames.Select(filename => new SendBackupFileToCloudStorageMessage { Filename = filename } ));
-                        });
+            services.Subscribe<CheckForNewFilesToBackupMessage>()
+                .Handler(async message => 
+                    {
+                        var files = await getUpdatedFilesService.GetUpdatedFilesAsync();
+                        services.PublishRange(files.Filenames.Select(filename => new SendBackupFileToCloudStorageMessage { Filename = filename } ));
+                    });
 
         // Step #3
         var tweetAboutTheBackupPublisher = services.Publisher<TweetAboutTheBackupMessage>();
                 
         var sendBackupFileToCloudStorageSubscription =
-            services
-                .Subscriptions<SendBackupFileToCloudStorageMessage>()
-                    .Subscribe()
-                    .Handler(async message => 
-                        {
-                            await sendFileToCloudStorageService.SendFileToMyCloud(message.Filename);
-                            tweetAboutTheBackupPublisher.Publish(new TweetAboutTheBackupMessage { Filename = message.Filename });
-                        });
+            services.Subscribe<SendBackupFileToCloudStorageMessage>()
+                .Handler(async message => 
+                    {
+                        await sendFileToCloudStorageService.SendFileToMyCloud(message.Filename);
+                        tweetAboutTheBackupPublisher.Publish(new TweetAboutTheBackupMessage { Filename = message.Filename });
+                    });
 
         // Step #4
         var tweetAboutTheBackupSubscription =
-            services
-                .Subscriptions<TweetAboutTheBackupMessage>()
-                    .Subscribe()
-                    .Handler(async message => 
-                        {
-                            await twitterApi.Tweet("We've just backed up " + message.Filename);
-                        });
+            services.Subscribe<TweetAboutTheBackupMessage>()
+                .Handler(async message => 
+                    {
+                        await twitterApi.Tweet("We've just backed up " + message.Filename);
+                    });
     }
 }
 
@@ -453,8 +447,7 @@ The decorators I promissed you to write about can do some magic for us. Let's us
  // Step #3
 var sendBackupFileToCloudStorageSubscription =
     services
-        .Subscriptions<SendBackupFileToCloudStorageMessage>()
-            .Subscribe()
+        .Subscribe<SendBackupFileToCloudStorageMessage>()
             .SoftFireAndForget()
             .Concurrent(16)
             .Handler(async message => 
@@ -470,8 +463,7 @@ The same goes for our tweeting, but our twitter api allows only 2 simultaneous t
 // Step #4
 var tweetAboutTheBackupSubscription =
     services
-        .Subscriptions<TweetAboutTheBackupMessage>()
-            .Subscribe()
+        .Subscribe<TweetAboutTheBackupMessage>()
             .SoftFireAndForget()
             .Concurrent(2)
             .Handler(async message => 
@@ -488,8 +480,7 @@ That was the `.Concurrent()` decorator. Now, let's add some retry functionality 
 // Step #3
 var sendBackupFileToCloudStorageSubscription =
     services
-        .Subscriptions<SendBackupFileToCloudStorageMessage>()
-            .Subscribe()
+        .Subscribe<SendBackupFileToCloudStorageMessage>()
             .SoftFireAndForget()
             .Retry(
                 5, 
@@ -511,8 +502,7 @@ var sendBackupFileToCloudStorageSubscription =
 // Step #4
 var tweetAboutTheBackupSubscription =
     services
-        .Subscriptions<TweetAboutTheBackupMessage>()
-            .Subscribe()
+        .Subscribe<TweetAboutTheBackupMessage>()
             .SoftFireAndForget()
             .Retry(3, TimeSpan.FromSeconds(10))
             .Concurrent(2)
@@ -530,8 +520,7 @@ We can use a decorator more than once to make the functionality even more advanc
 // Step #3
 var sendBackupFileToCloudStorageSubscription =
     services
-        .Subscriptions<SendBackupFileToCloudStorageMessage>()
-            .Subscribe()
+        .Subscribe<SendBackupFileToCloudStorageMessage>()
             .SoftFireAndForget()
             .Exception((message, exception) => Console.WriteLine("All attempts failed to send " + messge.Filename + "!" + exception));
             .Filter(

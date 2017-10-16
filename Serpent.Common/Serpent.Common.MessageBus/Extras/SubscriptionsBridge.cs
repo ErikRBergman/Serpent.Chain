@@ -10,16 +10,29 @@
     /// <typeparam name="TMessageType">The message type</typeparam>
     public struct SubscriptionsBridge<TMessageType> : IMessageBusSubscriptions<TMessageType>
     {
-        private readonly IMessageBus<TMessageType> bus;
+        private readonly IMessageBus<TMessageType> messageBus;
 
-        public SubscriptionsBridge(IMessageBus<TMessageType> bus)
+        /// <summary>
+        /// Creates an instance of the subscriptions bridge
+        /// </summary>
+        /// <param name="messageBus">The message messageBus</param>
+        public SubscriptionsBridge(IMessageBus<TMessageType> messageBus)
         {
-            this.bus = bus;
+            this.messageBus = messageBus;
         }
 
+        /// <summary>
+        /// Subscribe to a message bus
+        /// </summary>
+        /// <param name="handlerFunc">
+        /// The handler function
+        /// </param>
+        /// <returns>
+        /// The <see cref="IMessageBusSubscription"/>.
+        /// </returns>
         public IMessageBusSubscription Subscribe(Func<TMessageType, CancellationToken, Task> handlerFunc)
         {
-            return this.bus.Subscribe(handlerFunc);
+            return this.messageBus.Subscribe(handlerFunc);
         }
     }
 }

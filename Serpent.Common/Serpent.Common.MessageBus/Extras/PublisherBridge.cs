@@ -9,16 +9,32 @@
     /// <typeparam name="TMessageType">The message type</typeparam>
     public struct PublisherBridge<TMessageType> : IMessageBusPublisher<TMessageType>
     {
-        private readonly IMessageBus<TMessageType> bus;
+        private readonly IMessageBus<TMessageType> messageBus;
 
-        public PublisherBridge(IMessageBus<TMessageType> bus)
+        /// <summary>
+        /// Creates an instance of the publisher bridge
+        /// </summary>
+        /// <param name="messageBus">The message bus</param>
+        public PublisherBridge(IMessageBus<TMessageType> messageBus)
         {
-            this.bus = bus;
+            this.messageBus = messageBus;
         }
 
+        /// <summary>
+        /// Publishes a message
+        /// </summary>
+        /// <param name="message">
+        /// The message
+        /// </param>
+        /// <param name="cancellationToken">
+        /// A cancellation token
+        /// </param>
+        /// <returns>
+        /// The <see cref="Task"/>.
+        /// </returns>
         public Task PublishAsync(TMessageType message, CancellationToken cancellationToken)
         {
-            return this.bus.PublishAsync(message, cancellationToken);
+            return this.messageBus.PublishAsync(message, cancellationToken);
         }
     }
 }
