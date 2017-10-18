@@ -10,65 +10,6 @@
     public class ConcurrentMessageBusOptionsExtensionsTests
     {
         [TestMethod]
-        public void DisableWeakReferenceGarbageCollectionTests()
-        {
-            var options = new ConcurrentMessageBusOptions<int>
-            {
-                WeakReferenceGarbageCollection = new WeakReferenceGarbageCollectionOptions()
-                {
-                    IsEnabled = true
-                }
-            };
-
-            Assert.AreEqual(true, options.WeakReferenceGarbageCollection.IsEnabled);
-
-            options.DisableWeakReferenceGarbageCollection();
-
-            Assert.AreEqual(false, options.WeakReferenceGarbageCollection.IsEnabled);
-        }
-
-        [TestMethod]
-        public void EnableWeakReferenceGarbageCollectionTests()
-        {
-            // Ensure collection is enabled and collection interval is preserved when omitting collection interval
-            var options = new ConcurrentMessageBusOptions<int>
-            {
-                WeakReferenceGarbageCollection = new WeakReferenceGarbageCollectionOptions()
-                {
-                    IsEnabled = false,
-                    CollectionInterval =
-                                                                               TimeSpan.FromHours(
-                                                                                   20)
-                }
-            };
-
-            Assert.AreEqual(false, options.WeakReferenceGarbageCollection.IsEnabled);
-
-            options.EnableWeakReferenceGarbageCollection();
-
-            Assert.AreEqual(true, options.WeakReferenceGarbageCollection.IsEnabled);
-            Assert.AreEqual(TimeSpan.FromHours(20), options.WeakReferenceGarbageCollection.CollectionInterval);
-
-            // Ensure collection is enabled and collection interval overwritten 
-            options = new ConcurrentMessageBusOptions<int>
-            {
-                WeakReferenceGarbageCollection = new WeakReferenceGarbageCollectionOptions()
-                {
-                    IsEnabled = false,
-                    CollectionInterval =
-                                                                           TimeSpan.FromHours(20)
-                }
-            };
-
-            Assert.AreEqual(false, options.WeakReferenceGarbageCollection.IsEnabled);
-
-            options.EnableWeakReferenceGarbageCollection(TimeSpan.FromSeconds(20));
-
-            Assert.AreEqual(true, options.WeakReferenceGarbageCollection.IsEnabled);
-            Assert.AreEqual(TimeSpan.FromSeconds(20), options.WeakReferenceGarbageCollection.CollectionInterval);
-        }
-
-        [TestMethod]
         public async Task PublisherTests()
         {
             // Test having message handler decorators both in the publish dispatch and the Subscription
@@ -158,32 +99,6 @@
             var options = new ConcurrentMessageBusOptions<int>();
             options.UseSingleReceiverPublisher();
             Assert.AreEqual(typeof(SingleReceiverPublisher<int>), options.BusPublisher.GetType());
-        }
-
-        [TestMethod]
-        public void UseStrongReferencesTests()
-        {
-            var options = new ConcurrentMessageBusOptions<int>
-            {
-                SubscriptionReferenceType = SubscriptionReferenceTypeType.WeakReferences
-            };
-
-            Assert.AreEqual(SubscriptionReferenceTypeType.WeakReferences, options.SubscriptionReferenceType);
-            options.UseStrongReferences();
-            Assert.AreEqual(SubscriptionReferenceTypeType.StrongReferences, options.SubscriptionReferenceType);
-        }
-
-        [TestMethod]
-        public void UseWeakReferencesTests()
-        {
-            var options = new ConcurrentMessageBusOptions<int>
-            {
-                SubscriptionReferenceType = SubscriptionReferenceTypeType.StrongReferences
-            };
-
-            Assert.AreEqual(SubscriptionReferenceTypeType.StrongReferences, options.SubscriptionReferenceType);
-            options.UseWeakReferences();
-            Assert.AreEqual(SubscriptionReferenceTypeType.WeakReferences, options.SubscriptionReferenceType);
         }
 
         private class TestMessage

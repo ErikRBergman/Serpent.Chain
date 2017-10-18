@@ -8,11 +8,11 @@ namespace Serpent.Common.MessageBus
     public static class WhereExtensions
     {
         /// <summary>
-        /// Filter messages by a predicate
+        /// Filters messages based on a predicate
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The builder</param>
-        /// <param name="asyncPredicate">The asynchronous predicate</param>
+        /// <param name="asyncPredicate">An async function to test each message for a condition</param>
         /// <returns>The builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Where<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
@@ -36,11 +36,11 @@ namespace Serpent.Common.MessageBus
         }
 
         /// <summary>
-        /// Filter messages by a predicate
+        /// Filters messages based on a predicate
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The builder</param>
-        /// <param name="predicate">The predicate</param>
+        /// <param name="predicate">An async function to test each message for a condition</param>
         /// <returns>The builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Where<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,

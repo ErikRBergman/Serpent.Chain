@@ -7,7 +7,6 @@
     using System.Threading.Tasks;
 
     using Serpent.Common.MessageBus.Helpers;
-    using Serpent.Common.MessageBus.Interfaces;
 
     /// <summary>
     ///     The message bus
@@ -21,16 +20,16 @@
 
         private readonly ConcurrentMessageBusOptions<TMessageType> options = ConcurrentMessageBusOptions<TMessageType>.Default;
 
-        private readonly Func<IEnumerable<IMessageHandler<TMessageType>>, TMessageType, CancellationToken, Task> publishAsyncFunc;
+        private readonly Func<IEnumerable<Func<TMessageType, CancellationToken, Task>>, TMessageType, CancellationToken, Task> publishAsyncFunc;
 
         private readonly ConcurrentQueue<int> recycledSubscriptionIds = new ConcurrentQueue<int>();
 
-        private readonly ConcurrentDictionary<int, IMessageHandler<TMessageType>> subscriptions = new ConcurrentDictionary<int, IMessageHandler<TMessageType>>();
+        private readonly ConcurrentDictionary<int, Func<TMessageType, CancellationToken, Task>> subscriptions = new ConcurrentDictionary<int, Func<TMessageType, CancellationToken, Task>>();
 
-        private IEnumerable<IMessageHandler<TMessageType>> subscriptionCache = Array.Empty<IMessageHandler<TMessageType>>();
+        private IEnumerable<Func<TMessageType, CancellationToken, Task>> subscriptionCache = Array.Empty<Func<TMessageType, CancellationToken, Task>>();
 
         /// <summary>
-        ///     Creates a new instance of the message bus, providing an options object
+        ///     Creates a new instance of the message bus
         /// </summary>
         /// <param name="options">The options</param>
         public ConcurrentMessageBus(ConcurrentMessageBusOptions<TMessageType> options)
@@ -40,7 +39,7 @@
         }
 
         /// <summary>
-        ///     Creates a new instance of the message bus, providing an options object
+        ///     Creates a new instance of the message bus
         /// </summary>
         /// <param name="optionsAction">A method that configures the message bus options</param>
         public ConcurrentMessageBus(Action<ConcurrentMessageBusOptions<TMessageType>> optionsAction)
@@ -52,7 +51,7 @@
         }
 
         /// <summary>
-        ///     Creates a new instance of the message bus, providing an options object
+        ///     Creates a new instance of the message bus
         /// </summary>
         public ConcurrentMessageBus()
         {
@@ -97,11 +96,9 @@
         /// </returns>
         public IMessageBusSubscription Subscribe(Func<TMessageType, CancellationToken, Task> handlerFunc)
         {
-            var subscription = this.CreateSubscription(handlerFunc);
-
             var newSubscriptionId = this.GetNewSubscriptionId();
 
-            this.subscriptions.TryAdd(newSubscriptionId, subscription);
+            this.subscriptions.TryAdd(newSubscriptionId, handlerFunc);
 
             lock (this.subscriptionsCacheLock)
             {
@@ -114,13 +111,6 @@
         private ConcurrentMessageBusSubscription CreateMessageBusSubscription(int newSubscriptionId)
         {
             return new ConcurrentMessageBusSubscription(() => this.Unsubscribe(newSubscriptionId));
-        }
-
-        private IMessageHandler<TMessageType> CreateSubscription(Func<TMessageType, CancellationToken, Task> subscriptionHandlerFunc)
-        {
-            return this.options.SubscriptionReferenceType != SubscriptionReferenceTypeType.WeakReferences
-                       ? new StrongReferenceHandler<TMessageType>(subscriptionHandlerFunc)
-                       : (IMessageHandler<TMessageType>)new WeakReferenceHandler<TMessageType>(subscriptionHandlerFunc);
         }
 
         private int GetNewSubscriptionId()

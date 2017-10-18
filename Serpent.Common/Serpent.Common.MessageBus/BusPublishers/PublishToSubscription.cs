@@ -9,7 +9,7 @@
     {
         public static Task PublishAsync<TMessageType>(MessageAndHandler<TMessageType> messageAndHandler, CancellationToken cancellationToken)
         {
-            return messageAndHandler.Subscription.HandleMessageAsync(messageAndHandler.Message, cancellationToken);
+            return messageAndHandler.Handler(messageAndHandler.Message, cancellationToken);
         }
     }
 }

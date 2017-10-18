@@ -20,10 +20,6 @@
         [TestMethod]
         public void TestMethod1()
         {
-
-
-
-
             //.Where(m => m.Name == "Distinct");
 
             var instance = new TestMessage();

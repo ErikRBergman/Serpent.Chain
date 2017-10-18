@@ -25,14 +25,14 @@ namespace Serpent.Common.MessageBus
             this.publisher = handlerFunc;
         }
 
-        public override Task PublishAsync(IEnumerable<IMessageHandler<TMessageType>> subscriptions, TMessageType message, CancellationToken token)
+        public override Task PublishAsync(IEnumerable<Func<TMessageType, CancellationToken, Task>> handlers, TMessageType message, CancellationToken token)
         {
-            return Task.WhenAll(subscriptions.Select(subscription => this.publisher(new MessageAndHandler<TMessageType>(message, subscription), token)));
+            return Task.WhenAll(handlers.Select(subscription => this.publisher(new MessageAndHandler<TMessageType>(message, subscription), token)));
         }
 
         private Task PublishAsync(MessageAndHandler<TMessageType> messageAndHandler, CancellationToken token)
         {
-            return messageAndHandler.Subscription.HandleMessageAsync(messageAndHandler.Message, token);
+            return messageAndHandler.Handler(messageAndHandler.Message, token);
         }
     }
 }

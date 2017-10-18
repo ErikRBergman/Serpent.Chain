@@ -11,7 +11,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new BranchOutDecorator<TMessageType>(currentHandler, branches));
+            return messageHandlerChainBuilder.Add((currentHandler, services) => new BranchOutDecorator<TMessageType>(currentHandler, services.SubscriptionNotification, branches).HandleMessageAsync);
         }
     }
 }

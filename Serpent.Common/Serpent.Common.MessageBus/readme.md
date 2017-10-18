@@ -3,7 +3,7 @@ This is an asynchronous .NET Standard 2.0 message bus for usage in any project w
 All messages are dispatched through the .NET TPL (which is included in .NET Framework, .NET Standard and .NET Core).
 Serpent.Common.MessageBus is .NET Standard 2.0, which means, you can use it on any runtime that supports .NET Standard 2.0, for example .NET Framework 4.6.1 and .NET Core 1.0. 
 
-The message bus is implemeted `by` `ConcurrentMessageBus<TMessageType>` and has 3 interfaces:
+The message bus is implemented by `ConcurrentMessageBus<TMessageType>` and has 3 interfaces:
 * `IMessageBus<TMessageType>` which in turn has two interfaces:
 * `IMessageBusPublisher<TMessageType>` used to publish messages to the bus
 * `IMessageBusSubscriber<TMessageType>` used to subscribe to messages
@@ -17,6 +17,7 @@ Why would I use Serpent.Common.MessageBus or any message bus in my application i
 Well, I can come up with a few reasons.
 
 * Loose coupling - Message publisher and the subscribers know nothing about each other. As long as they know about the bus and what the messages do, both subscribers and publishers can be changed, added or replaced witout affecting each other.
+* A standardized way to add cross cutting concerns (like retry, thread synchronization)
 * Concurrency made easy - By adding only 1 line of code (`.Concurrent(16)`), you can parallelize your work on the .NET thread pool
 * Reuse - Smaller components with a defined contract can more easily be reused
 * Flexibility and out of the box functionality. When you have created your message handler, you can add quite some out-of-the-box functionality to it without modifying the message handler. Throttling, Exception handling, Retry, Duplicate message elimination, to name a few.
@@ -96,9 +97,9 @@ Note! The message bus works internally fully with TPL and if you need asynchrono
 
 A message handler can be one of the following:
 * An inline method with one of the following signatures
-  * `message => { .. }`
-  * `message => { return Task.CompletedTask; }`
-  * `(message, cancellationToken) => { return Task.CompletedTask; }`
+  * `bus.Subscribe().Handler(message => { .. })`
+  * `bus.Subscribe().Handler(message => { return Task.CompletedTask; })`
+  * `bus.Subscribe().Handler((message, cancellationToken) => { return Task.CompletedTask; })`
 * A method of your choice that has one of the following signatures (but you can pick the name yourself):
   * `void MyMethodOfChoice(MyMessageType message)`
   * `Task MyMethodOfChoiceAsync(MyMessageType message)`
@@ -107,6 +108,7 @@ A message handler can be one of the following:
 * A type that implements `ISimpleMessageHandler<TMessageType>`
 * A factory instantiating (or returning) a type that implements `IMessageHandler<TMessageType>`.
 
+A single handler can handle messages for multiple types, since every message is typed.
 
 #### Subscribe and handle messages asynchronously
 ```csharp
@@ -123,7 +125,7 @@ var subscription = bus
 // Unsubscribe
 subscription.Dispose();
 ```
-`.Handler()` returns an `IMessageBusSubscription` subscription that you call to unsubscribe.
+`.Handler()` returns an `IMessageBusSubscription` subscription that you dispose to unsubscribe.
 
 #### `.Subscribe().SoftFireAndForget()`
 Most often, you do not want the bus to track execution of your message handlers. The most common and best way to do this is by using `.SoftFireAndForget()`.
@@ -285,7 +287,6 @@ public void SetupSubscriptions(IMesssageBusSubscriptions<ReadmeMessage> bus, ISe
 }
 ```
 ##### Resolving handlers with Autofac
-
 ###### Register the generic bus and the sample handler
 ```csharp
 public void ConfigureServices(IRegistrationBuilder builder)
@@ -738,6 +739,7 @@ Here's a summary of the currently available decorators. If you have requirements
 * `.Take()` - Only let X messages pass through. Like LINQ `.Take()`.
 * `.TakeWhile()` - Only let messages pass through as long as a predicate succeeds. The same as `.Where().Take()`. Like LINQ `.TakeWhere()`.
 * `.TaskScheduler()` - Have the messages despatched to a new Task on a specified Task Scheduler. For example, to have all messages handled by the UI thread.
+* `.WeakReference()` - Keeps a weak reference to the message handler and unsubscribes when the message handler has been reclaimed by GC
 * `.Where()` - Filter messages based on predicate. Like LINQ `.Where()`
 
 Stacking these allow you to configure in a lot of advanced functionality, for example:
@@ -898,9 +900,12 @@ The feedback chain is intact through Branch, so if one of the branches throws an
 
 ##### Overloads
 ```csharp
-.Branch(params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches);
+.Branch(
+    Action<IMessageHandlerChainBuilder<TMessageType>> firstBranch,
+    params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches);
 ```
-* `branches` - the action that returns an array of MHC branches. See the examples.
+* `firstBranch` - the first branch - this value must not be null.
+* `branches` - additional branches
 ##### Examples
 ```csharp
 bus
@@ -1020,7 +1025,7 @@ var subscription = bus
 ```
 
 ##### `.Retry()` stacked with `.Concurrent()`
-We specify `.Retry()` before `.Concurrent()` to process other messages if an exception is thrown. If we add `.Retry()` after `.Concurrent()` a message failing will use one of the 20 concurrent handlers for upp to 4 minutes.
+We can specify `.Retry()` before `.Concurrent()` to process other messages while a failed attempt is waiting to retry, or `.Retry()` after `.Concurrent()` to lock upp one of the 20 concurrent handlers for upp to 4 minutes waiting for a retry.
 
 ```csharp
 var smtpClient = new SmtpClient();
@@ -1045,7 +1050,6 @@ var subscription = bus
                     "This is the news letter content"));
         });
 ```
-The reason we have `.Retry()` before `.Concurrent()`, is to prevent locking one of the 16 message handler slots while waiting to retry.
 
 #### `.ConcurrentFireAndForget()`
 `.ConcurrentFireAndForget()` is roughly the same as `.SoftFireAndForget().Concurrent()` - feedback can't pass through, but for scenarios where performance is very important, `.ConcurrentFireAndForget()` has smaller overhead.
@@ -1115,6 +1119,10 @@ Only allow a message with a certain key to be handled once.
 .Distinct(Func<TMessageType, CancellationToken, Task<TKeyType>> keySelector);
 .Distinct(Func<TMessageType, CancellationToken, Task<TKeyType>> keySelector, IEqualityComparer<TKeyType> equalityComparer);
 ```
+* `keySelector` - the function returing the key
+* `equalityComparer` - an equality comparer for the key. Can for example be StringComparer.OrdinalIgnoreCase or your own homegrown.
+
+The key can be the message itself.
 
 ##### Examples
 ```csharp
@@ -1140,7 +1148,6 @@ var subscription = bus
             Console.WriteLine(message.Id);
         });
 ```
-
 
 #### `.Exception()`
 `Exception()` invokes a method if the message handler (or a MHC Decorator below in the chain) throws an exception. 
@@ -1249,6 +1256,9 @@ The last overload of `.Filter()` is an inline decorator. To keep the chain you h
 .Filter(Func<TMessageType, CancellationToken, Task<bool>> beforeInvoke = null, Func<TMessageType, CancellationToken,Task> afterInvoke = null);
 .Filter(Func<TMessageType, CancellationToken, Func<TMessageType, CancellationToken, Task>, Task> filterFunc);
 ```
+* `beforeInvoke` - action or func called before the method is invoked. Some overloads allow returning a boolean. Return `true` or use an overload that does not return a value to always call the inner decorator, or return `false` to prevent the next decorator from executing..  
+* `afterInvoke` - action or func called after the method is invoked. THIS METHOD IS NOT CALLED IF THE HANDLER THROWS AN EXCEPTION.
+
 ##### Examples
 ```csharp
 var subscription = bus
@@ -1353,7 +1363,6 @@ Pass only a single message through the chain, optionally based on a predicate.
 .First(Func<TMessageType, Task<bool> predicate);
 .First(Func<TMessageType, CancellationToken, Task<bool> predicate);
 ```
-
 ##### Examples
 ```csharp
 var subscription = bus
@@ -1483,7 +1492,7 @@ Prepend currently does not support predicate and recursive. There is also no Pre
 ```
 
 #### `.Retry()`
-Allows you to configure the message handler chain to retry if the message handler fails (throws an exception).
+Retries calling the message handler if it fails (throws an exception).
 You specify the number of attempts (not retries). If all attempts fail, `Retry()` throws a `Serpent.Common.MessageBus.Exceptions.RetryFailedException` that contains the number of attempts, retry delay and a collection of all exceptions that was thrown.
 
 The exception delay starts after the invokation of an `exceptionFunc` or `exceptionAction`. You can use the exceptionFunc to wait a specific delay by setting `retryDelay` to TimeSpan.Zero and then awaiting `Task.Delay()`.
@@ -1492,45 +1501,45 @@ The exception delay starts after the invokation of an `exceptionFunc` or `except
 ```csharp
 
 // Try up to maxNumberOfAttempts if the handler fails. Wait retryDelay between the attempts.
-.Retry<TMessageType>(
+.Retry(
     int maxNumberOfAttempts,
     TimeSpan retryDelay);
 
 // Call an exceptionHandler for each failure and a sucess handler when an attempt succeeds
-.Retry<TMessageType>(
+.Retry(
     int maxNumberOfAttempts,
     TimeSpan retryDelay,
     Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task> exceptionFunc = null,
     Func<TMessageType, int, int, TimeSpan, Task> successFunc = null);
 
 // Call an exceptionHandler for each failure and a sucess handler when an attempt succeeds
-.Retry<TMessageType>(
+.Retry(
     int maxNumberOfAttempts,
     TimeSpan retryDelay,
     Func<TMessageType, Exception, int, int, TimeSpan, Task> exceptionFunc = null,
     Func<TMessageType, int, int, TimeSpan, Task> successFunc = null);
 
 // Call an exceptionHandler for each failure and a sucess handler when an attempt succeeds
-.Retry<TMessageType>(
+.Retry(
     int maxNumberOfAttempts,
     TimeSpan retryDelay,
     Func<TMessageType, Exception, int, int, Task> exceptionFunc = null,
     Func<TMessageType, Task> successFunc = null);
 
 // Call an exceptionHandler for each failure and a sucess handler when an attempt succeeds
-.Retry<TMessageType>(
+.Retry(
     int maxNumberOfAttempts,
     TimeSpan retryDelay,
     Action<TMessageType, Exception, int, int> exceptionAction,
     Action<TMessageType> successAction = null)
 
 // Call an exceptionHandler for each failure and a sucess handler when an attempt succeeds
-.Retry<TMessageType>(
+.Retry(
     int maxNumberOfAttempts,
     TimeSpan retryDelay,
     IMessageHandler<TMessageType> retryHandler);
-
 ```
+
 * `numberOfAttemps` - The total number of attemps to make.
 * `retryDelay` - The delay between attempts
 * `exceptionFunc` / `exceptionAction` *(optional)* - The method to invoke if an exception is thrown
@@ -1651,31 +1660,100 @@ public void SetupSubscription(IMessageBusSubscriber<Message> bus)
 
 #### `.Semaphore()`
 Limits the number of concurrent messages being handled without parallelizing.
+##### Overloads
+```csharp
+.Semaphore(int maxNumberOfConcurrentMessages)
+.Semaphore(Func<TMessageType, TKeyType> keySelector, int maxNumberOfConcurrentMessages = 1)
+.Semaphore(Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer, int maxNumberOfConcurrentMessages = 1)
+.Semaphore(Func<TMessageType, TKeyType> keySelector, KeySemaphore keySemaphore)
+```
+* `maxNumberOfConcurrentMessages` the number of concurrent messages to allow. 
+* `keySelector` the keySelector used to define the key used to limit concurrency. 
+* `keySemaphore` the shared key semaphore used to limit access from different chains. 
 
+##### Examples
+```csharp
+var subscription = bus
+    .Subscribe()
+    .Semaphore(1)
+    .Handler(async message =>
+        {
+            Console.WriteLine("This is guaranteed to run on a single thread at a time");
+        });
+```
+The example above limits the concurrency to 1 simultaneous message being handled
 
+```csharp
+var subscription = bus
+    .Subscribe()
+    .Semaphore(msg => msg.Id, 1)
+    .Handler(async message =>
+        {
+            Console.WriteLine("This is guaranteed to run on a single thread at a time for id " + message.Id);
+        });
+```
+The example above limits the concurrency to 1 simultaneous message being handled with the same Id
+
+```csharp
+
+    var keySemaphore = new KeySemaphore<string>();
+
+var subscription1 = bus1
+    .Subscribe()
+    .Semaphore(msg => msg.Id, keySemaphore)
+    .Handler(async message =>
+        {
+            Console.WriteLine("This is guaranteed to run on a single thread at a time for id " + message.Id);
+        });
+
+var subscription2 = bus2
+    .Subscribe()
+    .Semaphore(msg => msg.Id, keySemaphore)
+    .Handler(async message =>
+        {
+            Console.WriteLine("This is guaranteed to run on a single thread at a time for id " + message.Id);
+        });
+```
+The example above limits the concurrency to 1 simultaneous message being handled with the same Id. If subscription1 is handling a message, subscription2 will have to wait if another message with the same id is published to subscription2 until subscription1 is done handling the message.
 
 #### `.Skip()`
+Skips X messages before allowing messages to pass through.
 
 ##### Overloads
 ```csharp
+.Skip(int numberOfMessages);
 ```
+* `numberOfMessages` the number of messages to skip before letting messages through
+
 ##### Examples
 ```csharp
+var subscription = bus
+    .Subscribe()
+    .Skip(5)
+    .Handler(async message =>
+        {
+            Console.WriteLine("The message is NOT among the first 5");
+        });
 ```
-
-
-
 
 #### `.SkipWhile()`
+Skips all messages as long as the predicate returns true.
 
 ##### Overloads
 ```csharp
+.SkipWhile(Func<TMessageType, bool> predicate);
+.SkipWhile(Func<TMessageType, Task<bool>> predicate);
 ```
 ##### Examples
 ```csharp
+var subscription = bus
+    .Subscribe()
+    .SkipWhile(message => message.IsAmongTheFirst)
+    .Handler(async message =>
+        {
+            Console.WriteLine("The message is not among the first");
+        });
 ```
-
-
 
 #### `.SoftFireAndForget()`
 Breaks the feedback/exception chain which means that everything being synchronous coming after `.SoftFireAndForget()` is handled synchronous but it does not await asynchronous waiting.
@@ -1714,22 +1792,44 @@ var subscription = bus
 ```
 
 #### `.Take()`
+Subscribes for X messages, then unsubscribes
 
 ##### Overloads
 ```csharp
+.Take(int numberOfMessages);
 ```
+* `numberOfMessages` the number of messages to pass through before unsubscribing
+
 ##### Examples
 ```csharp
+var subscription = bus
+    .Subscribe()
+    .Take(5)
+    .Handler(async message =>
+        {
+            Console.WriteLine("The message is among the first 5");
+        });
 ```
-
 
 #### `.TakeWhile()`
+Subscribes as long as a predicate returns true, then unsubscribes
 
 ##### Overloads
 ```csharp
+.TakeWhile(Func<TMessageType, bool> predicate);
+.TakeWhile(Func<TMessageType, Task<bool>> predicate);
 ```
+* `predicate` subscribes as long as the predicate returns true, then unsubscribes
+
 ##### Examples
 ```csharp
+var subscription = bus
+    .Subscribe()
+    .TakeWhile(message => message.IsAmongTheFirst)
+    .Handler(async message =>
+        {
+            Console.WriteLine("The message is among the first");
+        });
 ```
 
 #### `.TaskScheduler()`
@@ -1742,14 +1842,66 @@ Invoke all calls on a specified Task Scheduler. This can come in handy if you us
 ```csharp
 ```
 
+
+#### `.WeakReference()`
+`.WeakReference()` keeps the message handler as a weak reference which does not prevent it from being garbage collected. If the handler is garbage collected (reclaimed by the garbage collection) `.WeakReference()` disposes the subscription (unsubscribes).
+This is usually used in MVVM applications where the framework or a DI container instantiates for example a ViewModel. When all views linked to the ViewModel are garbage collected, you want and expect the ViewModel to be garbage collected as well.
+The message bus normally holds strong references to the message handlers (since it executes faster) but in this case, the ViewModels will remain active handling messages after the last View is garbage collected, which not only is a memory leak but it can lead to unexpected behavior, bugs and performance issues.
+
+Good thing, it's easy to remedy. Use `.WeakReference()` *AS THE FINAL DECORATOR BEFORE THE HANDLER*. 
+If you don't, the decorators between WeakReference and your Handler may be reclaimed by GC and thereby terminating the subscription prematurely.
+
+`WeakReference()` disposes the subscription (unsubscribes) when a message is published and the handler is garbage collected. But if we have a condition that prevents `.WeakReference()` from getting the message. 
+In the example below due to the `.Where()` decorator, if the user is deleted, it's likely never unsubscribed. To remedy this problem, `.WeakReference()` have a Garbage Collector of it's own that by default, once a minute, checks and unsubscribes all subscriptions to handlers that are reclaimed by GC.
+ 
+##### Overloads
+```csharp
+.WeakReference()
+.WeakReference(IWeakReferenceGarbageCollector weakReferenceGarbageCollector)
+```
+* `weakReferenceGarbageCollector` let's you choose a custom garbage collector.
+
+##### Example
+In the example, we pretend there is a class called BaseViewModel in your MVVM framework, containing a `Model` property of the same generic type as BaseViewModel and that it's populated with a user.
+```csharp
+public struct UserUpdatedEvent
+{
+    public User User {get; set;}
+}
+
+public class UserViewModel : BaseViewModel<User>
+{
+    private readonly IMessageBusSubscription userUpdatedSubscription;
+
+    public UserViewModel(IMessageBusSubscriptions<UserUpdatedEvent> userUpdatedEvent)
+    {
+        // Subscribe to updates to the user
+        this.userUpdatedSubscription = userUpdatedEvent
+            .Subscribe()
+            .Where(message => message?.User?.Id == this.Model?.Id)
+            .DispatchOnCurrentContext()
+            // Just before .Handler to ensure the other decorators are not reclaimed buy GC
+            .WeakReference()
+            .Handler(this.UserUpdatedEventHandler)
+    }
+
+    private void UserUpdatedEventHandler(UserUpdatedEvent message)
+    {
+        this.RefreshUI();
+    }
+}
+
+```
+
 #### `.Where()`
-Only forwards messages for which the `predicate` returns true.
+Filters a sequence of values based on a predicate
+
 ##### Overloads
 ```csharp
 .Where(Func<TMessageType, bool> predicate);
 .Where(Func<TMessageType, Task<bool>> predicate);
 ```
-`predicate` - the function that is used to filter messages.
+`predicate` - the function that is used to filter messages. Return `true` to keep the message, `false`  to drop it.
 
 ##### Examples
 ```csharp
@@ -1771,7 +1923,7 @@ Use custom subscriptions before custom publishing, since it it will not affect a
 #### Customizing the bus publisher message handler chain
 You can configure the bus using the same decorators you use to configure subscriptions.
 
-Use `.Dispatch()` extension method on ´ConcurrentMessagesBusOptions<TMesageBus>` to change the dispatch message handler chain:
+Use the `.Dispatch()` extension method on ´ConcurrentMessagesBusOptions<TMesageBus>` to decorate the dispatch message handler chain:
 
 ##### Overloads
 ```csharp
@@ -1794,7 +1946,7 @@ public struct MessageAndSubscription<TMessageType>
 }
 ```
 * `Message` is the message being dispatched.
-* `Subscription` is the subscription message handler chain.
+* `Subscription` is the subscription message handler (chain).
 
 Make sure you call the handler method at the end of the MHC chain or your subscribers will not be called.
 
@@ -1821,42 +1973,6 @@ var bus = new ConcurrentMessageBus<TestMessage>(
                     .Handler(handler);
             }));
 ```
-
-### Strong and weak references
-Strong references to your subscriptions will keep your subscribers from being garbage collected. 
-In situations where you control the lifetime of your subscribers you can unsubscribe when your object no longer needs to handle messages. 
-In situations where you do not control the creation and disposition of the subscribers, like some MVVM frameworks, it can be beneficial to use weak references which does not prevent the subscribers from being garbage collected. When the framework's last reference to your subscriber object is removed, .NET framework will GC the object and prevent it from handling messages.
-
-Strong references is the default setting.
-
-To configure a message bus to use Weak references you can configure the service options in the bus constructor
-```csharp
-    var bus = new ConcurrentMessageBus<MyMessage>(options => options.UseWeakReferences());
-```
-Or you can set the options manually
-```csharp
-    var options = 
-        new ConcurrentMessageBusOptions<MyMessage>()
-         .UseWeakReferences();
-
-    var bus = new ConcurrentMessageBus<MyMessage>(options => options.UseWeakReferences());
-```
-If you use a dependency injection container to instantiate your message busses and you do not have a factory function, you can always register the options with the container.
-This example is with ASP.NET Core, `Setup.cs/ConfigureServices()` 
-```csharp
-// Register generic message bus singletons
-services.AddSingleton(typeof(IMessageBus<>), typeof(ConcurrentMessageBus<>));
-
-// These two are required if you want to be able to resolve IMessageBusPublisher<> and IMessageBusSubscriptions
-services.AddSingleton(typeof(IMessageBusPublisher<>), typeof(PublisherBridge<>));
-services.AddSingleton(typeof(IMessageBusSubscriptions<>), typeof(SubscriptionsBridge<>));
-
-// Register options for MyMessage
-services.AddSingleton(services =>   
-    new ConcurrentMessageBusOptions<MyMessage>()
-        .UseWeakReferences());
-```
-
 
 ## Creating your own custom MHC decorator
 When you have requirements that can not be fullfilled using the existing decorators, it might be time to write your very own.

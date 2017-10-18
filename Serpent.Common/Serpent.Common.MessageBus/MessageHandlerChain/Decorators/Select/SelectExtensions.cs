@@ -9,7 +9,7 @@ namespace Serpent.Common.MessageBus
     public static class SelectExtensions
     {
         /// <summary>
-        /// Select a new type of the rest of the message handler chain
+        /// Projects each message to a new form
         /// </summary>
         /// <typeparam name="TMessageType">
         /// The current message type
@@ -21,10 +21,10 @@ namespace Serpent.Common.MessageBus
         /// The mhc builder
         /// </param>
         /// <param name="selector">
-        /// The selector method
+        /// A transform function to apply to each message
         /// </param>
         /// <returns>
-        /// The <see cref="IMessageHandlerChainBuilder&lt;TNewMessageType&gt;"/>.
+        /// A builder of the new message type <see cref="IMessageHandlerChainBuilder&lt;TNewMessageType&gt;"/>.
         /// </returns>
         public static IMessageHandlerChainBuilder<TNewMessageType> Select<TMessageType, TNewMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
@@ -34,7 +34,7 @@ namespace Serpent.Common.MessageBus
         }
 
         /// <summary>
-        /// Select a new type of the rest of the message handler chain with an async selector
+        /// Projects each message to a new form with async selector
         /// </summary>
         /// <typeparam name="TMessageType">
         /// The current message type
@@ -46,7 +46,7 @@ namespace Serpent.Common.MessageBus
         /// The mhc builder
         /// </param>
         /// <param name="selector">
-        /// The async selector method
+        /// A transform function to apply to each message
         /// </param>
         /// <returns>
         /// The <see cref="IMessageHandlerChainBuilder&lt;TNewMessageType&gt;"/>.

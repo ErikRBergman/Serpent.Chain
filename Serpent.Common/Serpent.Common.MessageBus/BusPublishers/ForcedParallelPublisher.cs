@@ -1,21 +1,21 @@
 // ReSharper disable once CheckNamespace
+
 namespace Serpent.Common.MessageBus
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Serpent.Common.MessageBus.Interfaces;
-
-    public class ForcedParallelPublisher<T> : BusPublisher<T>
+    public class ForcedParallelPublisher<TMessageType> : BusPublisher<TMessageType>
     {
-        public static BusPublisher<T> Default { get; } = new ForcedParallelPublisher<T>();
+        public static BusPublisher<TMessageType> Default { get; } = new ForcedParallelPublisher<TMessageType>();
 
-        public override Task PublishAsync(IEnumerable<IMessageHandler<T>> subscriptions, T message, CancellationToken token)
+        public override Task PublishAsync(IEnumerable<Func<TMessageType, CancellationToken, Task>> handlers, TMessageType message, CancellationToken token)
         {
-            foreach (var subscription in subscriptions)
+            foreach (var subscription in handlers)
             {
-                Task.Run(() => subscription.HandleMessageAsync(message, token), token);
+                Task.Run(() => subscription(message, token), token);
             }
 
             return Task.CompletedTask;

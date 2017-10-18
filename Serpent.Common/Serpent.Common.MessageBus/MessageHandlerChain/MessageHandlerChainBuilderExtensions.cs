@@ -28,6 +28,13 @@ namespace Serpent.Common.MessageBus
             return messageHandlerChainBuilder.Add(previousHandler => addFunc(previousHandler).HandleMessageAsync);
         }
 
+        public static IMessageHandlerChainBuilder<TMessageType> Add<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+            Func<Func<TMessageType, CancellationToken, Task>, Func<TMessageType, CancellationToken, Task>> addFunc)
+        {
+            return messageHandlerChainBuilder.Add((previousHandler, services) => addFunc(previousHandler));
+        }
+
         /// <summary>
         ///     Use a factory method to provide a message handler instance for each message passing through
         /// </summary>

@@ -25,29 +25,26 @@
             serviceProvider.Publisher<TMessageType>().PublishRange(messages);
         }
 
+        /// <summary>
+        ///     Subscribe to a message using a message handler chain builder
+        /// </summary>
+        /// <typeparam name="TMessageType">
+        ///     The message type
+        /// </typeparam>
+        /// <param name="serviceProvider">
+        ///     The service provider
+        /// </param>
+        /// <returns>
+        ///     The <see cref="IMessageHandlerChainBuilder&lt;TMessageType&gt;" /> used to setup the message handler chain.
+        /// </returns>
+        public static IMessageHandlerChainBuilder<TMessageType> Subscribe<TMessageType>(this IServiceProvider serviceProvider)
+        {
+            return serviceProvider.Subscriptions<TMessageType>().Subscribe();
+        }
+
         public static IMessageBusSubscriptions<TMessageType> Subscriptions<TMessageType>(this IServiceProvider serviceProvider)
         {
             return serviceProvider.GetService<IMessageBusSubscriptions<TMessageType>>();
         }
-
-        /// <summary>
-        /// Subscribe to a message using a message handler chain builder
-        /// </summary>
-        /// <typeparam name="TMessageType">
-        /// The message type
-        /// </typeparam>
-        /// <param name="serviceProvider">
-        /// The service provider
-        /// </param>
-        /// <returns>
-        /// The <see cref="IMessageHandlerChainBuilder&lt;TMessageType&gt;"/> used to setup the message handler chain.
-        /// </returns>
-        public static IMessageHandlerChainBuilder<TMessageType> Subscribe<TMessageType>(this IServiceProvider serviceProvider)
-        {
-            return serviceProvider
-                .Subscriptions<TMessageType>()
-                    .Subscribe();
-        }
-
     }
 }

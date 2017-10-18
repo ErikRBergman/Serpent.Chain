@@ -1,17 +1,21 @@
 ﻿namespace Serpent.Common.MessageBus.Models
 {
+    using System;
+    using System.Threading;
+    using System.Threading.Tasks;
+
     using Serpent.Common.MessageBus.Interfaces;
 
     public struct MessageAndHandler<TMessageType>
     {
-        public MessageAndHandler(TMessageType message, IMessageHandler<TMessageType> subscription)
+        public MessageAndHandler(TMessageType message, Func<TMessageType, CancellationToken, Task> handler)
         {
             this.Message = message;
-            this.Subscription = subscription;
+            this.Handler = handler;
         }
 
         public TMessageType Message { get; }
 
-        public IMessageHandler<TMessageType> Subscription { get; }
+        public Func<TMessageType, CancellationToken, Task> Handler { get; }
     }
 }
