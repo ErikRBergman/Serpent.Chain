@@ -6,16 +6,22 @@
 
     internal class FirstAsyncDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
+        private readonly Func<TMessageType, CancellationToken, Task<bool>> asyncPredicate;
+
         private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 
-        private readonly Func<TMessageType, CancellationToken, Task<bool>> asyncPredicate;
+        private IMessageBusSubscription subscription;
 
         private int wasReceived;
 
-        public FirstAsyncDecorator(Func<TMessageType, CancellationToken,  Task> handlerFunc, Func<TMessageType, CancellationToken, Task<bool>> asyncPredicate)
+        public FirstAsyncDecorator(
+            Func<TMessageType, CancellationToken, Task> handlerFunc,
+            Func<TMessageType, CancellationToken, Task<bool>> asyncPredicate,
+            MessageHandlerChainBuilderSetupServices subscriptionServices)
         {
             this.handlerFunc = handlerFunc;
             this.asyncPredicate = asyncPredicate;
+            subscriptionServices.SubscriptionNotification.AddNotification(this.SetSubscription);
         }
 
         public override async Task HandleMessageAsync(TMessageType message, CancellationToken token)
@@ -26,10 +32,22 @@
                 {
                     if (Interlocked.CompareExchange(ref this.wasReceived, 1, 0) == 0)
                     {
-                        await this.handlerFunc(message, token).ConfigureAwait(false);
+                        try
+                        {
+                            await this.handlerFunc(message, token).ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            this.subscription?.Dispose();
+                        }
                     }
                 }
             }
+        }
+
+        private void SetSubscription(IMessageBusSubscription sub)
+        {
+            this.subscription = sub;
         }
     }
 }

@@ -4,6 +4,9 @@
 
     public struct NoDuplicatesMessageAndTriggers<TMessageType>
     {
+        /// <summary>
+        /// The message
+        /// </summary>
         public TMessageType Message { get; set; }
 
         /// <summary>

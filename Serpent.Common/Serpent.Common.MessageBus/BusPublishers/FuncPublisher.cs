@@ -6,7 +6,7 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class FuncPublisher<TMessageType> : BusPublisher<TMessageType>
+    internal class FuncPublisher<TMessageType> : BusPublisher<TMessageType>
     {
         private readonly Func<IEnumerable<Func<TMessageType, CancellationToken, Task>>, TMessageType, Task> publishFunc;
 

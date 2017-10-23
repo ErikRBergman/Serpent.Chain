@@ -4,6 +4,9 @@ namespace Serpent.Common.MessageBus
 {
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Concurrent;
 
+    /// <summary>
+    /// The concurrent decorator extensions
+    /// </summary>
     public static class ConcurrentExtensions
     {
         /// <summary>

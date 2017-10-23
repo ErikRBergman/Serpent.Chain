@@ -20,7 +20,6 @@ namespace Serpent.Common.MessageBus
         /// </summary>
         /// <param name="addFunc">A function that returns the method to call when building the chain</param>
         /// <returns>The builder</returns>
-        //IMessageHandlerChainBuilder<TMessageType> Add(Func<Func<TMessageType, CancellationToken, Task>, Func<TMessageType, CancellationToken, Task>> addFunc);
         IMessageHandlerChainBuilder<TMessageType> Add(Func<Func<TMessageType, CancellationToken, Task>, MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>> addFunc);
         
         /// <summary>

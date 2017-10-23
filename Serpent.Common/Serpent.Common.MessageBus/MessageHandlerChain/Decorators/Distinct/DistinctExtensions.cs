@@ -9,6 +9,9 @@ namespace Serpent.Common.MessageBus
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Distinct;
     using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
+    /// <summary>
+    /// The distinct decorator extensions
+    /// </summary>
     public static class DistinctExtensions
     {
         /// <summary>

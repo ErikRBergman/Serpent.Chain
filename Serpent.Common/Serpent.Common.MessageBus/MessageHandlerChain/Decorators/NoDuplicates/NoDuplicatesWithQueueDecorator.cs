@@ -1,68 +1,75 @@
-﻿namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.NoDuplicates
-{
-    using System;
-    using System.Collections.Concurrent;
-    using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Threading;
-    using System.Threading.Tasks;
+﻿////namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.NoDuplicates
+////{
+////    using System;
+////    using System.Collections.Concurrent;
+////    using System.Collections.Generic;
+////    using System.Diagnostics.CodeAnalysis;
+////    using System.Threading;
+////    using System.Threading.Tasks;
 
-    internal class NoDuplicatesWithQueueDecorator<TMessageType, TKeyType> : MessageHandlerChainDecorator<TMessageType>
-    {
-        private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
+////    internal class NoDuplicatesItem<TMessageType>
+////    {
+////        //public 
 
-        private readonly ConcurrentDictionary<TKeyType, bool> keyDictionary = new ConcurrentDictionary<TKeyType, bool>();
+////        public TMessageType QueuedMessage { get; set; }
+////    }
 
-        private readonly Func<TMessageType, TKeyType> keySelector;
+////    internal class NoDuplicatesWithQueueDecorator<TMessageType, TKeyType> : MessageHandlerChainDecorator<TMessageType>
+////    {
+////        private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 
-        private int isDefaultInvoked;
+////        private readonly ConcurrentDictionary<TKeyType, NoDuplicatesItem<TMessageType>> keyDictionary = new ConcurrentDictionary<TKeyType, NoDuplicatesItem<TMessageType>>();
 
-        public NoDuplicatesWithQueueDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector)
-        {
-            this.handlerFunc = handlerFunc ?? throw new ArgumentNullException(nameof(handlerFunc));
-            this.keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
-        }
+////        private readonly Func<TMessageType, TKeyType> keySelector;
 
-        public NoDuplicatesWithQueueDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer)
-        {
-            this.handlerFunc = handlerFunc ?? throw new ArgumentNullException(nameof(handlerFunc));
-            this.keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
-            this.keyDictionary = new ConcurrentDictionary<TKeyType, bool>(equalityComparer);
-        }
+////        private int isDefaultInvoked;
 
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1126:PrefixCallsCorrectly", Justification = "Reviewed. Suppression is OK here.")]
-        public override async Task HandleMessageAsync(TMessageType message, CancellationToken token)
-        {
-            var key = this.keySelector(message);
+////        public NoDuplicatesWithQueueDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector)
+////        {
+////            this.handlerFunc = handlerFunc ?? throw new ArgumentNullException(nameof(handlerFunc));
+////            this.keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
+////        }
 
-            if (key == null)
-            {
-                if (Interlocked.CompareExchange(ref this.isDefaultInvoked, 1, 0) == 0)
-                {
-                    try
-                    {
-                        await this.handlerFunc(message, token).ConfigureAwait(false);
-                    }
-                    finally
-                    {
-                        this.isDefaultInvoked = 0;
-                    }
-                }
+////        public NoDuplicatesWithQueueDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer)
+////        {
+////            this.handlerFunc = handlerFunc ?? throw new ArgumentNullException(nameof(handlerFunc));
+////            this.keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
+////            this.keyDictionary = new ConcurrentDictionary<TKeyType, NoDuplicatesItem<TMessageType>>(equalityComparer);
+////        }
 
-                return;
-            }
+////        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1126:PrefixCallsCorrectly", Justification = "Reviewed. Suppression is OK here.")]
+////        public override async Task HandleMessageAsync(TMessageType message, CancellationToken token)
+////        {
+////            var key = this.keySelector(message);
 
-            if (this.keyDictionary.TryAdd(key, true))
-            {
-                try
-                {
-                    await this.handlerFunc(message, token).ConfigureAwait(false);
-                }
-                finally
-                {
-                    this.keyDictionary.TryRemove(key, out _);
-                }
-            }
-        }
-    }
-}
+////            if (key == null)
+////            {
+////                if (Interlocked.CompareExchange(ref this.isDefaultInvoked, 1, 0) == 0)
+////                {
+////                    try
+////                    {
+////                        await this.handlerFunc(message, token).ConfigureAwait(false);
+////                    }
+////                    finally
+////                    {
+////                        this.isDefaultInvoked = 0;
+////                    }
+////                }
+
+////                return;
+////            }
+
+////            if (this.keyDictionary.TryAdd(key, null))
+////            {
+////                try
+////                {
+////                    await this.handlerFunc(message, token).ConfigureAwait(false);
+////                }
+////                finally
+////                {
+////                    this.keyDictionary.TryRemove(key, out _);
+////                }
+////            }
+////        }
+////    }
+////}

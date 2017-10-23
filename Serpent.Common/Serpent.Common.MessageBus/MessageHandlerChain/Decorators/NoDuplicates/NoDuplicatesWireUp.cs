@@ -24,7 +24,7 @@
         {
             var propertyName = attribute.PropertyName;
 
-            WireUp<TMessageType, THandlerType>(messageHandlerChainBuilder, propertyName);
+            WireUp<TMessageType>(messageHandlerChainBuilder, propertyName);
         }
 
         protected override void WireUpFromConfiguration<TMessageType, THandlerType>(
@@ -32,10 +32,10 @@
             IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             THandlerType handler)
         {
-            WireUp<TMessageType, THandlerType>(messageHandlerChainBuilder, configuration.PropertyName);
+            WireUp<TMessageType>(messageHandlerChainBuilder, configuration.PropertyName);
         }
 
-        private static void WireUp<TMessageType, THandlerType>(IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, string propertyName)
+        private static void WireUp<TMessageType>(IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, string propertyName)
         {
             if (string.IsNullOrWhiteSpace(propertyName))
             {

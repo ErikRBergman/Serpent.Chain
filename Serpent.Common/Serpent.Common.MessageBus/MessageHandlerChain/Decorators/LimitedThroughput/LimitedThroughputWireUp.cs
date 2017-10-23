@@ -1,4 +1,5 @@
-﻿namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.LimitedThroughput
+﻿// ReSharper disable StyleCop.SA1126
+namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.LimitedThroughput
 {
     using System;
 

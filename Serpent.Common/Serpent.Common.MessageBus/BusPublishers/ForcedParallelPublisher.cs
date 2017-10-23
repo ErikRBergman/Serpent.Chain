@@ -7,7 +7,7 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class ForcedParallelPublisher<TMessageType> : BusPublisher<TMessageType>
+    internal class ForcedParallelPublisher<TMessageType> : BusPublisher<TMessageType>
     {
         public static BusPublisher<TMessageType> Default { get; } = new ForcedParallelPublisher<TMessageType>();
 

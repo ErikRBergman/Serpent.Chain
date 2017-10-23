@@ -2,7 +2,7 @@
 {
     using System;
 
-    public class ExtensionMethodSelectorAttribute : Attribute
+    internal class ExtensionMethodSelectorAttribute : Attribute
     {
         public ExtensionMethodSelectorAttribute(string identifier)
         {

@@ -8,6 +8,9 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// The append many decorator extensions
+    /// </summary>
     public static class AppendManyExtensions
     {
         private static readonly Task<bool> TrueTask = Task.FromResult(true);

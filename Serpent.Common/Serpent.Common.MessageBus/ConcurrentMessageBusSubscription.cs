@@ -4,8 +4,9 @@
 
     using Serpent.Common.MessageBus.Helpers;
 
-    internal struct ConcurrentMessageBusSubscription : IMessageBusSubscription
+    internal class ConcurrentMessageBusSubscription : IMessageBusSubscription
     {
+        private readonly object lockObject = new object();
         private Action unsubscribeAction;
 
         public ConcurrentMessageBusSubscription(Action unsubscribeAction)
@@ -20,9 +21,12 @@
 
         private void Unsubscribe()
         {
-            var action = this.unsubscribeAction;
-            this.unsubscribeAction = ActionHelpers.NoAction;
-            action.Invoke();
+            lock (this.lockObject)
+            {
+                var action = this.unsubscribeAction;
+                this.unsubscribeAction = ActionHelpers.NoAction;
+                action.Invoke();
+            }
         }
     }
 }

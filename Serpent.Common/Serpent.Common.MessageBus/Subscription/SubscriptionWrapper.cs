@@ -5,6 +5,9 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// The subscription wrapper type. Unsubscribes when disposed or runs out of scope
+    /// </summary>
     public class SubscriptionWrapper : IMessageBusSubscription
     {
         private IMessageBusSubscription subscription;

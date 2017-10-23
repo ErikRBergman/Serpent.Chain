@@ -5,7 +5,7 @@
     using System.Linq.Expressions;
     using System.Reflection;
 
-    public static class ExpressionHelpers
+    internal static class ExpressionHelpers
     {
         public static Delegate CreateGetter<TType>(PropertyInfo property)
         {

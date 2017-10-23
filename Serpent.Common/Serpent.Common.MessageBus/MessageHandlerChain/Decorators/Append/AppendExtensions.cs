@@ -6,6 +6,9 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// The append decorator extensions
+    /// </summary>
     public static class AppendExtensions
     {
         /// <summary>

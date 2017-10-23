@@ -17,6 +17,9 @@ namespace Serpent.Common.MessageBus
             this.PropertyName = propertyName;
         }
 
+        /// <summary>
+        /// Ensures the bus will only allow a single message
+        /// </summary>
         public DistinctAttribute()
         {
         }

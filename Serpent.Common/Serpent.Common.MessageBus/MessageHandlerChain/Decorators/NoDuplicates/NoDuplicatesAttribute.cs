@@ -1,8 +1,6 @@
 ﻿// ReSharper disable once CheckNamespace
 namespace Serpent.Common.MessageBus
 {
-    using System;
-
     using Serpent.Common.MessageBus.MessageHandlerChain.WireUp;
 
     /// <summary>
@@ -19,10 +17,16 @@ namespace Serpent.Common.MessageBus
             this.PropertyName = propertyName;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the no duplicates decorator attribute
+        /// </summary>
         public NoDuplicatesAttribute()
         {
         }
 
+        /// <summary>
+        /// The name of the property used as a key to eliminate duplicates
+        /// </summary>
         public string PropertyName { get; }
     }
 }

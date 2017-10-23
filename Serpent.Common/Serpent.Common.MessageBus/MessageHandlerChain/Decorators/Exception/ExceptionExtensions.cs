@@ -8,6 +8,9 @@ namespace Serpent.Common.MessageBus
 
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Exception;
 
+    /// <summary>
+    /// The exception extensions
+    /// </summary>
     public static class ExceptionExtensions
     {
         private static readonly Task<bool> FalseTask = Task.FromResult(false);

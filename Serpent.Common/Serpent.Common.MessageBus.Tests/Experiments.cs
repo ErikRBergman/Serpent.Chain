@@ -18,8 +18,24 @@
     public class Experiments
     {
         [TestMethod]
-        public void TestMethod1()
+        public async Task TestMethod1()
         {
+            var bus = new ConcurrentMessageBus<TestMessage>();
+
+            {
+                bus.Subscribe().Handler(new TestMessageHandler());
+            }
+
+            GC.Collect(2, GCCollectionMode.Forced);
+            GC.Collect(2, GCCollectionMode.Forced);
+            GC.Collect(2, GCCollectionMode.Forced);
+            GC.Collect(2, GCCollectionMode.Forced);
+
+            await Task.Delay(TimeSpan.FromSeconds(60));
+
+
+
+
             //.Where(m => m.Name == "Distinct");
 
             var instance = new TestMessage();
@@ -50,6 +66,12 @@
         [Concurrent(16)]
         public class TestMessageHandler : IMessageHandler<TestMessage>, IMessageHandlerRetry<TestMessage>
         {
+            ~TestMessageHandler()
+            {
+                System.Diagnostics.Debug.WriteLine("finalized");
+            }
+
+
             public async Task HandleMessageAsync(TestMessage message, CancellationToken cancellationToken)
             {
             }

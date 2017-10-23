@@ -70,14 +70,6 @@
         }
 
         [TestMethod]
-        public void UseForcedParallelPublisherTests()
-        {
-            var options = new ConcurrentMessageBusOptions<int>();
-            options.UseForcedParallelPublisher();
-            Assert.AreEqual(typeof(ForcedParallelPublisher<int>), options.BusPublisher.GetType());
-        }
-
-        [TestMethod]
         public void UseParallelPublisherTests()
         {
             var options = new ConcurrentMessageBusOptions<int>();

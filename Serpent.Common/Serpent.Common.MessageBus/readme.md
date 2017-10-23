@@ -1251,10 +1251,8 @@ The last overload of `.Filter()` is an inline decorator. To keep the chain you h
 ```csharp
 .Filter(Action<TMessageType> beforeInvoke = null, Action<TMessageType> afterInvoke = null);
 .Filter(Func<TMessageType, bool> beforeInvoke = null, Action<TMessageType> afterInvoke = null);
-.Filter(Func<TMessageType, Func<TMessageType, Task>, Task> filterFunc);
 .Filter(Func<TMessageType, Task<bool>> beforeInvoke = null, Func<TMessageType, Task> afterInvoke = null);
 .Filter(Func<TMessageType, CancellationToken, Task<bool>> beforeInvoke = null, Func<TMessageType, CancellationToken,Task> afterInvoke = null);
-.Filter(Func<TMessageType, CancellationToken, Func<TMessageType, CancellationToken, Task>, Task> filterFunc);
 ```
 * `beforeInvoke` - action or func called before the method is invoked. Some overloads allow returning a boolean. Return `true` or use an overload that does not return a value to always call the inner decorator, or return `false` to prevent the next decorator from executing..  
 * `afterInvoke` - action or func called after the method is invoked. THIS METHOD IS NOT CALLED IF THE HANDLER THROWS AN EXCEPTION.
