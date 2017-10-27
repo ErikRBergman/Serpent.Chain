@@ -1,5 +1,6 @@
 ﻿// ReSharper disable once CheckNamespace
 
+// ReSharper disable StyleCop.SA1118
 namespace Serpent.Common.MessageBus
 {
     using System;
@@ -8,6 +9,9 @@ namespace Serpent.Common.MessageBus
 
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Retry;
 
+    /// <summary>
+    /// The .Retry() decorator extensions
+    /// </summary>
     public static class RetryExtensions
     {
         /// <summary>
@@ -34,7 +38,7 @@ namespace Serpent.Common.MessageBus
         /// <param name="maxNumberOfAttempts">The maximum number of attempts to try.</param>
         /// <param name="retryDelay">The delay between retries.</param>
         /// <param name="exceptionFunc">Optional function called for each time the message handler throws an exception.</param>
-        /// <param name="successFunc">Option function called after the messgae handler has succeeded.</param>
+        /// <param name="successFunc">Option function called after the message handler has succeeded.</param>
         /// <returns>The MHC builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Retry<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
@@ -55,7 +59,7 @@ namespace Serpent.Common.MessageBus
         /// <param name="maxNumberOfAttempts">The maximum number of attempts to try.</param>
         /// <param name="retryDelay">The delay between retries.</param>
         /// <param name="exceptionFunc">Optional function called for each time the message handler throws an exception.</param>
-        /// <param name="successFunc">Option function called after the messgae handler has succeeded.</param>
+        /// <param name="successFunc">Option function called after the message handler has succeeded.</param>
         /// <returns>The MHC builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Retry<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
@@ -69,12 +73,8 @@ namespace Serpent.Common.MessageBus
                         currentHandler,
                         maxNumberOfAttempts,
                         retryDelay,
-                        exceptionFunc == null
-                            ? (Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task>)null
-                            : (msg, exception, attempt, maxAttempts, delay, token) => exceptionFunc(msg, exception, attempt, maxAttempts),
-                        successFunc == null
-                            ? (Func<TMessageType, int, int, TimeSpan, Task>)null
-                            : (msg, attempt, maxAttempts, delay) => successFunc?.Invoke(msg, attempt, maxAttempts))
+                        exceptionFunc == null ? (Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task>)null : (msg, exception, attempt, maxAttempts, delay, token) => exceptionFunc(msg, exception, attempt, maxAttempts),
+                        successFunc == null ? (Func<TMessageType, int, int, TimeSpan, Task>)null : (msg, attempt, maxAttempts, delay) => successFunc.Invoke(msg, attempt, maxAttempts))
                     .HandleMessageAsync);
         }
 
@@ -86,7 +86,7 @@ namespace Serpent.Common.MessageBus
         /// <param name="maxNumberOfAttempts">The maximum number of attempts to try.</param>
         /// <param name="retryDelay">The delay between retries.</param>
         /// <param name="exceptionAction">Optional function called for each time the message handler throws an exception.</param>
-        /// <param name="successAction">Option function called after the messgae handler has succeeded.</param>
+        /// <param name="successAction">Option function called after the message handler has succeeded.</param>
         /// <returns>The MHC builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Retry<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
@@ -100,12 +100,12 @@ namespace Serpent.Common.MessageBus
                     currentHandler,
                     maxNumberOfAttempts,
                     retryDelay,
-                    exceptionAction == null
+                    exceptionAction == null 
                         ? (Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task>)null
                         :
                     (msg, exception, attempt, maxAttempts, delay, token) =>
                         {
-                            exceptionAction?.Invoke(msg, exception, attempt, maxAttempts);
+                            exceptionAction.Invoke(msg, exception, attempt, maxAttempts);
                             return Task.CompletedTask;
                         },
                     successAction == null
@@ -125,7 +125,7 @@ namespace Serpent.Common.MessageBus
         /// <param name="maxNumberOfAttempts">The maximum number of attempts to try.</param>
         /// <param name="retryDelay">The delay between retries.</param>
         /// <param name="exceptionAction">Optional function called for each time the message handler throws an exception.</param>
-        /// <param name="successAction">Option function called after the messgae handler has succeeded.</param>
+        /// <param name="successAction">Option function called after the message handler has succeeded.</param>
         /// <returns>The subscription builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Retry<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,

@@ -9,6 +9,10 @@
     {
         internal const string WireUpExtensionName = "DistinctWireUp";
 
+        private static readonly MethodInfo DistinctMethodInfo = typeof(DistinctExtensions).GetMethods()
+            .FirstOrDefault(
+                m => m.IsGenericMethodDefinition && m.IsStatic && m.GetCustomAttributes<ExtensionMethodSelectorAttribute>().Any(a => a.Identifier == WireUpExtensionName));
+
         protected override DistinctConfiguration CreateAndParseConfigurationFromDefaultValue(string text)
         {
             return new DistinctConfiguration();
@@ -28,12 +32,8 @@
             SelectorSetup<TMessageType, DistinctWireUp>
                 .WireUp(
                     attribute.PropertyName,
-                    () =>
-                        typeof(DistinctExtensions)
-                            .GetMethods()
-                            .FirstOrDefault(
-                                m => m.IsGenericMethodDefinition && m.IsStatic && m.GetCustomAttributes<ExtensionMethodSelectorAttribute>().Any(a => a.Identifier == WireUpExtensionName)),
-                    (methodInfo, selector) => methodInfo.Invoke(null, new object[] { messageHandlerChainBuilder, selector }));
+                        DistinctMethodInfo,
+                    (typedMethodInfo, selector) => typedMethodInfo.Invoke(null, new object[] { messageHandlerChainBuilder, selector }));
         }
 
         protected override void WireUpFromConfiguration<TMessageType, THandlerType>(DistinctConfiguration configuration, IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler)
@@ -47,11 +47,7 @@
             SelectorSetup<TMessageType, DistinctWireUp>
                 .WireUp(
                     configuration.PropertyName,
-                    () =>
-                        typeof(DistinctExtensions)
-                            .GetMethods()
-                            .FirstOrDefault(
-                                m => m.IsGenericMethodDefinition && m.IsStatic && m.GetCustomAttributes<ExtensionMethodSelectorAttribute>().Any(a => a.Identifier == WireUpExtensionName)),
+                    DistinctMethodInfo,
                     (methodInfo, selector) => methodInfo.Invoke(null, new object[] { messageHandlerChainBuilder, selector }));
         }
     }

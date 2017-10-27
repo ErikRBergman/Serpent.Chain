@@ -1,5 +1,10 @@
 ﻿namespace Serpent.Common.MessageBus
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// The concurrent message bus options
     /// </summary>
@@ -7,9 +12,10 @@
     public class ConcurrentMessageBusOptions<TMessageType>
     {
         /// <summary>
-        /// The publisher, distributing messages to the subscribers
+        /// Gets or sets the custom publish method. If CustomPublishFunc is not null, the method is invoked instead of the default bus publisher method.
         /// </summary>
-        public BusPublisher<TMessageType> BusPublisher { get; set; } = ParallelPublisher<TMessageType>.Default;
+        public Func<IEnumerable<Func<TMessageType, CancellationToken, Task>>, TMessageType, CancellationToken, Task> CustomPublishFunc { get; set; }
+
 
         internal static ConcurrentMessageBusOptions<TMessageType> Default { get; } = new ConcurrentMessageBusOptions<TMessageType>();
     }

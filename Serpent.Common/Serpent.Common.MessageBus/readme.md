@@ -56,7 +56,6 @@ public class Program
         // Add a synchronous subscriber
         var subscription = bus
                 .Subscribe()
-                // .SoftFireAndForget() // De-couple the publisher from the subscriber execution chain
                 // .Retry(3, TimeSpan.FromSeconds(30)) // Try up to 3 times with 30 sec. delay in between
                 // .Concurrent(16) // Up to 16 concurrent tasks will handle messges
                 .Handler(message => Console.WriteLine(message.Id));
@@ -125,20 +124,7 @@ var subscription = bus
 // Unsubscribe
 subscription.Dispose();
 ```
-`.Handler()` returns an `IMessageBusSubscription` subscription that you dispose to unsubscribe.
-
-#### `.Subscribe().SoftFireAndForget()`
-Most often, you do not want the bus to track execution of your message handlers. The most common and best way to do this is by using `.SoftFireAndForget()`.
-```csharp
-var subscription = bus
-    .Subscribe()
-    .SoftFireAndForget()
-    .Handler(async message =>
-        {
-            await this.SomeMethodAsync();
-            Console.WriteLine(message.Id);
-        });
-```
+`.Handler()` returns an `IMessageBusSubscription` on which you call `.Dispose()` to unsubscribe.
 
 #### Subscribe and handle with IMessageHandler
 
@@ -201,7 +187,7 @@ public class HandlerClass
 	}}
 ```
 
-### Using a `.Factory()` to instantiate a handler for each message
+### Using `.Factory()` to instantiate a handler for each message
 Note! The handler in this example implements IDisposable, but it is not a requirement. When using a factory to instantiate an IDisposable type, the type is automatically disposed when the message has been handled (unless you specify neverDispose:true).
 This approach can come in handy and simplify your code if, for example, your handler class use resources that can can only be used for a short period of time.
 
@@ -213,7 +199,6 @@ This approach can come in handy and simplify your code if, for example, your han
 * `neverDispose` set this to true to prevent the `.Factory()` to dispose the handler after each message. This is for situations when for example you want to wait until the messages start comming before you instantiate the handler. 
 
 #### Example
-
 ```csharp
 internal class ReadmeFactoryHandler : IMessageHandler<ExampleMessage>, IDisposable
 {
@@ -230,7 +215,7 @@ internal class ReadmeFactoryHandler : IMessageHandler<ExampleMessage>, IDisposab
 
 internal class ReadmeFactoryHandlerSetup
 {
-    public void SetupSubscription(IMessageBusSubscriber<ExampleMessage> bus)
+    public void SetupSubscription(IMessageBusSubscriptions<ExampleMessage> bus)
     {
         bus
             .Subscribe()
@@ -719,6 +704,8 @@ Here's a summary of the currently available decorators. If you have requirements
 * `.Concurrent()` - Parallelize and handle X concurrent messages.
 * `.ConcurrentFireAndForget()` - Parallelize and handle X concurrent messages but does not provide delivery feedback and does not pass through exceptions.
 * `.Delay()` - Delay the execution of the message handler.
+* `.DispatchOnTaskScheduler()` - Have the messages dispatched on a new Task on a specified Task Scheduler. For example, to have all messages handled by the UI thread.
+* `.DispatchOnCurrentContext()` - Have the messages dispatched to a new Task on the current Task Scheduler. For example, to have all messages handled by the UI thread.
 * `.Distinct()` - Only pass through unique messages based on key.
 * `.Exception()` - Handle exceptions not handled by the message handler.
 * `.Filter()` - Execute a method before and after the execution of the message handler. Can also filter messages to stop the message from being processed further.
@@ -738,7 +725,6 @@ Here's a summary of the currently available decorators. If you have requirements
 * `.SoftFireAndForget()` - Executes the synchronous parts of the next MHCD or Handler, synchronous but everything asynchronous is executed without feedback. 
 * `.Take()` - Only let X messages pass through. Like LINQ `.Take()`.
 * `.TakeWhile()` - Only let messages pass through as long as a predicate succeeds. The same as `.Where().Take()`. Like LINQ `.TakeWhere()`.
-* `.TaskScheduler()` - Have the messages despatched to a new Task on a specified Task Scheduler. For example, to have all messages handled by the UI thread.
 * `.WeakReference()` - Keeps a weak reference to the message handler and unsubscribes when the message handler has been reclaimed by GC
 * `.Where()` - Filter messages based on predicate. Like LINQ `.Where()`
 
@@ -1106,6 +1092,27 @@ var subscription = bus
             await this.SomeMethodAsyncInvoked10SecondsLaterAsync();
             Console.WriteLine(message.Id);
         });
+```
+
+#### `.DispatchOnCurrentContext()`
+Invoke all calls on the current Task Scheduler. This can come in handy if you use the message bus to handle messages on a UI where it's important that the messages are invoked on the UI thread.
+Use this method when initializing the message handler chain on the UI thread (or other context).
+
+##### Overloads
+```csharp
+```
+##### Examples
+```csharp
+```
+
+#### `.DispatchOnTaskScheduler()`
+Invoke all calls on a specified Task Scheduler. This can come in handy if you use the message bus to handle messages on a UI where it's important that the messages are invoked on the UI thread.
+
+##### Overloads
+```csharp
+```
+##### Examples
+```csharp
 ```
 
 #### `.Distinct()`
@@ -1595,7 +1602,7 @@ public class PoliteMessage
     public string PoliteText { get; }
 }
 
-public void SetupSubscription(IMessageBusSubscriber<Message> bus)
+public void SetupSubscription(IMessageBusSubscriptions<Message> bus)
 {
     bus
         .Subscribe()
@@ -1628,7 +1635,7 @@ public struct MessageContainer<T>
     public DateTime MessageDate { get; set; }
 }
 
-public void SetupSubscription(IMessageBusSubscriber<Message> bus)
+public void SetupSubscription(IMessageBusSubscriptions<Message> bus)
 {
     bus
         .Subscribe()
@@ -1830,16 +1837,6 @@ var subscription = bus
         });
 ```
 
-#### `.TaskScheduler()`
-Invoke all calls on a specified Task Scheduler. This can come in handy if you use the message bus to handle messages on a UI where it's important that the messages are invoked on the UI thread.
-
-##### Overloads
-```csharp
-```
-##### Examples
-```csharp
-```
-
 
 #### `.WeakReference()`
 `.WeakReference()` keeps the message handler as a weak reference which does not prevent it from being garbage collected. If the handler is garbage collected (reclaimed by the garbage collection) `.WeakReference()` disposes the subscription (unsubscribes).
@@ -1921,61 +1918,59 @@ Use custom subscriptions before custom publishing, since it it will not affect a
 #### Customizing the bus publisher message handler chain
 You can configure the bus using the same decorators you use to configure subscriptions.
 
-Use the `.Dispatch()` extension method on ´ConcurrentMessagesBusOptions<TMesageBus>` to decorate the dispatch message handler chain:
+Use the `.UseSubscriptionChain()` extension method on ´ConcurrentMessagesBusOptions<TMesageBus>` to decorate the dispatch message handler chain:
 
 ##### Overloads
 ```csharp
-.Dispatch<TMessageType>(Action<MessageHandlerChainBuilder<MessageAndSubscription<TMessageType>>, Func<MessageAndSubscription<TMessageType>, Task>> setupMessageHandlerChainAction);
-```
+// Configures a chain without specifying a handler
+.UseSubscriptionChain<TMessageType>(Action<MessageHandlerChainBuilder<MessageAndHandler<TMessageType>>> configureMessageHandlerChain);
 
-The message in the dispatch message handler chain is of type `MessageAndSubscription<TMessageType>`:
+// Configures a chain specifying a handler
+.UseSubscriptionChain<TMessageType>(Action<MessageHandlerChainBuilder<MessageAndHandler<TMessageType>>, Func<MessageAndHandler<TMessageType>, CancellationToken, Task>> configureMessageHandlerChain);
+```
+* `configureMessageHandlerChain` - The method called to configure the bus options. 
+
+The SubscriptionChain handles a message of type `MessageAndHandler<TMessageType>` for each subscription:
 ```csharp
-public struct MessageAndSubscription<TMessageType>
+public struct MessageAndHandler<TMessageType>
 {
-    public MessageAndSubscription(TMessageType message, ISubscription<TMessageType> subscription)
+    public MessageAndHandler(TMessageType message, Func<TMessageType, CancellationToken, Task> messageHandler)
     {
         this.Message = message;
-        this.Subscription = subscription;
+        this.MessageHandler = messageHandler;
     }
 
     public TMessageType Message { get; }
-
-    public ISubscription<TMessageType> Subscription { get; }
+    public Func<TMessageType, CancellationToken, Task> MessageHandler { get; }
 }
 ```
-* `Message` is the message being dispatched.
-* `Subscription` is the subscription message handler (chain).
-
-Make sure you call the handler method at the end of the MHC chain or your subscribers will not be called.
+* `Message` - the message.
+* `MessageHandler` - the message handler to execute for this message.
 
 ##### Example
 ```csharp
 var bus = new ConcurrentMessageBus<TestMessage>(
-    options => options.Dispatch(
-    // chain - the dispatch message handler chain
-    // handler - the handler 
-        (chain, handler) =>
-            {
-                chain
-                    .SoftFireAndForget()
-                    .Concurrent(16)
-                    .Filter(
-                        message =>
-                            {
-                                Console.WriteLine("Before the message is invoked");
-                            },
-                        message =>
-                            {
-                                Console.WriteLine("After the message was invoked")
-                            })
-                    .Handler(handler);
-            }));
+    options => options.UseSubscriptionChain(
+        chain => chain
+            .Concurrent(16)
+            .Filter(
+                messageBeforeHandler => 
+                    {
+                        Console.WriteLine("Before the message is invoked");
+                    },
+                messageAfterHandler =>
+                    {
+                        Console.WriteLine("After the message was invoked")
+                    });
+            ));
 ```
+
+Make sure you call the handler method at the end of the MHC chain or your subscribers will not be called.
 
 ## Creating your own custom MHC decorator
 When you have requirements that can not be fullfilled using the existing decorators, it might be time to write your very own.
 
-This first example is what the source code to the very simple `.Where()` decorator looks like:
+This first example is the very simple `.Where()` decorator:
 
 ```csharp
 public static class WhereExtensions
@@ -2017,7 +2012,6 @@ Consider this setup:
     bus
         .Subscribe()
         .Where(message => message.IsPolite)         // Only polite messages ;)
-        .SoftFireAndForget()
         .Exception((message, exception) => Console.WriteLine("Failed delivering Message created " + message.MessageDate + ":" + exception))
         .Retry(5, TimeSpan.FromSeconds(60))
         .Handler((message, token) => {
@@ -2028,9 +2022,7 @@ Consider this setup:
 When the message handler chain is built, the decorators are set up in this order:
 * `Retry` is called with the message handler as parameter
 * `Exception` is called with the `Retry` handler as parameter
-* `SoftFireAndForget` is called with `Exception`
-* `Where` is called with `SoftFireAndForget` as parameter
-
+* `Where` is called with `Exception` as parameter
 
 You can also make the decorator a separate type. It's easier for more complicated decorators.
 Here is the extension method for `.Delay()`:
@@ -2125,13 +2117,11 @@ Resolve a service
 ```csharp
 bus
     .Subscribe()
-    .SoftFireAndForget()
     .Factory(() => container.GetService<ReadmeService>());
 
 // Or using IMessagesHandler
 
 bus
     .Subscribe()
-    .SoftFireAndForget()
     .Factory(() => container.GetService<IMessageHandler<ReadmeMessage>>());
 ```

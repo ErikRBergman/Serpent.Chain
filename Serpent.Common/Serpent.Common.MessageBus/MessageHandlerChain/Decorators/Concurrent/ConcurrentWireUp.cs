@@ -1,4 +1,5 @@
-﻿namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Concurrent
+﻿// ReSharper disable StyleCop.SA1126 - invalid warning
+namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Concurrent
 {
     using System;
 

@@ -12,7 +12,7 @@ namespace Serpent.Common.MessageBus
     public static class ConcurrentMessageBusOptionsExtensions
     {
         /// <summary>
-        /// Use a custom bus publisher
+        /// Configures the bus to use a custom bus publisher
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="options">The options</param>
@@ -22,12 +22,12 @@ namespace Serpent.Common.MessageBus
             this ConcurrentMessageBusOptions<TMessageType> options,
             BusPublisher<TMessageType> customBusPublisher)
         {
-            options.BusPublisher = customBusPublisher;
+            options.CustomPublishFunc = customBusPublisher.PublishAsync;
             return options;
         }
 
         /// <summary>
-        /// The use the forced parallel publisher. Every message subscription handler is executed on a newly spawned Task
+        /// Configures the bus to use the forced parallel publisher. Every message subscription handler is executed on a newly spawned Task
         /// </summary>
         /// <typeparam name="TMessageType">
         /// The message type
@@ -41,12 +41,13 @@ namespace Serpent.Common.MessageBus
         public static ConcurrentMessageBusOptions<TMessageType> UseForcedParallelPublisher<TMessageType>(
             this ConcurrentMessageBusOptions<TMessageType> options)
         {
-            options.BusPublisher = ForcedParallelPublisher<TMessageType>.Default;
+            options.UseCustomPublisher(ForcedParallelPublisher<TMessageType>.Default);
             return options;
         }
 
         /// <summary>
-        /// The use the parallel publisher.
+        /// Configures the bus to use the parallel publisher. 
+        /// The synchronous part of each message handler is executed sequentially, awaiting all message handlers executing asynchronous to complete
         /// </summary>
         /// <typeparam name="TMessageType">
         /// The message type
@@ -60,12 +61,13 @@ namespace Serpent.Common.MessageBus
         public static ConcurrentMessageBusOptions<TMessageType> UseParallelPublisher<TMessageType>(
             this ConcurrentMessageBusOptions<TMessageType> options)
         {
-            options.BusPublisher = ParallelPublisher<TMessageType>.Default;
+            options.UseCustomPublisher(ParallelPublisher<TMessageType>.Default);
             return options;
         }
 
         /// <summary>
-        /// The use a func publisher.
+        /// Configures the bus to use the func publisher.
+        /// The func publisher is a 
         /// </summary>
         /// <typeparam name="TMessageType">
         /// The message type
@@ -104,7 +106,7 @@ namespace Serpent.Common.MessageBus
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="options">The options</param>
         /// <param name="customHandlerMethod">The custom </param>
-        /// <returns></returns>
+        /// <returns>The options</returns>
         public static ConcurrentMessageBusOptions<TMessageType> UseSingleReceiverPublisher<TMessageType>(
             this ConcurrentMessageBusOptions<TMessageType> options,
             Func<Func<TMessageType, CancellationToken, Task>, TMessageType, CancellationToken, Task> customHandlerMethod = null)

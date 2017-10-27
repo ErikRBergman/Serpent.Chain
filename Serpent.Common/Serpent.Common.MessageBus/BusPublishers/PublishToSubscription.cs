@@ -19,7 +19,7 @@
         /// <returns>A task</returns>
         public static Task PublishAsync<TMessageType>(MessageAndHandler<TMessageType> messageAndHandler, CancellationToken cancellationToken)
         {
-            return messageAndHandler.Handler(messageAndHandler.Message, cancellationToken);
+            return messageAndHandler.MessageHandler(messageAndHandler.Message, cancellationToken);
         }
     }
 }

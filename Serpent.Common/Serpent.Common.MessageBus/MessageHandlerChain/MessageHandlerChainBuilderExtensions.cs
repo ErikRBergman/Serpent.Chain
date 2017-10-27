@@ -28,6 +28,27 @@ namespace Serpent.Common.MessageBus
             return messageHandlerChainBuilder.Add(previousHandler => addFunc(previousHandler).HandleMessageAsync);
         }
 
+        /// <summary>
+        /// Add a decorator to the message handler chain builder
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="messageHandlerChainBuilder">The mhc builder</param>
+        /// <param name="addFunc">The method that returns the </param>
+        /// <returns>The mhc builder</returns>
+        public static IMessageHandlerChainBuilder<TMessageType> Add<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+            Func<Func<TMessageType, CancellationToken, Task>, MessageHandlerChainBuilderSetupServices, MessageHandlerChainDecorator<TMessageType>> addFunc)
+        {
+            return messageHandlerChainBuilder.Add((previousHandler, services) => addFunc(previousHandler, services).HandleMessageAsync);
+        }
+
+        /// <summary>
+        /// Add a decorator to the message handler chain builder
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="messageHandlerChainBuilder">The mhc builder</param>
+        /// <param name="addFunc">The method that returns the </param>
+        /// <returns>The mhc builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Add<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<Func<TMessageType, CancellationToken, Task>, Func<TMessageType, CancellationToken, Task>> addFunc)

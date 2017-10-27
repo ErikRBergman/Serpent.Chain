@@ -6,20 +6,20 @@
     /// <summary>
     /// The base type for class based message handler chain decorators
     /// </summary>
-    /// <typeparam name="TMessageType"></typeparam>
+    /// <typeparam name="TMessageType">The message type</typeparam>
     public abstract class MessageHandlerChainDecorator<TMessageType>
     {
         /// <summary>
-        /// Handle a message
+        /// Handles a message.
         /// </summary>
         /// <param name="message">
-        /// Thge message
+        /// The message to handle.
         /// </param>
         /// <param name="cancellationToken">
-        /// A cancellation token
+        /// A cancellation token that should be used to cancel the message handler.
         /// </param>
         /// <returns>
-        /// The <see cref="Task"/>.
+        /// A <see cref="Task"/> that completes when the message is handled.
         /// </returns>
         public abstract Task HandleMessageAsync(TMessageType message, CancellationToken cancellationToken);
     }

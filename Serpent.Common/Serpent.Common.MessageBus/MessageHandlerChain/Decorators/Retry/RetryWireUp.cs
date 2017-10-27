@@ -53,11 +53,11 @@ namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Retry
         {
             if (retryAttribute.UseIMessageHandlerRetry && handler is IMessageHandlerRetry<TMessageType> retryHandler)
             {
-                messageHandlerChainBuilder.Retry(retryAttribute.MaxNumberOfRetries, retryAttribute.RetryDelay, retryHandler);
+                messageHandlerChainBuilder.Retry(retryAttribute.MaxNumberOfAttempts, retryAttribute.RetryDelay, retryHandler);
             }
             else
             {
-                messageHandlerChainBuilder.Retry(retryAttribute.MaxNumberOfRetries, retryAttribute.RetryDelay);
+                messageHandlerChainBuilder.Retry(retryAttribute.MaxNumberOfAttempts, retryAttribute.RetryDelay);
             }
         }
 

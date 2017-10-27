@@ -1,11 +1,11 @@
-﻿namespace Serpent.Common.MessageBus.MessageHandlerChain.WireUp
-{
-    public enum WireUpType
-    {
-        Unknown,
+﻿////namespace Serpent.Common.MessageBus.MessageHandlerChain.WireUp
+////{
+////    public enum WireUpType
+////    {
+////        Unknown,
 
-        Handler,
+////        Handler,
 
-        Factory
-    }
-}
+////        Factory
+////    }
+////}

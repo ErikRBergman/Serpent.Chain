@@ -2,6 +2,8 @@
 {
     using System;
     using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,23 +12,31 @@
     public class ConcurrentMessageBusOptionsExtensionsTests
     {
         [TestMethod]
-        public async Task PublisherTests()
+        public async Task UseCustomPublisherTests()
+        {
+            var mypublisher = new MyPublisher();
+            var bus = new ConcurrentMessageBus<int>(options => options.UseCustomPublisher(mypublisher));
+
+            await bus.PublishAsync(55);
+            await bus.PublishAsync(1);
+            await bus.PublishAsync(5);
+
+            Assert.AreEqual(3, mypublisher.Messages.Count);
+
+            Assert.AreEqual(55, mypublisher.Messages[0]);
+            Assert.AreEqual(1, mypublisher.Messages[1]);
+            Assert.AreEqual(5, mypublisher.Messages[2]);
+        }
+
+        [TestMethod]
+        public async Task UseSubscriptionChainWithHandlerTests()
         {
             // Test having message handler decorators both in the publish dispatch and the Subscription
             var bus = new ConcurrentMessageBus<TestMessage>(
-                options => options.Dispatch(
+                options => options.UseSubscriptionChain(
                     (chain, handler) =>
                         {
-                            chain
-                                .Filter(
-                                    message =>
-                                        {
-                                            message.Message.Log.TryAdd("Before", DateTime.Now);
-                                        },
-                                    message =>
-                                        {
-                                            message.Message.Log.TryAdd("After", DateTime.Now);
-                                        })
+                            chain.Filter(message => message.Message.Log.TryAdd("Before", DateTime.Now), message => message.Message.Log.TryAdd("After", DateTime.Now))
                                 .Handler(handler);
                         }));
 
@@ -62,40 +72,61 @@
         }
 
         [TestMethod]
-        public void UseCustomPublisherTests()
+        public async Task UseSubscriptionChainWithoutHandlerTests()
         {
-            var options = new ConcurrentMessageBusOptions<int>();
-            options.UseCustomPublisher(SerialPublisher<int>.Default);
-            Assert.AreSame(SerialPublisher<int>.Default, options.BusPublisher);
+            // Test having message handler decorators both in the publisher and the subscription
+            var bus = new ConcurrentMessageBus<TestMessage>(
+                options => options.UseSubscriptionChain(
+                    chain => chain
+                        .Filter(
+                            message => message.Message.Log.TryAdd("Before", DateTime.Now), 
+                            message => message.Message.Log.TryAdd("After", DateTime.Now))));
+
+            bus.Subscribe()
+                .Handler(
+                    async message =>
+                        {
+                            await Task.Delay(100);
+                            message.Log.TryAdd("Handler", DateTime.Now);
+                            await Task.Delay(100);
+                        });
+
+            var msg = new TestMessage();
+            bus.Publish(msg);
+
+            await Task.Delay(50);
+
+            Assert.AreEqual(1, msg.Log.Count);
+            Assert.IsTrue(msg.Log.ContainsKey("Before"));
+
+            await Task.Delay(100);
+
+            Assert.AreEqual(2, msg.Log.Count);
+            Assert.IsTrue(msg.Log.ContainsKey("Before"));
+            Assert.IsTrue(msg.Log.ContainsKey("Handler"));
+
+            await Task.Delay(100);
+
+            Assert.AreEqual(3, msg.Log.Count);
+            Assert.IsTrue(msg.Log.ContainsKey("Before"));
+            Assert.IsTrue(msg.Log.ContainsKey("Handler"));
+            Assert.IsTrue(msg.Log.ContainsKey("After"));
         }
 
-        [TestMethod]
-        public void UseParallelPublisherTests()
+        private class MyPublisher : BusPublisher<int>
         {
-            var options = new ConcurrentMessageBusOptions<int>();
-            options.UseParallelPublisher();
-            Assert.AreEqual(typeof(ParallelPublisher<int>), options.BusPublisher.GetType());
-        }
+            public List<int> Messages { get; } = new List<int>();
 
-        [TestMethod]
-        public void UseSerialPublisherTests()
-        {
-            var options = new ConcurrentMessageBusOptions<int>();
-            options.UseSerialPublisher();
-            Assert.AreEqual(typeof(SerialPublisher<int>), options.BusPublisher.GetType());
-        }
-
-        [TestMethod]
-        public void UseSingleReceiverPublisherTests()
-        {
-            var options = new ConcurrentMessageBusOptions<int>();
-            options.UseSingleReceiverPublisher();
-            Assert.AreEqual(typeof(SingleReceiverPublisher<int>), options.BusPublisher.GetType());
+            public override Task PublishAsync(IEnumerable<Func<int, CancellationToken, Task>> handlers, int message, CancellationToken cancellationToken)
+            {
+                this.Messages.Add(message);
+                return Task.CompletedTask;
+            }
         }
 
         private class TestMessage
         {
-            public ConcurrentDictionary<string, DateTime> Log { get; set; } = new ConcurrentDictionary<string, DateTime>();
+            public ConcurrentDictionary<string, DateTime> Log { get; } = new ConcurrentDictionary<string, DateTime>();
         }
     }
 }

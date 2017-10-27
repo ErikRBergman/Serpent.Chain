@@ -33,11 +33,11 @@
         /// <summary>
         ///     Wire up from attribute
         /// </summary>
-        /// <typeparam name="TMessageType"></typeparam>
-        /// <typeparam name="THandlerType"></typeparam>
-        /// <param name="attribute"></param>
-        /// <param name="messageHandlerChainBuilder"></param>
-        /// <param name="handler"></param>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <typeparam name="THandlerType">The handler type</typeparam>
+        /// <param name="attribute">The attribute to wire up from</param>
+        /// <param name="messageHandlerChainBuilder">The message handler chain builder</param>
+        /// <param name="handler">The message handler</param>
         public void WireUpFromAttribute<TMessageType, THandlerType>(Attribute attribute, IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, THandlerType handler)
         {
             if (attribute is TAttributeType ourAttribute)

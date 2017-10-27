@@ -9,7 +9,7 @@
         // ReSharper disable once StaticMemberInGenericType
         private static readonly ConcurrentDictionary<string, Container> Getters = new ConcurrentDictionary<string, Container>();
 
-        public static void WireUp(string propertyName, Func<MethodInfo> methodInfoGenerator, Action<MethodInfo, Delegate> invoker)
+        public static void WireUp(string propertyName, MethodInfo genericMethodInfo, Action<MethodInfo, Delegate> invokeDecoratorAction)
         {
             var container = Getters.GetOrAdd(
                 propertyName,
@@ -17,8 +17,7 @@
                     {
                         var propertyInfo = ExpressionHelpers.GetPropertyInfo<TMessageType>(propertyName);
                         var selector = ExpressionHelpers.CreateGetter<TMessageType>(propertyInfo);
-                        var methodInfo = methodInfoGenerator();
-                        var method = methodInfo.MakeGenericMethod(typeof(TMessageType), propertyInfo.PropertyType);
+                        var method = genericMethodInfo.MakeGenericMethod(typeof(TMessageType), propertyInfo.PropertyType);
 
                         return new Container
                                    {
@@ -27,7 +26,7 @@
                                    };
                     });
 
-            invoker(container.Method, container.Selector);
+            invokeDecoratorAction(container.Method, container.Selector);
         }
 
         private struct Container

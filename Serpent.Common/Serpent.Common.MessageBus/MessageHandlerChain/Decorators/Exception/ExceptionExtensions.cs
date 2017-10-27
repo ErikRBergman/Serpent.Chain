@@ -9,18 +9,21 @@ namespace Serpent.Common.MessageBus
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Exception;
 
     /// <summary>
-    /// The exception extensions
+    ///     The exception extensions
     /// </summary>
     public static class ExceptionExtensions
     {
         private static readonly Task<bool> FalseTask = Task.FromResult(false);
 
         /// <summary>
-        /// Handles exceptions, optionally prevents them to propagate up the chain
+        ///     Handles exceptions, optionally prevents them to propagate up the chain
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The builder</param>
-        /// <param name="exceptionHandlerFunc">The method that handles the exception. If this method returns true, the exception propagates further up the chain</param>
+        /// <param name="exceptionHandlerFunc">
+        ///     The method that handles the exception. If this method returns true, the exception
+        ///     propagates further up the chain
+        /// </param>
         /// <returns>The builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Exception<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
@@ -29,39 +32,15 @@ namespace Serpent.Common.MessageBus
             return messageHandlerChainBuilder.Add(currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, exceptionHandlerFunc));
         }
 
-
         /// <summary>
-        /// Prevents the exception from propagating up the chain
+        ///     Handles exceptions, optionally prevents them to propagate up the chain
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The builder</param>
-        /// <returns>The builder</returns>
-        public static IMessageHandlerChainBuilder<TMessageType> IgnoreExceptions<TMessageType>(
-            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder)
-        {
-
-            return messageHandlerChainBuilder.Add(innerMessageHandler =>
-                {
-                    return async (message, token) =>
-                        {
-                            try
-                            {
-                                await innerMessageHandler(message, token);
-                            }
-                            catch (Exception)
-                            {
-                                // ignored
-                            }
-                        };
-                });
-        }
-
-        /// <summary>
-        /// Handles exceptions, optionally prevents them to propagate up the chain
-        /// </summary>
-        /// <typeparam name="TMessageType">The message type</typeparam>
-        /// <param name="messageHandlerChainBuilder">The builder</param>
-        /// <param name="exceptionHandlerFunc">The method that handles the exception. If this method returns true, the exception propagates further up the chain</param>
+        /// <param name="exceptionHandlerFunc">
+        ///     The method that handles the exception. If this method returns true, the exception
+        ///     propagates further up the chain
+        /// </param>
         /// <returns>The builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Exception<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
@@ -71,7 +50,7 @@ namespace Serpent.Common.MessageBus
         }
 
         /// <summary>
-        /// Handles exceptions
+        ///     Handles exceptions
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The builder</param>
@@ -92,7 +71,7 @@ namespace Serpent.Common.MessageBus
         }
 
         /// <summary>
-        /// Handles exceptions
+        ///     Handles exceptions
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The builder</param>
@@ -112,26 +91,26 @@ namespace Serpent.Common.MessageBus
                         }));
         }
 
-
         /// <summary>
-        /// Handles exceptions, optionally prevents them to propagate up the chain
+        ///     Handles exceptions, optionally prevents them to propagate up the chain
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The builder</param>
-        /// <param name="exceptionHandlerFunc">The method that handles the exception. If this method returns true, the exception propagates further up the chain</param>
+        /// <param name="exceptionHandlerFunc">
+        ///     The method that handles the exception. If this method returns true, the exception
+        ///     propagates further up the chain
+        /// </param>
         /// <returns>The builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Exception<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Exception, bool> exceptionHandlerFunc)
         {
             return messageHandlerChainBuilder.Add(
-                currentHandler => new ExceptionDecorator<TMessageType>(
-                    currentHandler,
-                    (message, exception) => Task.FromResult(exceptionHandlerFunc(message, exception))));
+                currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, (message, exception) => Task.FromResult(exceptionHandlerFunc(message, exception))));
         }
 
         /// <summary>
-        /// Handles exceptions
+        ///     Handles exceptions
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The builder</param>
@@ -149,6 +128,31 @@ namespace Serpent.Common.MessageBus
                             exceptionHandlerAction(message, exception);
                             return FalseTask;
                         }));
+        }
+
+        /// <summary>
+        ///     Prevents the exception from propagating up the chain
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="messageHandlerChainBuilder">The builder</param>
+        /// <returns>The builder</returns>
+        public static IMessageHandlerChainBuilder<TMessageType> IgnoreExceptions<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder)
+        {
+            return messageHandlerChainBuilder.Add(
+                innerMessageHandler =>
+                    {
+                        return async (message, token) =>
+                            {
+                                try
+                                {
+                                    await innerMessageHandler(message, token);
+                                }
+                                catch (Exception)
+                                {
+                                    // ignored
+                                }
+                            };
+                    });
         }
     }
 }

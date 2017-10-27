@@ -3,13 +3,23 @@ namespace Serpent.Common.MessageBus
 {
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.Take;
 
+    /// <summary>
+    /// Provides the .Take() decorator extensions for message handler chain builder 
+    /// </summary>
     public static class TakeExtensions
     {
+        /// <summary>
+        /// Only takes a specified number of messages before unsubscribing
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="messageHandlerChainBuilder">The message handler chain builder</param>
+        /// <param name="numberOfMessages">The number of messages to take</param>
+        /// <returns>A message handler chain builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Take<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             int numberOfMessages)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new TakeDecorator<TMessageType>(currentHandler, numberOfMessages));
+            return messageHandlerChainBuilder.Add((currentHandler, services) => new TakeDecorator<TMessageType>(currentHandler, numberOfMessages, services.SubscriptionNotification));
         }
     }
 }

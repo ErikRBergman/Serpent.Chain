@@ -4,18 +4,35 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Serpent.Common.MessageBus.Interfaces;
-
+    /// <summary>
+    /// The message and handler type
+    /// </summary>
+    /// <typeparam name="TMessageType">The message type</typeparam>
     public struct MessageAndHandler<TMessageType>
     {
-        public MessageAndHandler(TMessageType message, Func<TMessageType, CancellationToken, Task> handler)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MessageAndHandler{TMessageType}"/> struct. 
+        /// </summary>
+        /// <param name="message">
+        /// The message
+        /// </param>
+        /// <param name="messageHandler">
+        /// The message handler
+        /// </param>
+        public MessageAndHandler(TMessageType message, Func<TMessageType, CancellationToken, Task> messageHandler)
         {
             this.Message = message;
-            this.Handler = handler;
+            this.MessageHandler = messageHandler;
         }
 
+        /// <summary>
+        /// The message
+        /// </summary>
         public TMessageType Message { get; }
 
-        public Func<TMessageType, CancellationToken, Task> Handler { get; }
+        /// <summary>
+        /// The message handler
+        /// </summary>
+        public Func<TMessageType, CancellationToken, Task> MessageHandler { get; }
     }
 }

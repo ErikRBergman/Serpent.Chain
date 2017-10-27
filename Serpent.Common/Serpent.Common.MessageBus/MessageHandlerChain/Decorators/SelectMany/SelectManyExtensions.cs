@@ -7,6 +7,9 @@ namespace Serpent.Common.MessageBus
 
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.SelectMany;
 
+    /// <summary>
+    /// The .SelectMany() decorator extensions type
+    /// </summary>
     public static class SelectManyExtensions
     {
         /// <summary>

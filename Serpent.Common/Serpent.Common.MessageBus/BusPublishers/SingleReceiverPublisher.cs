@@ -7,8 +7,6 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Serpent.Common.MessageBus.Interfaces;
-
     /// <summary>
     /// Dispatches a message to a single subscription, alternating between subscriptions
     /// </summary>
@@ -28,8 +26,14 @@ namespace Serpent.Common.MessageBus
             this.handlerFunc = customHandlerMethod ?? ((subscription, message, token) => subscription(message, token));
         }
 
-        // This publisher assumes the handlers always come in the same order
-        public override Task PublishAsync(IEnumerable<Func<TMessageType, CancellationToken, Task>> handlers, TMessageType message, CancellationToken token)
+        /// <summary>
+        /// Publish a message to all handlers. This method is called when a message is published to a message bus.
+        /// </summary>
+        /// <param name="handlers">The handlers</param>
+        /// <param name="message">The message to publish</param>
+        /// <param name="cancellationToken">A cancellation token</param>
+        /// <returns>The task</returns>
+        public override Task PublishAsync(IEnumerable<Func<TMessageType, CancellationToken, Task>> handlers, TMessageType message, CancellationToken cancellationToken)
         {
             while (true)
             {
@@ -40,7 +44,7 @@ namespace Serpent.Common.MessageBus
                 {
                     if (index == nextIndex)
                     {
-                        return this.handlerFunc(handler, message, token);
+                        return this.handlerFunc(handler, message, cancellationToken);
                     }
 
                     index++;

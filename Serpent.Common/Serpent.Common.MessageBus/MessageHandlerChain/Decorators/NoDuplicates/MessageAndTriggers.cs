@@ -2,6 +2,11 @@
 {
     using System;
 
+    /// <summary>
+    /// The no duplicates message and triggers type.
+    /// Used to control the no duplicates decorator
+    /// </summary>
+    /// <typeparam name="TMessageType">The message type</typeparam>
     public struct NoDuplicatesMessageAndTriggers<TMessageType>
     {
         /// <summary>

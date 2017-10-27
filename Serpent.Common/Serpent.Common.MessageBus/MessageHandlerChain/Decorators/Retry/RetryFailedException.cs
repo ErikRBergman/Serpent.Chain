@@ -34,7 +34,9 @@ namespace Serpent.Common.MessageBus.Exceptions
         /// </summary>
         public TimeSpan Delay { get; }
 
-        // The exceptions
+        /// <summary>
+        /// The exceptions
+        /// </summary>
         public IReadOnlyCollection<Exception> Exceptions { get; }
     }
 }

@@ -6,14 +6,23 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// The message bus subscriber extension types
+    /// </summary>
     public static class MessageBusSubscriberExtensions
     {
-        public static async Task<TMessageType> GetMessageAsync<TMessageType>(this IMessageBusSubscriptions<TMessageType> messageBus)
+        /// <summary>
+        /// Get a new message
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="subscriptions">The subscriptions interface</param>
+        /// <returns>A task</returns>
+        public static async Task<TMessageType> GetMessageAsync<TMessageType>(this IMessageBusSubscriptions<TMessageType> subscriptions)
         {
             var completion = new TaskCompletionSource<TMessageType>();
             var isCompleted = 0;
 
-            using (messageBus.Subscribe(
+            using (subscriptions.Subscribe(
                     message =>
                         {
                             if (Interlocked.CompareExchange(ref isCompleted, 1, 0) == 0)
@@ -33,7 +42,7 @@ namespace Serpent.Common.MessageBus
         ///     Register a subscription that through a factory creates a unique message handler for each message and then calls a
         ///     handler function
         ///     This functionality can also be replicated on your own by using:
-        ///     messageBus.Subscribe(message => { var handler = new HandlerClass(); return handler.HandleMessageAsync(message); },
+        ///     subscriptions.Subscribe(message => { var handler = new HandlerClass(); return handler.HandleMessageAsync(message); },
         ///     null);
         /// </summary>
         /// <typeparam name="TMessage">The bus message type</typeparam>
@@ -61,7 +70,7 @@ namespace Serpent.Common.MessageBus
         ///     Register a subscription that through a factory creates a unique message handler for each message, calls a handler
         ///     and then disposes the handler function
         ///     This functionality can also be replicated on your own by using:
-        ///     messageBus.Subscribe(async message => { var handler = new HandlerClass(); await
+        ///     subscriptions.Subscribe(async message => { var handler = new HandlerClass(); await
         ///     handler.HandleMessageAsync(message); handler.Dispose(); }, null);
         /// </summary>
         /// <typeparam name="TMessage">The bus message type</typeparam>
@@ -136,6 +145,13 @@ namespace Serpent.Common.MessageBus
             return SubscriptionWrapper.Create(messageBus, (message, token) => invocationFunc((TMessage)message), message => message is TMessage);
         }
 
+        /// <summary>
+        /// Subscribes to a message bus
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="subscriptions">The subscriptions</param>
+        /// <param name="handlerFunc">The handler method</param>
+        /// <returns>A message bus subscription</returns>
         public static IMessageBusSubscription Subscribe<TMessageType>(this IMessageBusSubscriptions<TMessageType> subscriptions, Func<TMessageType, Task> handlerFunc)
         {
             return subscriptions.Subscribe((message, token) => handlerFunc(message));

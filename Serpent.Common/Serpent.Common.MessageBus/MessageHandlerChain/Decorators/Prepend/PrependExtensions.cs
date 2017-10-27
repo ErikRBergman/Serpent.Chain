@@ -5,6 +5,9 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// The .Prepend() decorator extensions
+    /// </summary>
     public static class PrependExtensions
     {
         /// <summary>

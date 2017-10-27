@@ -5,6 +5,9 @@ namespace Serpent.Common.MessageBus
     using System;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// Provides extensions for the .Where() decorator
+    /// </summary>
     public static class WhereExtensions
     {
         /// <summary>

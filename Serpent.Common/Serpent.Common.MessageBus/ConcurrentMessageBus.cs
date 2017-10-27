@@ -20,7 +20,7 @@
 
         private readonly ConcurrentMessageBusOptions<TMessageType> options = ConcurrentMessageBusOptions<TMessageType>.Default;
 
-        private readonly Func<IEnumerable<Func<TMessageType, CancellationToken, Task>>, TMessageType, CancellationToken, Task> publishAsyncFunc;
+        private readonly Func<IEnumerable<Func<TMessageType, CancellationToken, Task>>, TMessageType, CancellationToken, Task> publishAsyncFunc = ParallelPublisher<TMessageType>.Default.PublishAsync;
 
         private readonly ConcurrentQueue<int> recycledSubscriptionIds = new ConcurrentQueue<int>();
 
@@ -29,38 +29,42 @@
         private IEnumerable<Func<TMessageType, CancellationToken, Task>> subscriptionCache = Array.Empty<Func<TMessageType, CancellationToken, Task>>();
 
         /// <summary>
-        ///     Creates a new instance of the message bus
+        /// Initializes a new instance of the <see cref="ConcurrentMessageBus{TMessageType}"/> class. 
         /// </summary>
-        /// <param name="options">The options</param>
+        /// <param name="options">
+        /// The options
+        /// </param>
         public ConcurrentMessageBus(ConcurrentMessageBusOptions<TMessageType> options)
         {
             this.options = options;
-            this.publishAsyncFunc = this.options.BusPublisher.PublishAsync;
+            this.publishAsyncFunc = this.options.CustomPublishFunc ?? this.publishAsyncFunc;
         }
 
         /// <summary>
-        ///     Creates a new instance of the message bus
+        /// Initializes a new instance of the <see cref="ConcurrentMessageBus{TMessageType}"/> class. 
         /// </summary>
-        /// <param name="optionsAction">A method that configures the message bus options</param>
+        /// <param name="optionsAction">
+        /// A method that configures the message bus options
+        /// </param>
         public ConcurrentMessageBus(Action<ConcurrentMessageBusOptions<TMessageType>> optionsAction)
         {
             var newOptions = new ConcurrentMessageBusOptions<TMessageType>();
             optionsAction(newOptions);
             this.options = newOptions;
-            this.publishAsyncFunc = this.options.BusPublisher.PublishAsync;
+            this.publishAsyncFunc = this.options.CustomPublishFunc ?? this.publishAsyncFunc;
         }
 
         /// <summary>
-        ///     Creates a new instance of the message bus
+        /// Initializes a new instance of the <see cref="ConcurrentMessageBus{TMessageType}"/> class. 
         /// </summary>
         public ConcurrentMessageBus()
         {
-            if (this.options.BusPublisher == null)
+            if (this.options.CustomPublishFunc == null)
             {
                 throw new Exception("No BusPublisher must not be null");
             }
 
-            this.publishAsyncFunc = this.options.BusPublisher.PublishAsync;
+            this.publishAsyncFunc = this.options.CustomPublishFunc ?? this.publishAsyncFunc;
         }
 
         /// <summary>

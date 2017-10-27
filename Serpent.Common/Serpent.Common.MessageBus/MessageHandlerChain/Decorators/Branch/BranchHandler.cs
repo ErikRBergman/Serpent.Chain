@@ -33,21 +33,21 @@
             return Task.WhenAll(this.handlers.Select(h => h(message, token)));
         }
 
-        public void SetSubscription(IMessageBusSubscription subscription)
+        public void SetSubscription(IMessageBusSubscription newSubscription)
         {
-            if (subscription != null)
+            if (newSubscription != null)
             {
                 lock (this.listLock)
                 {
                     if (this.handlers.Count == 0)
                     {
-                        subscription.Dispose();
-                        subscription = null;
+                        newSubscription.Dispose();
+                        newSubscription = null;
                     }
                 }
             }
 
-            this.subscription = subscription;
+            this.subscription = newSubscription;
         }
 
         public IMessageBusSubscription Subscribe(Func<TMessageType, CancellationToken, Task> handlerFunc)

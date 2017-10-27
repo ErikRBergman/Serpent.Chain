@@ -6,8 +6,6 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Serpent.Common.MessageBus.Interfaces;
-
     /// <summary>
     /// Base type for bus publishers
     /// </summary>
@@ -15,9 +13,9 @@ namespace Serpent.Common.MessageBus
     public abstract class BusPublisher<TMessageType>
     {
         /// <summary>
-        /// Publish a message to all handlers
+        /// Publishes a message to all subscribers (message handlers). This method is called when a message is published to a message bus.
         /// </summary>
-        /// <param name="handlers">The handlers</param>
+        /// <param name="handlers">The message handlers</param>
         /// <param name="message">The message to publish</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The task</returns>
