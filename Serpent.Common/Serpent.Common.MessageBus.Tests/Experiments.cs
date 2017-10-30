@@ -17,10 +17,27 @@
     [TestClass]
     public class Experiments
     {
+        public static Expression<Func<T>> GetExpression<T>(Expression<Func<T>> e)
+        {
+            return e;
+        }
+
+
+        internal class X
+        {
+            public int Id { get; set; } 
+        }
+
         [TestMethod]
         public async Task TestMethod1()
         {
             var bus = new ConcurrentMessageBus<TestMessage>();
+            var x = new X();
+
+            var e1 = GetExpression(() => x.Id);
+            var e2 = GetExpression(() => x.Id);
+
+            var eq = ReferenceEquals(e1, e2);
 
             {
                 bus.Subscribe().Handler(new TestMessageHandler());

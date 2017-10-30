@@ -59,11 +59,6 @@
         /// </summary>
         public ConcurrentMessageBus()
         {
-            if (this.options.CustomPublishFunc == null)
-            {
-                throw new Exception("No BusPublisher must not be null");
-            }
-
             this.publishAsyncFunc = this.options.CustomPublishFunc ?? this.publishAsyncFunc;
         }
 

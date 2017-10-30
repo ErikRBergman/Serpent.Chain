@@ -146,7 +146,6 @@ var handler = new HandlerClass();
 
 var subscription = bus
     .Subscribe()
-    .SoftFireAndForget()
     .Handler(handler);
 ```
 
@@ -156,7 +155,6 @@ The Handler-function returns an `IMessageBusSubscription` that inherits from `ID
 ```csharp
 var subscription = bus
     .Subscribe()
-    .SoftFireAndForget()
     .Handler(async message =>
         {
             await this.SomeMethodAsync();
@@ -177,7 +175,6 @@ public class HandlerClass
     {
         this.wrapper = bus
             .Subscribe()
-            .SoftFireAndForget()
             .Handler(async message =>
                 {
                     await this.SomeMethodAsync();
@@ -219,7 +216,6 @@ internal class ReadmeFactoryHandlerSetup
     {
         bus
             .Subscribe()
-            .SoftFireAndForget()
             .Factory(() => new ReadmeFactoryHandler());
     }
 }
@@ -260,14 +256,12 @@ public void SetupSubscriptions(IMesssageBusSubscriptions<ReadmeMessage> bus, ISe
 {
     bus
         .Subscribe()
-        .SoftFireAndForget()
         .Factory(() => services.GetService<ReadmeService>());
 
     // Using IMessageHandler<>
 
     bus
         .Subscribe()
-        .SoftFireAndForget()
         .Factory(() => services.GetService<IMessageHandler<ReadmeMessage>>());
 }
 ```
@@ -296,14 +290,12 @@ public void SetupSubscriptions(IMesssageBusSubscriptions<ReadmeMessage> bus, ICo
 {
     bus
         .Subscribe()
-        .SoftFireAndForget()
         .Factory(() => services.Resolve<ReadmeService>());
 
     // Using IMessageHandler<>
 
     bus
         .Subscribe()
-        .SoftFireAndForget()
         .Factory(() => services.Resolve<IMessageHandler<ReadmeMessage>>());
 }
 ```
@@ -434,7 +426,6 @@ The decorators I promissed you to write about can do some magic for us. Let's us
 var sendBackupFileToCloudStorageSubscription =
     services
         .Subscribe<SendBackupFileToCloudStorageMessage>()
-            .SoftFireAndForget()
             .Concurrent(16)
             .Handler(async message => 
                 {
@@ -442,7 +433,6 @@ var sendBackupFileToCloudStorageSubscription =
                     tweetAboutTheBackupPublisher.Publish(new TweetAboutTheBackupMessage { Filename = message.Filename });
                 });
 ```
-The `.SoftFireAndForget()` is used to drop the feedback chain, which means that a caller publishing the a message using PublishAsync can't await the message being handled.
 
 The same goes for our tweeting, but our twitter api allows only 2 simultaneous tweets. I'm sure the Twitter API allows a lot more, but this is for the sake of the example.
 ```csharp
@@ -450,7 +440,6 @@ The same goes for our tweeting, but our twitter api allows only 2 simultaneous t
 var tweetAboutTheBackupSubscription =
     services
         .Subscribe<TweetAboutTheBackupMessage>()
-            .SoftFireAndForget()
             .Concurrent(2)
             .Handler(async message => 
                 {
@@ -467,7 +456,6 @@ That was the `.Concurrent()` decorator. Now, let's add some retry functionality 
 var sendBackupFileToCloudStorageSubscription =
     services
         .Subscribe<SendBackupFileToCloudStorageMessage>()
-            .SoftFireAndForget()
             .Retry(
                 5, 
                 TimeSpan.FromMinutes(1),
@@ -489,7 +477,6 @@ var sendBackupFileToCloudStorageSubscription =
 var tweetAboutTheBackupSubscription =
     services
         .Subscribe<TweetAboutTheBackupMessage>()
-            .SoftFireAndForget()
             .Retry(3, TimeSpan.FromSeconds(10))
             .Concurrent(2)
             .Handler(async message => 
@@ -507,7 +494,6 @@ We can use a decorator more than once to make the functionality even more advanc
 var sendBackupFileToCloudStorageSubscription =
     services
         .Subscribe<SendBackupFileToCloudStorageMessage>()
-            .SoftFireAndForget()
             .Exception((message, exception) => Console.WriteLine("All attempts failed to send " + messge.Filename + "!" + exception));
             .Filter(
                 beforeMessage => Console.WriteLine("Sending " + beforeMessage.Filename + " to cloud"),
@@ -548,7 +534,6 @@ public void Setup(IMessageSubscriptions<MyRequestMessage> requestBus, IMessageBu
 {
     var subscription = 
         requestBus.Subscribe()
-            .SoftFireAndForget()
             .NoDuplicates(message => message.UserId)
             .Concurrent(20)
             .Handler(async (message, token) => 
@@ -629,7 +614,6 @@ Let's add some functionality to our subscription!
 var subscription = bus
     .Subscribe()
     // Inserted decorators
-    .SoftFireAndForget()
     .NoDuplicates(message => message.Filename)
     .Delay(TimeSpan.FromSeconds(5))
     .Retry(5, TimeSpan.FromSeconds(30))
@@ -653,13 +637,12 @@ var subscription = bus
 ```
 Let's break down what happens here
 1. The subscription receives the message
-2. `.SoftFireAndForget()` break the feedback chain so publishers won't wait for the message handling
-3. `.NoDuplicates()` stops/drops all messages that are already being handled by the subscription, making sure the same file is not read more than once concurrently 
-4. `.Delay()` delay the handling of all messages by 5 seconds. In this case, to make sure the "other" system creating the files is done writing before we start reading.
-5. `.Retry()` make a total of 5 attempts to read the file. If the handler throws an exception, `.Retry()` will wait 30 seconds before trying again
-6. `.Concurrent()` processes up to 16 files concurrently, queueing any excess
-7. `.LimitedThroughput()` limits throughput to maximum of 100 messages per 100ms = 1000 messages/second 
-8. `.Handler()` calls our code reading the file
+2. `.NoDuplicates()` stops/drops all messages that are already being handled by the subscription, making sure the same file is not read more than once concurrently 
+3. `.Delay()` delay the handling of all messages by 5 seconds. In this case, to make sure the "other" system creating the files is done writing before we start reading.
+4. `.Retry()` make a total of 5 attempts to read the file. If the handler throws an exception, `.Retry()` will wait 30 seconds before trying again
+5. `.Concurrent()` processes up to 16 files concurrently, queueing any excess
+6. `.LimitedThroughput()` limits throughput to maximum of 100 messages per 100ms = 1000 messages/second 
+7. `.Handler()` calls our code reading the file
 
 We added functionality to our subscription MHC by adding MHC decorators.  
 
@@ -679,7 +662,6 @@ Using the decorators when configuring a subscription
 
     var subscription = bus
         .Subscribe()
-            .SoftFireAndForget()                    // Fire and forget
             .NoDuplicates(message => message.Id)    // Do not allow messages with an Id matching a message already being handled
             .Delay(TimeSpan.FromSeconds(5))         // Delay the message 5 seconds
             .Retry(3, TimeSpan.FromSeconds(60))     // If the two attempts in the next line fail, try again 2 more times (3 attempts)
@@ -757,7 +739,7 @@ bus
     .FireAndForget()
     .Handler(message => Console.WriteLine("I handle all messages"));
 ```
-`.FireAndForget()` will return immediately and render `.Concurrent()` useless.
+`.FireAndForget()` will return immediately and render `.Concurrent()` useless since all messages will be spawned on their own tasks immediately.
 
 
 #### `.Append()`
@@ -882,7 +864,7 @@ var subscription = bus
 #### `.Branch()`
 `.Branch()` is not actually a decorator, like `.BranchOut()`, but a handler that splits the message handler chain into two ore more message handler chains.
 The branches are invoked "softly parallel", which means that if the first branch does only CPU intensive work for seconds, the other branches will not get their message delivered until the first branch is done. If the first branch awaits I/O, the next branch will start, and so on.
-The feedback chain is intact through Branch, so if one of the branches throws an exception which is not handled, it is passed up the chain and can potentially prevent other branches to complete. If there is no FireAndForget, the publisher can await the delivery of the message to all branches.
+The feedback chain is intact through Branch, so if one of the branches throws an exception which is not handled, it is passed up the chain and can potentially prevent other branches to complete. If there is no FireAndForget, the publisher is able to await the delivery of a message to all branches.
 
 ##### Overloads
 ```csharp
@@ -956,7 +938,6 @@ bus
     .NoDuplicates(message => message.Id)
     .BranchOut(
         branch => branch
-            .SoftFireAndForget()
             .Delay(TimeSpan.FromSeconds(10))
             .Filter(message => message.Id == "Message 2")
             .Handler(message => Console.WriteLine("I only handle Message 2")))
@@ -964,7 +945,6 @@ bus
 ```
 The subscription will not handle any concurrent duplicates and is branched to two separate message handlers.
 Message 2 will be handled by the branched message handler 10 seconds after the subscription receives it while the normal handler will handle all messages immediately.
-Since we don''t want the Publisher to await the delayed delivery, we stack `.SoftFireAndForget()` and `.Delay()`.
 
 #### `.Concurrent()`
 Parallelizes the message handler chain to a maximum of X concurrent messages. Messages that arrive to `.Concurrent()` are queued and handled as soon as possible, in a FIFO (first in first out) manner. 
@@ -977,7 +957,7 @@ It's often wise to make the level of parallelism configurable. You may experienc
 `.Concurrent()` will keep the feedback chain which will allow the caller to await until the message is handled. Exceptions thrown pass right back to the caller. 
 This makes decorators like `.Retry()` work properly both before and after `.Concurrent()`. See the examples.
 
-If you do not need the feedback chain, you can use `.ConcurrentFireAndForget()`, which has slightly smaller execution footprint.
+If you do not need to maintain the feedback chain, you can use `.ConcurrentFireAndForget()`, which has slightly smaller execution footprint (it's a little faster).
 
 ##### Overloads
 ```csharp
@@ -997,7 +977,6 @@ var smtpClient = new SmtpClient();
 
 var subscription = bus
     .Subscribe()
-    .SoftFireAndForget()
     .Concurrent(20)	
     .Handler(async message =>
         {
@@ -1018,8 +997,6 @@ var smtpClient = new SmtpClient();
 
 var subscription = bus
     .Subscribe()
-    // .SoftFireAndForget() is usually wise to have somewhere before .Concurrent()
-    .SoftFireAndForget()
     // Handle errors from last attempt
     .Exception(message => Console.WriteLine("Mail failed id:" + message.Id + " failed all attempts"))
     // Try 5 times. First retry (out of 4) after 1 minute
@@ -1072,7 +1049,6 @@ Delay (await) the specified number of milliseconds
 ```csharp
 var subscription = bus
     .Subscribe()
-    .SoftFireAndForget()
     .Delay(TimeSpan.FromSeconds(10)) // delay the message 10 seconds
     .Handler(async message =>
         {
@@ -1085,7 +1061,6 @@ var subscription = bus
 ```csharp
 var subscription = bus
     .Subscribe()
-    .SoftFireAndForget()
     .Delay(10000)) // delay 100000 milliseconds before handling the message
     .Handler(async message =>
         {
@@ -1136,7 +1111,6 @@ The key can be the message itself.
 var subscription = bus
     .Subscribe()
     .Distinct(message => message.Id)    // Only allow a message with a certain key to be delivered once
-    .SoftFireAndForget()
     .Handler(async message =>
         {
             await this.SomeMethodAsyncInvoked10SecondsLaterAsync();
@@ -1148,7 +1122,6 @@ Async with CancellationToken
 var subscription = bus
     .Subscribe()
     .Distinct(async (message, token) => GetKeyAsync(message, token))    // Only allow a message with a certain key to be delivered once
-    .SoftFireAndForget()
     .Handler(async message =>
         {
             await this.SomeMethodAsyncInvoked10SecondsLaterAsync();
@@ -1460,7 +1433,6 @@ Another example would be a handler responsible for loading a project from a data
 ```csharp
 var subscription = bus
     .Subscribe()
-    .SoftFireAndForget()
     .NoDuplicates(message => message.FullPathName)
     .Handler(message =>
         {
@@ -1472,7 +1444,6 @@ This next example demonstrates using an equality comparer to eliminate duplicate
 ```csharp
 var subscription = bus
     .Subscribe()
-    .SoftFireAndForget()
     .NoDuplicates(message => message.FullPathName, StringComparer.OrdinalIgnoreCase)
     .Handler(async message =>
         {
@@ -1555,7 +1526,6 @@ The exception delay starts after the invokation of an `exceptionFunc` or `except
 ```csharp
 var subscription = bus
     .Subscribe()
-    .SoftFireAndForget()
     .Retry(
         5,      // 5 attempts
         TimeSpan.FromSeconds(30),
@@ -1641,7 +1611,6 @@ public void SetupSubscription(IMessageBusSubscriptions<Message> bus)
         .Subscribe()
         .Where(message => message.IsPolite)         // Only polite messages ;)
         .Select(message => new MessageContainer<Message>(message) // Convert to MessageContainer
-        .SoftFireAndForget()
         .Exception((message, exception) => Console.WriteLine("Failed delivering Message created " + message.MessageDate + ":" + exception))
         .Retry(5, TimeSpan.FromSeconds(60))
         .Concurrent(16)
@@ -1777,7 +1746,7 @@ Using `.SoftFireAndForget()` after `.Concurrent()` will make the concurrency inf
 ```csharp
 var subscription = bus
     .Subscribe()
-    .SoftFireAndForget() // wise to have before .Concurrent
+    .SoftFireAndForget()
     .Concurrent(16)
     .Handler(async message =>
         {
@@ -1788,7 +1757,7 @@ var subscription = bus
 ```csharp
 var subscription = bus
     .Subscribe()
-    .SoftFireAndForget() // wise to have before .Concurrent
+    .SoftFireAndForget()
     .Delay(TimeSpan.FromSeconds(10))
     .Handler(async message =>
         {

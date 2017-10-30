@@ -6,7 +6,7 @@ namespace Serpent.Common.MessageBus
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.WeakReference;
 
     /// <summary>
-    ///     The delay decorator extensions
+    ///     The .WeakReference() decorator extensions
     /// </summary>
     public static class WeakReferenceExtensions
     {
