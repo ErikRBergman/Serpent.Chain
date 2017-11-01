@@ -10,11 +10,11 @@
     public interface IMessageHandler<in TMessageType>
     {
         /// <summary>
-        /// The method invoked when a message is published
+        ///  Handles a message
         /// </summary>
-        /// <param name="message">The message</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>A task</returns>
+        /// <param name="message">The message to handle</param>
+        /// <param name="cancellationToken">A cancellation token</param>
+        /// <returns>A task that completes when the message is handled</returns>
         Task HandleMessageAsync(TMessageType message, CancellationToken cancellationToken);
     }
 }
