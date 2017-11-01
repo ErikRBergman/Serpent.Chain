@@ -15,7 +15,7 @@
 
             var counter = 0;
 
-            using (bus.Subscribe()
+            using (bus.Subscribe(b => b
                 .SoftFireAndForget()
                 .Concurrent(10)
                 .Handler(
@@ -23,7 +23,7 @@
                         {
                             await Task.Delay(500);
                             Interlocked.Increment(ref counter);
-                        }).Wrapper())
+                        })).Wrapper())
             {
                 await Task.Delay(100);
 

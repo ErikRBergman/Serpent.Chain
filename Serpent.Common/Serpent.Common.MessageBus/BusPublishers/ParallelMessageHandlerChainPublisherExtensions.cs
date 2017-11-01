@@ -8,6 +8,7 @@ namespace Serpent.Common.MessageBus
 
     using Serpent.Common.MessageBus.BusPublishers;
     using Serpent.Common.MessageBus.Exceptions;
+    using Serpent.Common.MessageBus.MessageHandlerChain;
     using Serpent.Common.MessageBus.Models;
 
     /// <summary>
@@ -26,17 +27,21 @@ namespace Serpent.Common.MessageBus
             this ConcurrentMessageBusOptions<TMessageType> options,
             Action<MessageHandlerChainBuilder<MessageAndHandler<TMessageType>>, Func<MessageAndHandler<TMessageType>, CancellationToken, Task>> configureMessageHandlerChain)
         {
-            var dispatch = new MessageHandlerPublishDispatch<MessageAndHandler<TMessageType>>();
+            var builder = new MessageHandlerChainBuilder<MessageAndHandler<TMessageType>>();
+            configureMessageHandlerChain(builder, PublishToSubscription.PublishAsync);
 
-            var builder = new MessageHandlerChainBuilder<MessageAndHandler<TMessageType>>(dispatch);
-            configureMessageHandlerChain(builder, PublishToSubscription.PublishAsync<TMessageType>);
-
-            if (dispatch.InvocationFunc == null)
+            if (builder.HasHandler == false)
             {
-                throw new NoHandlerException("No handler was added to the message handler chain. Messages can not be dispatched to the bus.\r\nUse .Handler() or .Factory() on the message handler chain.");
+                builder.Handler(PublishToSubscription.PublishAsync);
             }
 
-            options.UseCustomPublisher(new ParallelMessageHandlerChainPublisher<TMessageType>(builder.Build(dispatch.InvocationFunc)));
+            var subscriptionNotification = new MessageHandlerChainBuildNotification();
+            var services = new MessageHandlerChainBuilderSetupServices(subscriptionNotification);
+            var chainFunc = builder.BuildFunc(services);
+            var newChain = new MessageHandlerChain<MessageAndHandler<TMessageType>>(chainFunc);
+            subscriptionNotification.Notify(newChain);
+
+            options.UseCustomPublisher(new ParallelMessageHandlerChainPublisher<TMessageType>(chainFunc));
             return options;
         }
 
@@ -51,11 +56,21 @@ namespace Serpent.Common.MessageBus
             this ConcurrentMessageBusOptions<TMessageType> options,
             Action<MessageHandlerChainBuilder<MessageAndHandler<TMessageType>>> configureMessageHandlerChain)
         {
-            var dispatch = new MessageHandlerPublishDispatch<MessageAndHandler<TMessageType>>();
-            var builder = new MessageHandlerChainBuilder<MessageAndHandler<TMessageType>>(dispatch);
-            
+            var builder = new MessageHandlerChainBuilder<MessageAndHandler<TMessageType>>();
             configureMessageHandlerChain(builder);
-            options.UseCustomPublisher(new ParallelMessageHandlerChainPublisher<TMessageType>(builder.Build(dispatch.InvocationFunc ?? PublishToSubscription.PublishAsync<TMessageType>)));
+
+            if (builder.HasHandler == false)
+            {
+                builder.Handler(PublishToSubscription.PublishAsync);
+            }
+
+            var subscriptionNotification = new MessageHandlerChainBuildNotification();
+            var services = new MessageHandlerChainBuilderSetupServices(subscriptionNotification);
+            var chainFunc = builder.BuildFunc(services);
+            var newChain = new MessageHandlerChain<MessageAndHandler<TMessageType>>(chainFunc);
+            subscriptionNotification.Notify(newChain);
+
+            options.UseCustomPublisher(new ParallelMessageHandlerChainPublisher<TMessageType>(chainFunc));
             return options;
         }
     }

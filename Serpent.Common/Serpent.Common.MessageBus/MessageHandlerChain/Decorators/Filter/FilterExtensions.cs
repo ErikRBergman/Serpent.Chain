@@ -31,7 +31,7 @@ namespace Serpent.Common.MessageBus
                 return messageHandlerChainBuilder;
             }
 
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new FilterDecorator<TMessageType>(currentHandler, (msg, _) => beforeInvoke?.Invoke(msg), (msg, _) => afterInvoke?.Invoke(msg)));
         }
 
@@ -53,7 +53,7 @@ namespace Serpent.Common.MessageBus
                 return messageHandlerChainBuilder;
             }
 
-            return messageHandlerChainBuilder.Add(currentHandler => new FilterDecorator<TMessageType>(currentHandler, beforeInvoke, afterInvoke));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new FilterDecorator<TMessageType>(currentHandler, beforeInvoke, afterInvoke));
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace Serpent.Common.MessageBus
                 return messageHandlerChainBuilder;
             }
 
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new FilterDecorator<TMessageType>(
                     currentHandler,
                     (message, token) => Task.FromResult(beforeInvoke?.Invoke(message) ?? true),
@@ -103,7 +103,7 @@ namespace Serpent.Common.MessageBus
                 return messageHandlerChainBuilder;
             }
 
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new FilterDecorator<TMessageType>(
                     currentHandler,
                     (message, token) =>

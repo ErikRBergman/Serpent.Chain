@@ -14,7 +14,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
         {
             var bus = new ConcurrentMessageBus<Message>();
 
-            bus.Subscribe()
+            bus.Subscribe(b => b
                 .Select(
                     message => new OuterMessage
                                    {
@@ -23,7 +23,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
                                    })
                 .Filter(msg => msg.Message.Step1 = true)
                 .Select(message => message.Message)
-                .Handler(message => message.Step2 = true);
+                .Handler(message => message.Step2 = true));
 
             var messageToPublish = new Message();
 

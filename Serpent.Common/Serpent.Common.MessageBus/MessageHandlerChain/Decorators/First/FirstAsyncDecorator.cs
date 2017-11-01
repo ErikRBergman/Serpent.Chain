@@ -10,7 +10,7 @@
 
         private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 
-        private IMessageBusSubscription subscription;
+        private IMessageHandlerChain messageHandlerChain;
 
         private int wasReceived;
 
@@ -21,7 +21,7 @@
         {
             this.handlerFunc = handlerFunc;
             this.asyncPredicate = asyncPredicate;
-            subscriptionServices.SubscriptionNotification.AddNotification(this.SetSubscription);
+            subscriptionServices.BuildNotification.AddNotification(this.MessageHandlerChainBuilt);
         }
 
         public override async Task HandleMessageAsync(TMessageType message, CancellationToken token)
@@ -38,16 +38,16 @@
                         }
                         finally
                         {
-                            this.subscription?.Dispose();
+                            this.messageHandlerChain?.Dispose();
                         }
                     }
                 }
             }
         }
 
-        private void SetSubscription(IMessageBusSubscription sub)
+        private void MessageHandlerChainBuilt(IMessageHandlerChain messageHandlerChain)
         {
-            this.subscription = sub;
+            this.messageHandlerChain = messageHandlerChain;
         }
     }
 }

@@ -2,6 +2,7 @@
 namespace Serpent.Common.MessageBus
 {
     using System;
+    using System.Threading.Tasks;
 
     using Serpent.Common.MessageBus.MessageHandlerChain.Decorators.BranchOut;
 
@@ -21,7 +22,13 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches)
         {
-            return messageHandlerChainBuilder.Add((currentHandler, services) => new BranchOutDecorator<TMessageType>(currentHandler, services.SubscriptionNotification, branches).HandleMessageAsync);
+            return messageHandlerChainBuilder.Decorate(
+                (innerHandler, services) =>
+                    {
+                        var handler = new BranchOutDecorator<TMessageType>(branches);
+                        services.BuildNotification.AddNotification(handler.MessageHandlerChainBuilt);
+                        return (message, token) => Task.WhenAll(handler.HandleMessageAsync(message, token), innerHandler(message, token));
+                    });
         }
     }
 }

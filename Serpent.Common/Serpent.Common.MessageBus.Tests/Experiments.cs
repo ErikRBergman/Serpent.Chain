@@ -40,7 +40,7 @@
             var eq = ReferenceEquals(e1, e2);
 
             {
-                bus.Subscribe().Handler(new TestMessageHandler());
+                bus.Subscribe(builder => builder.Handler(new TestMessageHandler()));
             }
 
             GC.Collect(2, GCCollectionMode.Forced);

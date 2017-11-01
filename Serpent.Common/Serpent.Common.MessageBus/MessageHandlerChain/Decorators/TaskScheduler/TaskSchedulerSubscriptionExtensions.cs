@@ -19,7 +19,7 @@ namespace Serpent.Common.MessageBus
         /// <returns>A message handler chain builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> DispatchOnCurrentContext<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new TaskSchedulerDecorator<TMessageType>(currentHandler, TaskScheduler.FromCurrentSynchronizationContext()));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new TaskSchedulerDecorator<TMessageType>(currentHandler, TaskScheduler.FromCurrentSynchronizationContext()));
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             TaskScheduler taskScheduler)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new TaskSchedulerDecorator<TMessageType>(currentHandler, taskScheduler).HandleMessageAsync);
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new TaskSchedulerDecorator<TMessageType>(currentHandler, taskScheduler).HandleMessageAsync);
         }
     }
 }

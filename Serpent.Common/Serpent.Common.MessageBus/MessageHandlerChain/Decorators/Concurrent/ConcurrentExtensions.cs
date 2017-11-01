@@ -18,7 +18,7 @@ namespace Serpent.Common.MessageBus
         /// <returns>The message handler chain builder used to stack more decorators</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Concurrent<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, int maxNumberOfConcurrentMessages)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new ConcurrentDecorator<TMessageType>(currentHandler, maxNumberOfConcurrentMessages));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new ConcurrentDecorator<TMessageType>(currentHandler, maxNumberOfConcurrentMessages));
         }
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace Serpent.Common.MessageBus
         /// <returns>The message handler chain builder used to stack more decorators</returns>
         public static IMessageHandlerChainBuilder<TMessageType> ConcurrentFireAndForget<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, int maxNumberOfConcurrentMessages)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new ConcurrentFireAndForgetDecorator<TMessageType>(currentHandler, maxNumberOfConcurrentMessages));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new ConcurrentFireAndForgetDecorator<TMessageType>(currentHandler, maxNumberOfConcurrentMessages));
         }
     }
 }

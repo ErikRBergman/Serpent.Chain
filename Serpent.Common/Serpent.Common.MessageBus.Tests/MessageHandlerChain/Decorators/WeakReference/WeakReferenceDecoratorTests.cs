@@ -25,10 +25,10 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Decorators.WeakRef
             Assert.AreEqual(0, bus.SubscriberCount);
 
             // Strong references
-            bus.Subscribe()
+            bus.Subscribe(b => b
                 .Concurrent(5)
                 .Retry(2, TimeSpan.FromSeconds(10))
-                    .Handler(new MyHandler());
+                    .Handler(new MyHandler())); 
 
             Assert.AreEqual(1, bus.SubscriberCount);
             GC.Collect(2, GCCollectionMode.Forced);
@@ -38,7 +38,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Decorators.WeakRef
             Assert.AreEqual(1, bus.SubscriberCount);
 
             // Now weak reference
-            bus.Subscribe().WeakReference().Handler(new MyHandler());
+            bus.Subscribe(b => b.WeakReference().Handler(new MyHandler()));
 
             Assert.AreEqual(2, bus.SubscriberCount);
             GC.Collect(2, GCCollectionMode.Forced);
@@ -47,7 +47,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Decorators.WeakRef
             Assert.AreEqual(1, bus.SubscriberCount);
 
             // Now weak reference with more decorators
-            bus.Subscribe().WeakReference().Delay(50).Concurrent(10).Handler(new MyHandler());
+            bus.Subscribe(b => b.WeakReference().Delay(50).Concurrent(10).Handler(new MyHandler()));
 
             Assert.AreEqual(2, bus.SubscriberCount);
             GC.Collect(2, GCCollectionMode.Forced);
@@ -57,7 +57,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Decorators.WeakRef
 
 
             // Weak reference with more decorators first
-            bus.Subscribe().Delay(50).Concurrent(10).WeakReference().Delay(50).Concurrent(10).Handler(new MyHandler());
+            bus.Subscribe(b => b.Delay(50).Concurrent(10).WeakReference().Delay(50).Concurrent(10).Handler(new MyHandler()));
 
             Assert.AreEqual(2, bus.SubscriberCount);
             GC.Collect(2, GCCollectionMode.Forced);

@@ -33,7 +33,17 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, TNewMessageType> selector)
         {
-            return new SelectDecorator<TMessageType, TNewMessageType>(messageHandlerChainBuilder, selector).NewMessageHandlerChainBuilder;
+            var newMessagesTypeBuilder = new MessageHandlerChainBuilder<TNewMessageType>();
+
+            messageHandlerChainBuilder.Handler(
+                services =>
+                    {
+                        var handler = new SelectDecorator<TMessageType, TNewMessageType>(newMessagesTypeBuilder, selector);
+                        services.BuildNotification.AddNotification(handler.MessageHandlerChainBuilt);
+                        return handler.HandleMessageAsync;
+                    });
+
+            return newMessagesTypeBuilder;
         }
 
         /// <summary>
@@ -58,7 +68,17 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Task<TNewMessageType>> selector)
         {
-            return new SelectAsyncDecorator<TMessageType, TNewMessageType>(messageHandlerChainBuilder, selector).NewMessageHandlerChainBuilder;
+            var newMessagesTypeBuilder = new MessageHandlerChainBuilder<TNewMessageType>();
+
+            messageHandlerChainBuilder.Handler(
+                services =>
+                    {
+                        var handler = new SelectAsyncDecorator<TMessageType, TNewMessageType>(newMessagesTypeBuilder, selector);
+                        services.BuildNotification.AddNotification(handler.MessageHandlerChainBuilt);
+                        return handler.HandleMessageAsync;
+                    });
+
+            return newMessagesTypeBuilder;
         }
     }
 }

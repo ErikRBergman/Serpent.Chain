@@ -17,7 +17,7 @@
 
             var attemptsCount = 0;
 
-            using (bus.Subscribe()
+            using (bus.Subscribe(b => b
                 .FireAndForget()
                 .Retry(
                     5,
@@ -27,7 +27,7 @@
                             Debug.WriteLine(DateTime.Now + $" attempt {attempt} / {maxNumberOfAttempts}");
                             attemptsCount++;
                         })
-                .Handler(message => throw new Exception(DateTime.Now.ToString(CultureInfo.CurrentCulture)))
+                .Handler(message => throw new Exception(DateTime.Now.ToString(CultureInfo.CurrentCulture))))
                 .Wrapper())
             {
                 await bus.PublishAsync();

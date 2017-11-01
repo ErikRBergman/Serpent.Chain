@@ -19,8 +19,7 @@ namespace Serpent.Common.MessageBus
         /// <param name="messageHandlerChainBuilder">The message handler chain builder</param>
         /// <param name="firstBranch">The first branch</param>
         /// <param name="branches">The other branch(es)</param>
-        /// <returns>A subscription</returns>
-        public static IMessageBusSubscription Branch<TMessageType>(
+        public static void Branch<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Action<IMessageHandlerChainBuilder<TMessageType>> firstBranch,
             params Action<IMessageHandlerChainBuilder<TMessageType>>[] branches)
@@ -30,17 +29,20 @@ namespace Serpent.Common.MessageBus
                 throw new ArgumentNullException(nameof(firstBranch));
             }
 
-            var allBranches = new List<Action<IMessageHandlerChainBuilder<TMessageType>>>
-                                  {
-                                      firstBranch
-                                  };
-            allBranches.AddRange(branches);
+            messageHandlerChainBuilder.Handler(
+                services =>
+                    {
+                        var allBranches = new List<Action<IMessageHandlerChainBuilder<TMessageType>>>
+                        {
+                            firstBranch
+                        };
 
-            var handler = new BranchHandler<TMessageType>(allBranches);
-            var subscription = messageHandlerChainBuilder.Handler(handler.HandleMessageAsync);
-            handler.SetSubscription(subscription);
+                        allBranches.AddRange(branches);
 
-            return subscription;
+                        var handler = new BranchHandler<TMessageType>(allBranches);
+                        services.BuildNotification.AddNotification(handler.MessageHandlerChainBuilt);
+                        return handler.HandleMessageAsync;
+                    });
         }
     }
 }

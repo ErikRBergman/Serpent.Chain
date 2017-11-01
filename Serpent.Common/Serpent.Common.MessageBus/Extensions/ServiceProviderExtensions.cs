@@ -70,9 +70,9 @@
         /// <returns>
         ///     The <see cref="IMessageHandlerChainBuilder&lt;TMessageType&gt;" /> used to setup the message handler chain.
         /// </returns>
-        public static IMessageHandlerChainBuilder<TMessageType> Subscribe<TMessageType>(this IServiceProvider serviceProvider)
+        public static IMessageHandlerChain<TMessageType> Subscribe<TMessageType>(this IServiceProvider serviceProvider, Action<IMessageHandlerChainBuilder<TMessageType>> builderAction)
         {
-            return serviceProvider.Subscriptions<TMessageType>().Subscribe();
+            return serviceProvider.Subscriptions<TMessageType>().Subscribe(builderAction);
         }
 
         /// <summary>

@@ -2,34 +2,40 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
 
-    internal class SelectManyAsyncDecorator<TOldMessageType, TNewMessageType> : IMessageBusSubscriptions<TNewMessageType>
+    using Serpent.Common.MessageBus.Interfaces;
+
+    internal class SelectManyAsyncDecorator<TOldMessageType, TNewMessageType> : IMessageHandler<TOldMessageType>
     {
-        private readonly IMessageHandlerChainBuilder<TOldMessageType> outerMessageHandlerChainBuilder;
+        private readonly MessageHandlerChainBuilder<TNewMessageType> newChainBuilder;
 
         private readonly Func<TOldMessageType, Task<IEnumerable<TNewMessageType>>> selector;
 
-        public SelectManyAsyncDecorator(IMessageHandlerChainBuilder<TOldMessageType> outerMessageHandlerChainBuilder, Func<TOldMessageType, Task<IEnumerable<TNewMessageType>>> selector)
+        private IMessageHandlerChain<TNewMessageType> newChain;
+
+        public SelectManyAsyncDecorator(MessageHandlerChainBuilder<TNewMessageType> newChainBuilder, Func<TOldMessageType, Task<IEnumerable<TNewMessageType>>> selector)
         {
-            this.outerMessageHandlerChainBuilder = outerMessageHandlerChainBuilder;
+            this.newChainBuilder = newChainBuilder;
             this.selector = selector;
-            this.NewMessageHandlerChainBuilder = new MessageHandlerChainBuilder<TNewMessageType>(this);
         }
 
-        public IMessageHandlerChainBuilder<TNewMessageType> NewMessageHandlerChainBuilder { get; }
-
-        public IMessageBusSubscription Subscribe(Func<TNewMessageType, CancellationToken, Task> handlerFunc)
+        public async Task HandleMessageAsync(TOldMessageType message, CancellationToken cancellationToken)
         {
-            return this.outerMessageHandlerChainBuilder.Handler(async (message, token) =>
-                {
-                    var messages = await this.selector(message).ConfigureAwait(false);
-                    foreach (var msg in messages)
-                    {
-                        await handlerFunc(msg, token).ConfigureAwait(false);
-                    }
-                });
+            await Task.WhenAll(
+                (await this.selector(message).ConfigureAwait(false))
+                    .Select(msg => this.newChain.HandleMessageAsync(msg, cancellationToken)));
+        }
+
+        public void MessageHandlerChainBuilt(IMessageHandlerChain messageHandlerChain)
+        {
+            var subscriptionNotification = new MessageHandlerChainBuildNotification();
+            var services = new MessageHandlerChainBuilderSetupServices(subscriptionNotification);
+            var chainFunc = this.newChainBuilder.BuildFunc(services);
+            this.newChain = new MessageHandlerChain<TNewMessageType>(chainFunc, messageHandlerChain.Dispose);
+            subscriptionNotification.Notify(this.newChain);
         }
     }
 }

@@ -40,14 +40,14 @@
                                 .Handler(handler);
                         }));
 
-            bus.Subscribe()
+            bus.Subscribe(builder => builder
                 .Handler(
                     async message =>
                         {
                             await Task.Delay(100);
                             message.Log.TryAdd("Handler", DateTime.Now);
                             await Task.Delay(100);
-                        });
+                        }));
 
             var msg = new TestMessage();
             bus.Publish(msg);
@@ -82,14 +82,14 @@
                             message => message.Message.Log.TryAdd("Before", DateTime.Now), 
                             message => message.Message.Log.TryAdd("After", DateTime.Now))));
 
-            bus.Subscribe()
-                .Handler(
+            bus.Subscribe(builder =>
+                builder.Handler(
                     async message =>
                         {
                             await Task.Delay(100);
                             message.Log.TryAdd("Handler", DateTime.Now);
                             await Task.Delay(100);
-                        });
+                        }));
 
             var msg = new TestMessage();
             bus.Publish(msg);

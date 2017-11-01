@@ -8,41 +8,41 @@
     [TestClass]
     public class MessageBusExtensionsTests
     {
-        [TestMethod]
-        public void TestSingleBusMultipleTypesExtensions()
-        {
-            var bus = new ConcurrentMessageBus<BaseMessageType>();
+        ////[TestMethod]
+        ////public void TestSingleBusMultipleTypesExtensions()
+        ////{
+        ////    var bus = new ConcurrentMessageBus<BaseMessageType>();
 
-            var type1Received = new List<MessageType1>();
-            var type2Received = new List<MessageType2>();
+        ////    var type1Received = new List<MessageType1>();
+        ////    var type2Received = new List<MessageType2>();
 
-            var subscription1 = bus.Subscribe<BaseMessageType, MessageType1>(
-                msg =>
-                    {
-                        type1Received.Add(msg);
-                        return Task.CompletedTask;
-                    });
+        ////    var subscription1 = bus.Subscribe<BaseMessageType, MessageType1>(
+        ////        msg =>
+        ////            {
+        ////                type1Received.Add(msg);
+        ////                return Task.CompletedTask;
+        ////            });
 
-            var subscription2 = bus.Subscribe<BaseMessageType, MessageType2>(
-                msg =>
-                    {
-                        type2Received.Add(msg);
-                        return Task.CompletedTask;
-                    });
+        ////    var subscription2 = bus.Subscribe<BaseMessageType, MessageType2>(
+        ////        msg =>
+        ////            {
+        ////                type2Received.Add(msg);
+        ////                return Task.CompletedTask;
+        ////            });
 
-            bus.PublishAsync(new MessageType1("Haj"));
-            bus.PublishAsync(
-                new MessageType2()
-                    {
-                        Name = "Boj"
-                    });
+        ////    bus.PublishAsync(new MessageType1("Haj"));
+        ////    bus.PublishAsync(
+        ////        new MessageType2()
+        ////            {
+        ////                Name = "Boj"
+        ////            });
 
-            Assert.AreEqual(1, type1Received.Count);
-            Assert.AreEqual(1, type2Received.Count);
+        ////    Assert.AreEqual(1, type1Received.Count);
+        ////    Assert.AreEqual(1, type2Received.Count);
 
-            subscription2.Dispose();
-            subscription1.Dispose();
-        }
+        ////    subscription2.Dispose();
+        ////    subscription1.Dispose();
+        ////}
 
         private class BaseMessageType
         {

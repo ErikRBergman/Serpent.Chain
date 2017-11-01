@@ -22,7 +22,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Retry
 
             var handler = new RetryMessageHandler();
 
-            bus.Subscribe().SoftFireAndForget().WireUp(handler);
+            bus.Subscribe(b => b.SoftFireAndForget().WireUp(handler));
 
             await bus.PublishAsync();
 
@@ -39,9 +39,9 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Retry
             var handler = new NonRetryMessageHandler();
 
             bus
-                .Subscribe()
+                .Subscribe(b => b
                 .SoftFireAndForget()
-                .WireUp(handler);
+                .WireUp(handler));
 
             await bus.PublishAsync();
 

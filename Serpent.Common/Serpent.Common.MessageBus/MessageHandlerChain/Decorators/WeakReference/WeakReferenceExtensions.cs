@@ -32,8 +32,8 @@ namespace Serpent.Common.MessageBus
         /// <returns>The builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> WeakReference<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, IWeakReferenceGarbageCollector weakReferenceGarbageCollector)
         {
-            messageHandlerChainBuilder.Add((currentHandler, services) => new WeakReferenceDecorator<TMessageType>(currentHandler, services.SubscriptionNotification, weakReferenceGarbageCollector).HandleMessageAsync);
-            return new MessageHandlerChainBuilder<TMessageType>(new MessageHandlerChainBridge<TMessageType>(messageHandlerChainBuilder));
+            messageHandlerChainBuilder.Decorate((currentHandler, services) => new WeakReferenceDecorator<TMessageType>(currentHandler, services.BuildNotification, weakReferenceGarbageCollector).HandleMessageAsync);
+            return messageHandlerChainBuilder;
         }
     }
 }

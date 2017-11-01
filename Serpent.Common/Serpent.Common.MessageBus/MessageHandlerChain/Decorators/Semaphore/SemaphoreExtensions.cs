@@ -32,7 +32,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             int maxNumberOfConcurrentMessages)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new SemaphoreDecorator<TMessageType>(currentHandler, maxNumberOfConcurrentMessages));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new SemaphoreDecorator<TMessageType>(currentHandler, maxNumberOfConcurrentMessages));
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace Serpent.Common.MessageBus
             Func<TMessageType, TKeyType> keySelector,
             int maxNumberOfConcurrentMessages = 1)
         {
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new SemaphoreWithKeyDecorator<TMessageType, TKeyType>(currentHandler, keySelector, maxNumberOfConcurrentMessages));
         }
 
@@ -95,7 +95,7 @@ namespace Serpent.Common.MessageBus
             IEqualityComparer<TKeyType> equalityComparer,
             int maxNumberOfConcurrentMessages = 1)
         {
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new SemaphoreWithKeyDecorator<TMessageType, TKeyType>(
                     currentHandler,
                     keySelector,
@@ -116,7 +116,7 @@ namespace Serpent.Common.MessageBus
             Func<TMessageType, TKeyType> keySelector,
             KeySemaphore<TKeyType> keySemaphore)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new SemaphoreWithKeyDecorator<TMessageType, TKeyType>(currentHandler, keySelector, keySemaphore));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new SemaphoreWithKeyDecorator<TMessageType, TKeyType>(currentHandler, keySelector, keySemaphore));
         }
     }
 }

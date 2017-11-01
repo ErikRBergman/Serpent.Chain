@@ -16,13 +16,13 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Append
 
             var counter = 0;
 
-            using (bus.Subscribe()
-                .Append(msg => msg)
+            using (bus.Subscribe(b => 
+                b.Append(msg => msg)
                 .Handler(
                     async message =>
                         {
                             Interlocked.Add(ref counter, message.AddValue);
-                        }).Wrapper())
+                        })).Wrapper())
             {
 
                 for (var i = 0; i < 100; i++)
@@ -35,13 +35,13 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Append
 
             counter = 0;
 
-            using (bus.Subscribe()
-                .Append(async msg => msg)
+            using (bus.Subscribe(b => 
+                b.Append(async msg => msg)
                 .Handler(
                     async message =>
                         {
                             Interlocked.Add(ref counter, message.AddValue);
-                        }).Wrapper())
+                        })).Wrapper())
             {
 
                 for (var i = 0; i < 100; i++)

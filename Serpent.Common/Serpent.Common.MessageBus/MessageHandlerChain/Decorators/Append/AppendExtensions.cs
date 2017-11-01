@@ -27,7 +27,7 @@ namespace Serpent.Common.MessageBus
                 return messageHandlerChainBuilder;
             }
 
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 innerMessageHandler =>
                     {
                         return async (message, token) =>
@@ -61,7 +61,7 @@ namespace Serpent.Common.MessageBus
                 return messageHandlerChainBuilder;
             }
 
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 innerMessageHandler => (message, token) => Task.WhenAll(innerMessageHandler(message, token), AppendIfAsync(innerMessageHandler, predicate, messageSelector, message, token, isRecursive)));
         }
 
@@ -81,7 +81,7 @@ namespace Serpent.Common.MessageBus
                 return messageHandlerChainBuilder;
             }
 
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 innerMessageHandler =>
                     {
                         return (message, token) =>
@@ -131,7 +131,7 @@ namespace Serpent.Common.MessageBus
                 throw new ArgumentNullException(nameof(predicate), "Predicate may not be null");
             }
 
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 innerMessageHandler => (message, token) => Task.WhenAll(innerMessageHandler(message, token), AppendIfAsync(predicate, messageSelector, innerMessageHandler, message, token, isRecursive)));
         }
 

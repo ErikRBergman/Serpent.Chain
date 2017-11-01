@@ -4,24 +4,34 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    internal class SelectDecorator<TOldMessageType, TNewMessageType> : IMessageBusSubscriptions<TNewMessageType>
+    using Serpent.Common.MessageBus.Interfaces;
+
+    internal class SelectDecorator<TOldMessageType, TNewMessageType> : IMessageHandler<TOldMessageType>
     {
-        private readonly IMessageHandlerChainBuilder<TOldMessageType> outerMessageHandlerChainBuilder;
+        private readonly MessageHandlerChainBuilder<TNewMessageType> newChainBuilder;
 
         private readonly Func<TOldMessageType, TNewMessageType> selector;
 
-        public SelectDecorator(IMessageHandlerChainBuilder<TOldMessageType> outerMessageHandlerChainBuilder, Func<TOldMessageType, TNewMessageType> selector)
+        private IMessageHandlerChain<TNewMessageType> newChain;
+
+        public SelectDecorator(MessageHandlerChainBuilder<TNewMessageType> newChainBuilder, Func<TOldMessageType, TNewMessageType> selector)
         {
-            this.outerMessageHandlerChainBuilder = outerMessageHandlerChainBuilder;
+            this.newChainBuilder = newChainBuilder;
             this.selector = selector;
-            this.NewMessageHandlerChainBuilder = new MessageHandlerChainBuilder<TNewMessageType>(this);
         }
 
-        public IMessageHandlerChainBuilder<TNewMessageType> NewMessageHandlerChainBuilder { get; }
-
-        public IMessageBusSubscription Subscribe(Func<TNewMessageType, CancellationToken, Task> handlerFunc)
+        public Task HandleMessageAsync(TOldMessageType message, CancellationToken cancellationToken)
         {
-            return this.outerMessageHandlerChainBuilder.Handler((message, token) => handlerFunc(this.selector(message), token));
+            return this.newChain.HandleMessageAsync(this.selector(message), cancellationToken);
+        }
+
+        public void MessageHandlerChainBuilt(IMessageHandlerChain messageHandlerChain)
+        {
+            var subscriptionNotification = new MessageHandlerChainBuildNotification();
+            var services = new MessageHandlerChainBuilderSetupServices(subscriptionNotification);
+            var chainFunc = this.newChainBuilder.BuildFunc(services);
+            this.newChain = new MessageHandlerChain<TNewMessageType>(chainFunc, messageHandlerChain.Dispose);
+            subscriptionNotification.Notify(this.newChain);
         }
     }
 }

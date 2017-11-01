@@ -11,9 +11,9 @@ namespace Serpent.Common.MessageBus
         /// </summary>
         /// <param name="subscription">The subscription</param>
         /// <returns>A new subscription wrapper</returns>
-        public static SubscriptionWrapper Wrapper(this IMessageBusSubscription subscription)
+        public static MessageHandlerChainWrapper Wrapper(this IMessageHandlerChain subscription)
         {
-            return new SubscriptionWrapper(subscription);
+            return new MessageHandlerChainWrapper(subscription);
         }
     }
 }

@@ -18,7 +18,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
 
             var count = 0;
 
-            using (bus.Subscribe()
+            using (bus.Subscribe(b => b
                 .SoftFireAndForget()
                 .LimitedThroughput(10, TimeSpan.FromMilliseconds(100))
                 .Handler(
@@ -26,7 +26,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
                         {
                             Interlocked.Increment(ref count);
                             await Task.Delay(100);
-                        })
+                        }))
                 .Wrapper())
             {
                 for (var i = 0; i < 2000; i++)
@@ -50,7 +50,12 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
 
             var count = 0;
 
-            using (bus.Subscribe().SoftFireAndForget().LimitedThroughput(10, TimeSpan.FromMilliseconds(100)).Handler(msgz => { Interlocked.Increment(ref count); }).Wrapper())
+            using (bus.Subscribe(b =>
+                b
+                    .SoftFireAndForget()
+                    .LimitedThroughput(10, TimeSpan.FromMilliseconds(100))
+                    .Handler(
+                        msgz => Interlocked.Increment(ref count))).Wrapper())
             {
                 for (var i = 0; i < 2000; i++)
                 {

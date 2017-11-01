@@ -20,7 +20,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Decorators.Distinc
 
             var handler = new DistinctMessageHandler();
 
-            bus.Subscribe().WireUp(handler);
+            bus.Subscribe(b => b.WireUp(handler));
 
             await bus.PublishAsync(new Message()
                                        {
@@ -45,9 +45,8 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Decorators.Distinc
 
             Assert.AreEqual(2, handler.NumberOfInvokations);
 
-            bus.Subscribe().WireUp(handler);
-            bus.Subscribe().WireUp(handler);
-
+            bus.Subscribe(b => b.WireUp(handler));
+            bus.Subscribe(b => b.WireUp(handler));
         }
 
         private class Message

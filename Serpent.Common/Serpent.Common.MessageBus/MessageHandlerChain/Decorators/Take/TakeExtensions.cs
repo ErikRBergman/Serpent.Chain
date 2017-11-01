@@ -19,7 +19,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             int numberOfMessages)
         {
-            return messageHandlerChainBuilder.Add((currentHandler, services) => new TakeDecorator<TMessageType>(currentHandler, numberOfMessages, services.SubscriptionNotification));
+            return messageHandlerChainBuilder.AddDecorator((currentHandler, services) => new TakeDecorator<TMessageType>(currentHandler, numberOfMessages, services.BuildNotification));
         }
     }
 }

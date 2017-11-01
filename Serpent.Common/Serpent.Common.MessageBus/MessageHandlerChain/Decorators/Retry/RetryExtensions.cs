@@ -27,7 +27,7 @@ namespace Serpent.Common.MessageBus
             int maxNumberOfAttempts,
             TimeSpan retryDelay)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new RetryDecorator<TMessageType>(currentHandler, maxNumberOfAttempts, retryDelay).HandleMessageAsync);
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new RetryDecorator<TMessageType>(currentHandler, maxNumberOfAttempts, retryDelay).HandleMessageAsync);
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace Serpent.Common.MessageBus
             Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task> exceptionFunc = null,
             Func<TMessageType, int, int, TimeSpan, Task> successFunc = null)
         {
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new RetryDecorator<TMessageType>(currentHandler, maxNumberOfAttempts, retryDelay, exceptionFunc, successFunc).HandleMessageAsync);
         }
 
@@ -68,7 +68,7 @@ namespace Serpent.Common.MessageBus
             Func<TMessageType, Exception, int, int, Task> exceptionFunc = null,
             Func<TMessageType, int, int, Task> successFunc = null)
         {
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new RetryDecorator<TMessageType>(
                         currentHandler,
                         maxNumberOfAttempts,
@@ -95,7 +95,7 @@ namespace Serpent.Common.MessageBus
             Action<TMessageType, Exception, int, int> exceptionAction = null,
             Action<TMessageType, int, int> successAction = null)
         {
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new RetryDecorator<TMessageType>(
                     currentHandler,
                     maxNumberOfAttempts,
@@ -155,7 +155,7 @@ namespace Serpent.Common.MessageBus
                     };
             }
 
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new RetryDecorator<TMessageType>(currentHandler, maxNumberOfAttempts, retryDelay, exceptionFunc, successFunc).HandleMessageAsync);
         }
 

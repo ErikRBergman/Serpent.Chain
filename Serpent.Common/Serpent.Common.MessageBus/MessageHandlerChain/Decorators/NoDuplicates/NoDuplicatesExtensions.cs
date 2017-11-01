@@ -27,7 +27,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, TKeyType> keySelector)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new NoDuplicatesDecorator<TMessageType, TKeyType>(currentHandler, keySelector));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new NoDuplicatesDecorator<TMessageType, TKeyType>(currentHandler, keySelector));
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace Serpent.Common.MessageBus
             Func<TMessageType, TKeyType> keySelector,
             IEqualityComparer<TKeyType> equalityComparer)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new NoDuplicatesDecorator<TMessageType, TKeyType>(currentHandler, keySelector, equalityComparer));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new NoDuplicatesDecorator<TMessageType, TKeyType>(currentHandler, keySelector, equalityComparer));
         }
     }
 }

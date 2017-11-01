@@ -16,8 +16,8 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
             var bus = new ConcurrentMessageBus<int>();
             var items = new List<int>();
 
-            bus.Subscribe()
-                .Append(msg => 1)
+            bus.Subscribe(b => 
+                b.Append(msg => 1)
                 .Handler(
                     msg =>
                         {
@@ -25,7 +25,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
                             {
                                 items.Add(msg);
                             }
-                        });
+                        }));
 
             await bus.PublishAsync(0);
 
@@ -41,8 +41,8 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
             var bus = new ConcurrentMessageBus<int>();
             var items = new List<int>();
 
-            bus.Subscribe()
-                .Append(
+            bus.Subscribe(b =>
+                b.Append(
                     async msg =>
                         {
                             await Task.Delay(10);
@@ -55,7 +55,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
                             {
                                 items.Add(msg);
                             }
-                        });
+                        }));
 
             await bus.PublishAsync(0);
 
@@ -71,7 +71,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
             var bus = new ConcurrentMessageBus<MyMessage>();
             var items = new List<MyMessage>();
 
-            bus.Subscribe()
+            bus.Subscribe(b => b
                 .Append(
                     msg => msg.Id == 1,
                      msg =>
@@ -88,7 +88,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
                             {
                                 items.Add(msg);
                             }
-                        });
+                        }));
 
             await bus.PublishAsync(
                 new MyMessage
@@ -108,19 +108,17 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
             var bus = new ConcurrentMessageBus<MyMessage>();
             var items = new List<MyMessage>();
 
-            bus.Subscribe()
-                .Append(
-                    msg => msg.InnerMessage != null,
-                    msg => msg.InnerMessage,
-                    true)
-                .Handler(
-                    msg =>
-                        {
-                            lock (items)
+            bus.Subscribe(
+                b => b
+                    .Append(msg => msg.InnerMessage != null, msg => msg.InnerMessage, true)
+                    .Handler(
+                        msg =>
                             {
-                                items.Add(msg);
-                            }
-                        });
+                                lock (items)
+                                {
+                                    items.Add(msg);
+                                }
+                            }));
 
             await bus.PublishAsync(
                 new MyMessage
@@ -149,7 +147,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
             var bus = new ConcurrentMessageBus<MyMessage>();
             var items = new List<MyMessage>();
 
-            bus.Subscribe()
+            bus.Subscribe(b => b
                 .Append(
                     msg => Task.FromResult(msg.InnerMessage != null),
                     msg => Task.FromResult(msg.InnerMessage),
@@ -161,7 +159,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
                             {
                                 items.Add(msg);
                             }
-                        });
+                        }));
 
             await bus.PublishAsync(
                 new MyMessage
@@ -190,8 +188,8 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
             var bus = new ConcurrentMessageBus<MyMessage>();
             var items = new List<MyMessage>();
 
-            bus.Subscribe()
-                .Append(
+            bus.Subscribe(b =>
+                b.Append(
                     async msg =>
                         {
                             await Task.Delay(10);
@@ -207,7 +205,7 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
                             {
                                 items.Add(msg);
                             }
-                        });
+                        }));
 
             await bus.PublishAsync(
                 new MyMessage

@@ -24,7 +24,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, bool> predicate)
         {
-            return messageHandlerChainBuilder.Add((currentHandler, subscriptionServices) => new FirstDecorator<TMessageType>(currentHandler, predicate, subscriptionServices).HandleMessageAsync);
+            return messageHandlerChainBuilder.Decorate((currentHandler, subscriptionServices) => new FirstDecorator<TMessageType>(currentHandler, predicate, subscriptionServices).HandleMessageAsync);
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace Serpent.Common.MessageBus
         /// <returns>The message handler chain builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> First<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder)
         {
-            return messageHandlerChainBuilder.Add((currentHandler, subscriptionServices) => new FirstDecorator<TMessageType>(currentHandler, msg => true, subscriptionServices).HandleMessageAsync);
+            return messageHandlerChainBuilder.Decorate((currentHandler, subscriptionServices) => new FirstDecorator<TMessageType>(currentHandler, msg => true, subscriptionServices).HandleMessageAsync);
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Task<bool>> asyncPredicate)
         {
-            return messageHandlerChainBuilder.Add((currentHandler, subscriptionServices) => new FirstAsyncDecorator<TMessageType>(currentHandler, (message, token) => asyncPredicate(message), subscriptionServices).HandleMessageAsync);
+            return messageHandlerChainBuilder.Decorate((currentHandler, subscriptionServices) => new FirstAsyncDecorator<TMessageType>(currentHandler, (message, token) => asyncPredicate(message), subscriptionServices).HandleMessageAsync);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, CancellationToken, Task<bool>> asyncPredicate)
         {
-            return messageHandlerChainBuilder.Add((currentHandler, subscriptionServices) => new FirstAsyncDecorator<TMessageType>(currentHandler, asyncPredicate, subscriptionServices).HandleMessageAsync);
+            return messageHandlerChainBuilder.Decorate((currentHandler, subscriptionServices) => new FirstAsyncDecorator<TMessageType>(currentHandler, asyncPredicate, subscriptionServices).HandleMessageAsync);
         }
     }
 }

@@ -26,7 +26,7 @@ namespace Serpent.Common.MessageBus
                 return messageHandlerChainBuilder;
             }
 
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 innerMessageHandler =>
                     {
                         return (message, token) =>
@@ -54,7 +54,7 @@ namespace Serpent.Common.MessageBus
                 return messageHandlerChainBuilder;
             }
 
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 innerMessageHandler =>
                     {
                         return (message, token) =>

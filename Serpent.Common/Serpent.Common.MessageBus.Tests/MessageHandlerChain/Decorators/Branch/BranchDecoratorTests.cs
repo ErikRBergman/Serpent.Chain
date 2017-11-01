@@ -16,22 +16,22 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain
             var bus = new ConcurrentMessageBus<int>();
             var items = new HashSet<int>();
 
-            bus.Subscribe()
+            bus.Subscribe(b => b
                 .Branch(
-                    branch =>
+                    branch => branch.Handler(msg =>
                         {
                             lock (items)
                             {
                                 items.Add(1);
                             }
-                        },
-                    branch =>
+                        }),
+                    branch => branch.Handler(msg =>
                         {
                             lock (items)
                             {
                                 items.Add(2);
                             }
-                        });
+                        })));
 
             await bus.PublishAsync(1);
 

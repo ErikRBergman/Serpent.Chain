@@ -10,17 +10,17 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="MessageHandlerChainBuilderSetupServices"/> struct. 
         /// </summary>
-        /// <param name="subscriptionNotification">
+        /// <param name="buildNotification">
         /// The subscription notification service
         /// </param>
-        public MessageHandlerChainBuilderSetupServices(IMessageHandlerChainSubscriptionNotification subscriptionNotification)
+        public MessageHandlerChainBuilderSetupServices(IMessageHandlerChainBuildNotification buildNotification)
         {
-            this.SubscriptionNotification = subscriptionNotification;
+            this.BuildNotification = buildNotification;
         }
 
         /// <summary>
         /// The subscription notification service
         /// </summary>
-        public IMessageHandlerChainSubscriptionNotification SubscriptionNotification { get; }
+        public IMessageHandlerChainBuildNotification BuildNotification { get; }
     }
 }

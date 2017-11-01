@@ -12,13 +12,18 @@
 
         private int count;
 
-        private IMessageBusSubscription subscription;
+        private IMessageHandlerChain messageHandlerChain;
 
-        public TakeDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, int numberOfMessages, IMessageHandlerChainSubscriptionNotification subscriptionNotification)
+        public TakeDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, int numberOfMessages, IMessageHandlerChainBuildNotification buildNotification)
         {
             this.handlerFunc = handlerFunc;
             this.count = numberOfMessages;
-            subscriptionNotification.AddNotification(this.SetSubscription);
+            buildNotification.AddNotification(this.SetSubscription);
+        }
+
+        private void SetSubscription(IMessageHandlerChain messageHandlerChain)
+        {
+            this.messageHandlerChain = messageHandlerChain;
         }
 
         /// <summary>
@@ -45,14 +50,9 @@
                 }
             }
 
-            this.subscription?.Dispose();
+            this.messageHandlerChain?.Dispose();
 
             return Task.CompletedTask;
-        }
-
-        private void SetSubscription(IMessageBusSubscription sub)
-        {
-            this.subscription = sub;
         }
     }
 }

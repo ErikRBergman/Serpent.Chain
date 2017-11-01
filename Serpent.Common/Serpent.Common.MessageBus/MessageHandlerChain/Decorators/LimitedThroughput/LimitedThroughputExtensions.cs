@@ -24,7 +24,7 @@ namespace Serpent.Common.MessageBus
             int maxMessagesPerPeriod,
             TimeSpan? periodSpan = null)
         {
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new LimitedThroughputDecorator<TMessageType>(currentHandler, maxMessagesPerPeriod, periodSpan ?? TimeSpan.FromSeconds(1)).HandleMessageAsync);
         }
 
@@ -41,7 +41,7 @@ namespace Serpent.Common.MessageBus
             int maxMessagesPerPeriod,
             TimeSpan? periodSpan = null)
         {
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new LimitedThroughputFireAndForgetDecorator<TMessageType>(currentHandler, maxMessagesPerPeriod, periodSpan ?? TimeSpan.FromSeconds(1)).HandleMessageAsync);
         }
     }

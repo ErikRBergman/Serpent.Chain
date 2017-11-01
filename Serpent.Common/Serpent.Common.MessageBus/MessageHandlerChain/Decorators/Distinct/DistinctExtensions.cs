@@ -25,7 +25,7 @@ namespace Serpent.Common.MessageBus
         [ExtensionMethodSelector(DistinctWireUp.WireUpExtensionName)]
         public static IMessageHandlerChainBuilder<TMessageType> Distinct<TMessageType, TKeyType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, Func<TMessageType, TKeyType> keySelector)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new DistinctDecorator<TMessageType, TKeyType>(currentHandler, keySelector));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new DistinctDecorator<TMessageType, TKeyType>(currentHandler, keySelector));
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace Serpent.Common.MessageBus
         /// <returns>The builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Distinct<TMessageType, TKeyType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new DistinctDecorator<TMessageType, TKeyType>(currentHandler, keySelector, equalityComparer));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new DistinctDecorator<TMessageType, TKeyType>(currentHandler, keySelector, equalityComparer));
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace Serpent.Common.MessageBus
         /// <returns>The builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Distinct<TMessageType, TKeyType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, Func<TMessageType, Task<TKeyType>> keySelector)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new DistinctAsyncDecorator<TMessageType, TKeyType>(currentHandler, (message, token) => keySelector(message)));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new DistinctAsyncDecorator<TMessageType, TKeyType>(currentHandler, (message, token) => keySelector(message)));
         }
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace Serpent.Common.MessageBus
         /// <returns>The builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Distinct<TMessageType, TKeyType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, Func<TMessageType, Task<TKeyType>> keySelector, IEqualityComparer<TKeyType> equalityComparer)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new DistinctAsyncDecorator<TMessageType, TKeyType>(currentHandler, (message, token) => keySelector(message), equalityComparer));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new DistinctAsyncDecorator<TMessageType, TKeyType>(currentHandler, (message, token) => keySelector(message), equalityComparer));
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Serpent.Common.MessageBus
         /// <returns>The builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Distinct<TMessageType, TKeyType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, Func<TMessageType, CancellationToken, Task<TKeyType>> keySelector)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new DistinctAsyncDecorator<TMessageType, TKeyType>(currentHandler, keySelector));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new DistinctAsyncDecorator<TMessageType, TKeyType>(currentHandler, keySelector));
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace Serpent.Common.MessageBus
         /// <returns>The builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Distinct<TMessageType, TKeyType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, Func<TMessageType, CancellationToken, Task<TKeyType>> keySelector, IEqualityComparer<TKeyType> equalityComparer)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new DistinctAsyncDecorator<TMessageType, TKeyType>(currentHandler, keySelector, equalityComparer));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new DistinctAsyncDecorator<TMessageType, TKeyType>(currentHandler, keySelector, equalityComparer));
         }
     }
 }

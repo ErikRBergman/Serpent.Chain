@@ -17,7 +17,7 @@ namespace Serpent.Common.MessageBus
         /// <returns>The message handler chain builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> FireAndForget<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new FireAndForgetDecorator<TMessageType>(currentHandler).HandleMessageAsync);
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new FireAndForgetDecorator<TMessageType>(currentHandler).HandleMessageAsync);
         }
     }
 }

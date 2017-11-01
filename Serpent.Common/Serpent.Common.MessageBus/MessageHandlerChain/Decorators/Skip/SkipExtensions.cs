@@ -18,7 +18,7 @@ namespace Serpent.Common.MessageBus
         /// <returns>A message handler chain builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Skip<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, int numberOfMessages)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new SkipDecorator<TMessageType>(currentHandler, numberOfMessages));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new SkipDecorator<TMessageType>(currentHandler, numberOfMessages));
         }
     }
 }

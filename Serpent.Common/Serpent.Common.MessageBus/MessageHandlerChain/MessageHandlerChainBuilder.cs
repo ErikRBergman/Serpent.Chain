@@ -8,39 +8,33 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.Common.MessageBus.Exceptions;
     using Serpent.Common.MessageBus.MessageHandlerChain;
 
     /// <summary>
     ///     The message handler chain builder. Used to create decorator and handler chains
     /// </summary>
     /// <typeparam name="TMessageType">The message type</typeparam>
-    public struct MessageHandlerChainBuilder<TMessageType> : IMessageHandlerChainBuilder<TMessageType>
+    public class MessageHandlerChainBuilder<TMessageType> : IMessageHandlerChainBuilder<TMessageType>
     {
-        private Stack<Func<Func<TMessageType, CancellationToken, Task>, MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>>> handlerSetupFuncs;
-
-        /// <summary>
-        ///     Creates a new instance of the MessageHandlerChainBuilder
-        /// </summary>
-        /// <param name="subscriptions">The subscriptions interface used to subscribe when the chain is terminated</param>
-        public MessageHandlerChainBuilder(IMessageBusSubscriptions<TMessageType> subscriptions)
-        {
-            this.MessageBusSubscriptions = subscriptions;
-            this.handlerSetupFuncs =
+        private readonly Stack<Func<Func<TMessageType, CancellationToken, Task>, MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>>> handlerSetupFuncs =
                 new Stack<Func<Func<TMessageType, CancellationToken, Task>, MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>>>();
-        }
+
+        private Func<MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>> createHandlerFunc = null;
 
         /// <summary>
         ///     The number of handler setup methods
         /// </summary>
         public int Count => this.handlerSetupFuncs?.Count ?? 0;
-
+        
         /// <summary>
-        ///     The message bus subscriptions
+        /// Returns true if the builder has a handler
         /// </summary>
-        public IMessageBusSubscriptions<TMessageType> MessageBusSubscriptions { get; }
+        public bool HasHandler => this.createHandlerFunc != null;
+
 
         /// <summary>
-        ///     Adds a method that sets up the message decorator
+        ///     Adds a decorator to the message handler chain
         /// </summary>
         /// <param name="addFunc">
         ///     The method that sets up a message decorator
@@ -48,13 +42,12 @@ namespace Serpent.Common.MessageBus
         /// <returns>
         ///     The <see cref="IMessageHandlerChainBuilder&lt;TMessageType&gt;" />.
         /// </returns>
-        public IMessageHandlerChainBuilder<TMessageType> Add(
+        public IMessageHandlerChainBuilder<TMessageType> Decorate(
             Func<Func<TMessageType, CancellationToken, Task>, MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>> addFunc)
         {
-            if (this.handlerSetupFuncs == null)
+            if (this.createHandlerFunc != null)
             {
-                this.handlerSetupFuncs =
-                    new Stack<Func<Func<TMessageType, CancellationToken, Task>, MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>>>();
+                throw new MessageHandlerChainHasAHandlerException("The message handler chain has a handler. Decorators can not be added when then chain has a handler.");
             }
 
             this.handlerSetupFuncs.Push(addFunc);
@@ -62,52 +55,65 @@ namespace Serpent.Common.MessageBus
         }
 
         /// <summary>
-        ///     Builds the message handler chain
+        ///     Adds a handler to the message handler chain. When a handler is added, no more decorators or handlers can be added
         /// </summary>
-        /// <param name="handlerFunc">
-        ///     The method used to handle the message for this chain. Called by the last decorator in the chain.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="Func&lt;TmessageType,CancellationToken,Task&gt;" />.
-        /// </returns>
-        public Func<TMessageType, CancellationToken, Task> Build(Func<TMessageType, CancellationToken, Task> handlerFunc)
+        /// <param name="addHandlerFunc">The method called to create and return the message handler chain's message handler</param>
+        public void Handler(Func<MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>> addHandlerFunc)
         {
-            if (this.handlerSetupFuncs == null || this.handlerSetupFuncs.Count == 0)
+            if (this.createHandlerFunc != null)
             {
-                return handlerFunc;
+                throw new MessageHandlerChainHasAHandlerException("The message handler chain already has a handler. A message handler chain can only have a single handler.");
             }
 
-            var subscriptionNotification = new MessageHandlerChainSubscriptionNotification();
-            var services = new MessageHandlerChainBuilderSetupServices(subscriptionNotification);
-
-            return this.handlerSetupFuncs.Aggregate(handlerFunc, (current, handlerSetupFunc) => handlerSetupFunc(current, services));
+            this.createHandlerFunc = addHandlerFunc;
         }
 
         /// <summary>
-        ///     Builds the message handler chain and creates the subscription
+        ///     Builds the message handler chain
         /// </summary>
-        /// <param name="handlerFunc">
-        ///     The handler function
-        /// </param>
         /// <returns>
-        ///     The <see cref="IMessageBusSubscription" />.
+        ///     The <see cref="Func&lt;TmessageType,CancellationToken,Task&gt;" />.
         /// </returns>
-        public IMessageBusSubscription Handler(Func<TMessageType, CancellationToken, Task> handlerFunc)
+        public IMessageHandlerChain<TMessageType> BuildChain()
         {
-            // Setup builder services
-            var subscriptionNotification = new MessageHandlerChainSubscriptionNotification();
+            if (this.createHandlerFunc == null)
+            {
+                throw new MessageHandlerChainHasNoMessageHandlerException("The message handler chain does not have a message handler");
+            }
+
+            var subscriptionNotification = new MessageHandlerChainBuildNotification();
             var services = new MessageHandlerChainBuilderSetupServices(subscriptionNotification);
 
-            var subscription = this.MessageBusSubscriptions.Subscribe(this.Build(handlerFunc, services));
+            var handlerFunc = this.createHandlerFunc(services);
 
-            // notify all interested parties of the subscription
-            subscriptionNotification.Notify(subscription);
+            if (this.handlerSetupFuncs == null || this.handlerSetupFuncs.Count == 0)
+            {
+                return new MessageHandlerChain<TMessageType>(handlerFunc);
+            }
 
-            return subscription;
+            var func = this.handlerSetupFuncs.Aggregate(handlerFunc, (current, handlerSetupFunc) => handlerSetupFunc(current, services));
+
+            return new MessageHandlerChain<TMessageType>(func);
         }
 
-        private Func<TMessageType, CancellationToken, Task> Build(Func<TMessageType, CancellationToken, Task> handlerFunc, MessageHandlerChainBuilderSetupServices services)
+        /// <summary>
+        /// Builds the message handler chain
+        /// </summary>
+        /// <param name="services">
+        /// The setup notification services.
+        /// </param>
+        /// <returns>
+        /// The <see cref="Func&lt;TmessageType,CancellationToken,Task&gt;"/>.
+        /// </returns>
+        public Func<TMessageType, CancellationToken, Task> BuildFunc(MessageHandlerChainBuilderSetupServices services)
         {
+            if (this.createHandlerFunc == null)
+            {
+                throw new MessageHandlerChainHasNoMessageHandlerException("The message handler chain does not have a message handler");
+            }
+
+            var handlerFunc = this.createHandlerFunc(services);
+
             if (this.handlerSetupFuncs == null || this.handlerSetupFuncs.Count == 0)
             {
                 return handlerFunc;

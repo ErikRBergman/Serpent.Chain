@@ -21,7 +21,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, bool> predicate)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new SkipWhileDecorator<TMessageType>(currentHandler, predicate));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new SkipWhileDecorator<TMessageType>(currentHandler, predicate));
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Task<bool>> predicate)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new SkipWhileAsyncDecorator<TMessageType>(currentHandler, predicate));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new SkipWhileAsyncDecorator<TMessageType>(currentHandler, predicate));
         }
     }
 }

@@ -12,13 +12,13 @@
         {
             var bus = new ConcurrentMessageBus<Message1>();
 
-            bus.Subscribe().FireAndForget()
+            bus.Subscribe(b => b.FireAndForget()
                 .Handler(
                 async msgz =>
                     {
                         await Task.Delay(100);
                         msgz.Status = "Got it!";
-                    });
+                    }));
 
             var msg = new Message1();
 

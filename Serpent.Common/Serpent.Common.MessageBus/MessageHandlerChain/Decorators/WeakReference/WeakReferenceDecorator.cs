@@ -11,12 +11,12 @@ namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.WeakReference
     {
         private readonly WeakReference<Func<TMessageType, CancellationToken, Task>> handlerFunc;
 
-        private IMessageBusSubscription subscription;
+        private IMessageHandlerChain messageHandlerChain;
 
-        public WeakReferenceDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, IMessageHandlerChainSubscriptionNotification subscriptionNotification, IWeakReferenceGarbageCollector weakReferenceGarbageCollector)
+        public WeakReferenceDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, IMessageHandlerChainBuildNotification buildNotification, IWeakReferenceGarbageCollector weakReferenceGarbageCollector)
         {
             this.handlerFunc = new WeakReference<Func<TMessageType, CancellationToken, Task>>(handlerFunc);
-            subscriptionNotification.AddNotification(sub => this.subscription = sub);
+            buildNotification.AddNotification(chain => this.messageHandlerChain = chain);
             weakReferenceGarbageCollector?.Add(this);
         }
 
@@ -27,10 +27,10 @@ namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.WeakReference
                 return target(message, token);
             }
 
-            if (this.subscription != null)
+            if (this.messageHandlerChain != null)
             {
-                this.subscription.Dispose();
-                this.subscription = null;
+                this.messageHandlerChain.Dispose();
+                this.messageHandlerChain = null;
             }
 
             return Task.CompletedTask;
@@ -44,10 +44,10 @@ namespace Serpent.Common.MessageBus.MessageHandlerChain.Decorators.WeakReference
                 return false;
             }
 
-            if (this.subscription != null)
+            if (this.messageHandlerChain != null)
             {
-                this.subscription.Dispose();
-                this.subscription = null;
+                this.messageHandlerChain.Dispose();
+                this.messageHandlerChain = null;
             }
 
             return true;

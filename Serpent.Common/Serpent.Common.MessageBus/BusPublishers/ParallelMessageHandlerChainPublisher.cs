@@ -8,6 +8,7 @@ namespace Serpent.Common.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.Common.MessageBus.MessageHandlerChain;
     using Serpent.Common.MessageBus.Models;
 
     /// <summary>
@@ -27,7 +28,14 @@ namespace Serpent.Common.MessageBus
         /// </param>
         public ParallelMessageHandlerChainPublisher(MessageHandlerChainBuilder<MessageAndHandler<TMessageType>> messageHandlerChainBuilder)
         {
-            this.publisher = messageHandlerChainBuilder.Build(this.PublishAsync);
+            messageHandlerChainBuilder.Handler(this.PublishAsync);
+
+            var subscriptionNotification = new MessageHandlerChainBuildNotification();
+            var services = new MessageHandlerChainBuilderSetupServices(subscriptionNotification);
+            this.publisher = messageHandlerChainBuilder.BuildFunc(services);
+
+            var chain = new MessageHandlerChain<MessageAndHandler<TMessageType>>(this.publisher);
+            subscriptionNotification.Notify(chain);
         }
 
         /// <summary>

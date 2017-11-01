@@ -29,7 +29,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Exception, Task<bool>> exceptionHandlerFunc)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, exceptionHandlerFunc));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, exceptionHandlerFunc));
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Exception, CancellationToken, Task<bool>> exceptionHandlerFunc)
         {
-            return messageHandlerChainBuilder.Add(currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, exceptionHandlerFunc));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, exceptionHandlerFunc));
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Exception, Task> exceptionHandlerFunc)
         {
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new ExceptionDecorator<TMessageType>(
                     currentHandler,
                     async (message, exception) =>
@@ -81,7 +81,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Exception, CancellationToken, Task> exceptionHandlerFunc)
         {
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new ExceptionDecorator<TMessageType>(
                     currentHandler,
                     async (message, exception, token) =>
@@ -105,7 +105,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Exception, bool> exceptionHandlerFunc)
         {
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, (message, exception) => Task.FromResult(exceptionHandlerFunc(message, exception))));
         }
 
@@ -120,7 +120,7 @@ namespace Serpent.Common.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Action<TMessageType, Exception> exceptionHandlerAction)
         {
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new ExceptionDecorator<TMessageType>(
                     currentHandler,
                     (message, exception) =>
@@ -138,7 +138,7 @@ namespace Serpent.Common.MessageBus
         /// <returns>The builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> IgnoreExceptions<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder)
         {
-            return messageHandlerChainBuilder.Add(
+            return messageHandlerChainBuilder.AddDecorator(
                 innerMessageHandler =>
                     {
                         return async (message, token) =>

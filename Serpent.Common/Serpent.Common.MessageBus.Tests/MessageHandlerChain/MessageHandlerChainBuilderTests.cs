@@ -18,7 +18,7 @@
 
             var count = 0;
 
-            using (bus.Subscribe()
+            using (bus.Subscribe(b => b
                 .FireAndForget()
                 .SoftFireAndForget()
                 .NoDuplicates(message => message.Id)
@@ -42,7 +42,7 @@
                             await Task.Delay(200);
                             message.Message.HandlerInvoked = "Sure was";
                             Interlocked.Increment(ref count);
-                        }).Wrapper())
+                        })).Wrapper())
             {
                 for (var i = 0; i < 1000; i++)
                 {
@@ -60,7 +60,7 @@
         {
             var bus = new ConcurrentMessageBus<Message>();
 
-            using (bus.Subscribe()
+            using (bus.Subscribe(b => b
                 .Filter(
                     message => { message.Steps.Add("before1"); },
                     message =>
@@ -86,7 +86,7 @@
                         {
                             message.Steps.Add("handler");
                             message.HandlerInvoked = "yes";
-                        }).Wrapper())
+                        })).Wrapper())
             {
                 var msg = new Message();
                 await bus.PublishAsync(msg);
