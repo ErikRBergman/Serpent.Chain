@@ -20,7 +20,7 @@ namespace Serpent.Common.MessageBus
         IMessageBusSubscriptions<TMessageType> MessageBusSubscriptions { get; }
 
         /// <summary>
-        ///     Adds a decorator to the message handler chain builder
+        ///     Adds a decorator to the message handler chain
         /// </summary>
         /// <param name="addFunc">A function that returns the method to call when building the chain</param>
         /// <returns>The builder</returns>

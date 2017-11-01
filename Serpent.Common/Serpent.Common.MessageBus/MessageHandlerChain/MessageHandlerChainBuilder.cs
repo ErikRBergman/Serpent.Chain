@@ -65,7 +65,7 @@ namespace Serpent.Common.MessageBus
         ///     Builds the message handler chain
         /// </summary>
         /// <param name="handlerFunc">
-        ///     The handler that receives the message when all decorators have run
+        ///     The method used to handle the message for this chain. Called by the last decorator in the chain.
         /// </param>
         /// <returns>
         ///     The <see cref="Func&lt;TmessageType,CancellationToken,Task&gt;" />.

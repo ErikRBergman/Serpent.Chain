@@ -6,14 +6,14 @@ namespace Serpent.Common.MessageBus.BusPublishers
 
     using Serpent.Common.MessageBus.Helpers;
 
-    internal class MessageHandlerPublishDispatch<TMessgeType> : IMessageBusSubscriptions<TMessgeType>
+    internal class MessageHandlerPublishDispatch<TMessageType> : IMessageBusSubscriptions<TMessageType>
     {
-        public Func<TMessgeType, CancellationToken, Task> InvocationFunc { get; private set; }
+        public Func<TMessageType, CancellationToken, Task> InvocationFunc { get; private set; }
 
-        public IMessageBusSubscription Subscribe(Func<TMessgeType, CancellationToken, Task> handlerFunc)
+        public IMessageBusSubscription Subscribe(Func<TMessageType, CancellationToken, Task> handlerFunc)
         {
             this.InvocationFunc = handlerFunc;
-            return new NullMessageBusSubscription();
+            return NullMessageBusSubscription.Default;
         }
     }
 }

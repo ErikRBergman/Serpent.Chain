@@ -6,11 +6,16 @@
 
     internal class NullMessageSubscriptions<TMessageType> : IMessageBusSubscriptions<TMessageType>
     {
+        private NullMessageSubscriptions()
+        {
+            
+        }
+
         public static NullMessageSubscriptions<TMessageType> Default { get; } = new NullMessageSubscriptions<TMessageType>();
 
         public IMessageBusSubscription Subscribe(Func<TMessageType, CancellationToken, Task> handlerFunc)
         {
-            return new NullMessageBusSubscription();
+            return NullMessageBusSubscription.Default;
         }
     }
 }
