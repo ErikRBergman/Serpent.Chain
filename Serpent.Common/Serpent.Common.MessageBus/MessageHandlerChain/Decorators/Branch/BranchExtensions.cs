@@ -29,7 +29,7 @@ namespace Serpent.Common.MessageBus
                 throw new ArgumentNullException(nameof(firstBranch));
             }
 
-            messageHandlerChainBuilder.Handler(
+            messageHandlerChainBuilder.Handle(
                 services =>
                     {
                         var allBranches = new List<Action<IMessageHandlerChainBuilder<TMessageType>>>

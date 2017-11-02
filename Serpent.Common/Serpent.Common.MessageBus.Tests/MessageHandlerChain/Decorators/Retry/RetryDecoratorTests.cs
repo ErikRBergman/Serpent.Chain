@@ -1,4 +1,4 @@
-﻿namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Retry
+﻿namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Decorators.Retry
 {
     using System;
     using System.Diagnostics;
@@ -6,6 +6,8 @@
     using System.Threading.Tasks;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+    using Serpent.Common.MessageBus;
 
     [TestClass]
     public class RetryDecoratorTests

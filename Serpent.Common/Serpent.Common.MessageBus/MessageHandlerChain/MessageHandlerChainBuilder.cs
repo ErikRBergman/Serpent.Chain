@@ -58,7 +58,7 @@ namespace Serpent.Common.MessageBus
         ///     Adds a handler to the message handler chain. When a handler is added, no more decorators or handlers can be added
         /// </summary>
         /// <param name="addHandlerFunc">The method called to create and return the message handler chain's message handler</param>
-        public void Handler(Func<MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>> addHandlerFunc)
+        public IMessageHandlerChainBuilder<TMessageType> Handle(Func<MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>> addHandlerFunc)
         {
             if (this.createHandlerFunc != null)
             {
@@ -66,10 +66,12 @@ namespace Serpent.Common.MessageBus
             }
 
             this.createHandlerFunc = addHandlerFunc;
+
+            return this;
         }
 
         /// <summary>
-        ///     Builds the message handler chain
+        ///     Builds a message handler chain from the decorators and the handler added
         /// </summary>
         /// <returns>
         ///     The <see cref="Func&lt;TmessageType,CancellationToken,Task&gt;" />.

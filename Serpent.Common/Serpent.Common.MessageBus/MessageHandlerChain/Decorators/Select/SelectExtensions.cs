@@ -35,7 +35,7 @@ namespace Serpent.Common.MessageBus
         {
             var newMessagesTypeBuilder = new MessageHandlerChainBuilder<TNewMessageType>();
 
-            messageHandlerChainBuilder.Handler(
+            messageHandlerChainBuilder.Handle(
                 services =>
                     {
                         var handler = new SelectDecorator<TMessageType, TNewMessageType>(newMessagesTypeBuilder, selector);
@@ -70,7 +70,7 @@ namespace Serpent.Common.MessageBus
         {
             var newMessagesTypeBuilder = new MessageHandlerChainBuilder<TNewMessageType>();
 
-            messageHandlerChainBuilder.Handler(
+            messageHandlerChainBuilder.Handle(
                 services =>
                     {
                         var handler = new SelectAsyncDecorator<TMessageType, TNewMessageType>(newMessagesTypeBuilder, selector);

@@ -27,7 +27,26 @@ namespace Serpent.Common.MessageBus
         /// </summary>
         /// <param name="addHandlerFunc">A function that returns the method to call when building the chain</param>
         //// <returns>The builder</returns>
-        void Handler(
+        IMessageHandlerChainBuilder<TMessageType> Handle(
             Func<MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>> addHandlerFunc);
+
+        /// <summary>
+        ///     Builds a message handler chain from the decorators and the handler added
+        /// </summary>
+        /// <returns>
+        ///     The <see cref="Func&lt;TmessageType,CancellationToken,Task&gt;" />.
+        /// </returns>
+        IMessageHandlerChain<TMessageType> BuildChain();
+
+        /// <summary>
+        /// Builds the message handler chain
+        /// </summary>
+        /// <param name="services">
+        /// The setup notification services.
+        /// </param>
+        /// <returns>
+        /// The <see cref="Func&lt;TmessageType,CancellationToken,Task&gt;"/>.
+        /// </returns>
+        Func<TMessageType, CancellationToken, Task> BuildFunc(MessageHandlerChainBuilderSetupServices services);
     }
 }

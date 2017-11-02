@@ -29,6 +29,7 @@
         }
 
         [TestMethod]
+        [Ignore]
         public async Task TestMethod1()
         {
             var bus = new ConcurrentMessageBus<TestMessage>();
@@ -65,9 +66,6 @@
             {
                 throw new Exception($"No \"Test\" attribute found on type {handlerType.Name}");
             }
-
-
-
         }
 
 

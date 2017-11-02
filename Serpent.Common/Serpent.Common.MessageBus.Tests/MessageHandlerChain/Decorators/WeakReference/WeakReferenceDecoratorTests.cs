@@ -1,14 +1,10 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Decorators.WeakReference
+﻿namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Decorators.WeakReference
 {
-    using System.Collections.Generic;
-    using System.Collections.Immutable;
-    using System.Diagnostics;
-    using System.Linq;
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
+
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     using Serpent.Common.MessageBus.Interfaces;
 
@@ -16,19 +12,15 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Decorators.WeakRef
     public class WeakReferenceDecoratorTests
     {
         [TestMethod]
-        public async Task TestMethod1()
+        public async Task WeakReferenceDecoratorTest()
         {
-            //new int[] { 1 }.SelectMany()
-
+            // new int[] { 1 }.SelectMany()
             var bus = new ConcurrentMessageBus<int>();
 
             Assert.AreEqual(0, bus.SubscriberCount);
 
             // Strong references
-            bus.Subscribe(b => b
-                .Concurrent(5)
-                .Retry(2, TimeSpan.FromSeconds(10))
-                    .Handler(new MyHandler())); 
+            bus.Subscribe(b => b.Concurrent(5).Retry(2, TimeSpan.FromSeconds(10)).Handler(new MyHandler()));
 
             Assert.AreEqual(1, bus.SubscriberCount);
             GC.Collect(2, GCCollectionMode.Forced);
@@ -55,7 +47,6 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Decorators.WeakRef
 
             Assert.AreEqual(1, bus.SubscriberCount);
 
-
             // Weak reference with more decorators first
             bus.Subscribe(b => b.Delay(50).Concurrent(10).WeakReference().Delay(50).Concurrent(10).Handler(new MyHandler()));
 
@@ -64,9 +55,6 @@ namespace Serpent.Common.MessageBus.Tests.MessageHandlerChain.Decorators.WeakRef
             await bus.PublishAsync();
 
             Assert.AreEqual(1, bus.SubscriberCount);
-
-
-
         }
     }
 
