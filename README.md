@@ -1,7 +1,7 @@
 # Serpent.MessageBus
 This is an asynchronous .NET Standard 2.0 message bus for usage in any project where a message bus is suitable.
 All messages are dispatched through the .NET TPL (which is included in .NET Framework, .NET Standard and .NET Core).
-Serpent.MessageBus is .NET Standard 2.0, which means, you can use it on any runtime that supports .NET Standard 2.0, for example .NET Framework 4.6.1 and .NET Core 1.0. 
+Serpent.MessageBus is .NET Standard 2.0, which means, you can use it on any runtime that supports .NET Standard 2.0, for example .NET Framework 4.6.1, .NET Core 2.0, Mono 5.4, Xamarin iOS 10.14 and Xamarin Android 8.0. 
 
 The message bus is implemented by `ConcurrentMessageBus<TMessageType>` and has 3 interfaces:
 * `IMessageBus<TMessageType>` which in turn has two interfaces:
