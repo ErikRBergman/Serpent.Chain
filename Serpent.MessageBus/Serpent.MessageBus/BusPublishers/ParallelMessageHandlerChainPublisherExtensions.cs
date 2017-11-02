@@ -30,6 +30,11 @@ namespace Serpent.MessageBus
             var builder = new MessageHandlerChainBuilder<MessageAndHandler<TMessageType>>();
             configureMessageHandlerChain(builder, PublishToSubscription.PublishAsync);
 
+            return UseSubscriptionChain(options, builder);
+        }
+
+        private static ConcurrentMessageBusOptions<TMessageType> UseSubscriptionChain<TMessageType>(ConcurrentMessageBusOptions<TMessageType> options, MessageHandlerChainBuilder<MessageAndHandler<TMessageType>> builder)
+        {
             if (builder.HasHandler == false)
             {
                 builder.Handler(PublishToSubscription.PublishAsync);
@@ -59,19 +64,7 @@ namespace Serpent.MessageBus
             var builder = new MessageHandlerChainBuilder<MessageAndHandler<TMessageType>>();
             configureMessageHandlerChain(builder);
 
-            if (builder.HasHandler == false)
-            {
-                builder.Handler(PublishToSubscription.PublishAsync);
-            }
-
-            var subscriptionNotification = new MessageHandlerChainBuildNotification();
-            var services = new MessageHandlerChainBuilderSetupServices(subscriptionNotification);
-            var chainFunc = builder.BuildFunc(services);
-            var newChain = new MessageHandlerChain<MessageAndHandler<TMessageType>>(chainFunc);
-            subscriptionNotification.Notify(newChain);
-
-            options.UseCustomPublisher(new ParallelMessageHandlerChainPublisher<TMessageType>(chainFunc));
-            return options;
+            return UseSubscriptionChain(options, builder);
         }
     }
 }

@@ -4,7 +4,7 @@ namespace Serpent.MessageBus
     using System;
     using System.Threading.Tasks;
 
-    using Serpent.MessageBus.MessageHandlerChain.Decorators.BranchOut;
+    using Serpent.MessageBus.MessageHandlerChain.Decorators.Branch;
 
     /// <summary>
     /// The branch out extensions
@@ -25,7 +25,7 @@ namespace Serpent.MessageBus
             return messageHandlerChainBuilder.Decorate(
                 (innerHandler, services) =>
                     {
-                        var handler = new BranchOutDecorator<TMessageType>(branches);
+                        var handler = new BranchHandler<TMessageType>(branches);
                         services.BuildNotification.AddNotification(handler.MessageHandlerChainBuilt);
                         return (message, token) => Task.WhenAll(handler.HandleMessageAsync(message, token), innerHandler(message, token));
                     });
