@@ -91,7 +91,7 @@ namespace Serpent.MessageBus
 
             return messageHandlerChainBuilder.AddDecorator(
                 innerMessageHandler => 
-                (message, token) => Task.WhenAll(innerMessageHandler(message, token), AppendIfAsync(innerMessageHandler, predicate, messageSelector, message, token, isRecursive)));
+                (message, token) => Task.WhenAll(innerMessageHandler(message, token), AppendManyIfAsync(innerMessageHandler, predicate, messageSelector, message, token, isRecursive)));
         }
 
         /// <summary>
@@ -186,10 +186,10 @@ namespace Serpent.MessageBus
             }
 
             return messageHandlerChainBuilder.AddDecorator(
-                innerMessageHandler => (message, token) => Task.WhenAll(innerMessageHandler(message, token), AppendIfAsync(predicate, messageSelector, innerMessageHandler, message, token, isRecursive)));
+                innerMessageHandler => (message, token) => Task.WhenAll(innerMessageHandler(message, token), AppendManyIfAsync(predicate, messageSelector, innerMessageHandler, message, token, isRecursive)));
         }
 
-        private static Task AppendIfAsync<TMessageType>(
+        private static Task AppendManyIfAsync<TMessageType>(
             Func<TMessageType, bool> predicate,
             Func<TMessageType, IEnumerable<TMessageType>> messageSelector,
             Func<TMessageType, CancellationToken, Task> innerMessageHandler,
@@ -214,13 +214,13 @@ namespace Serpent.MessageBus
             {
                 return Task.WhenAll(
                     newMessageTask,
-                    Task.WhenAll(newMessages.Select(newMessage => AppendIfAsync(predicate, messageSelector, innerMessageHandler, newMessage, token, true))));
+                    Task.WhenAll(newMessages.Select(newMessage => AppendManyIfAsync(predicate, messageSelector, innerMessageHandler, newMessage, token, true))));
             }
 
             return newMessageTask;
         }
 
-        private static async Task AppendIfAsync<TMessageType>(
+        private static async Task AppendManyIfAsync<TMessageType>(
             Func<TMessageType, CancellationToken, Task> messageHandler,
             Func<TMessageType, CancellationToken, Task<bool>> predicate,
             Func<TMessageType, CancellationToken, Task<IEnumerable<TMessageType>>> messageSelector,
@@ -247,7 +247,7 @@ namespace Serpent.MessageBus
                 return;
             }
 
-            await Task.WhenAll(newMessagesTask, Task.WhenAll(newMessages.Select(newMessage => AppendIfAsync(messageHandler, predicate, messageSelector, newMessage, token, true))));
+            await Task.WhenAll(newMessagesTask, Task.WhenAll(newMessages.Select(newMessage => AppendManyIfAsync(messageHandler, predicate, messageSelector, newMessage, token, true))));
         }
 
         private static async Task InnerMessageHandlerAsync<TMessageType>(
