@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>0.0.50</Version>
+    <Authors>Erik Bergman</Authors>
+    <Company>Serpent</Company>
+    <Description>An asynchronous message bus</Description>
+    <FileVersion>0.0.50.0</FileVersion>
+    <PackageProjectUrl>https://github.com/ErikRBergman/Serpent/tree/master/Serpent/Serpent.MessageBus</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ErikRBergman/Serpent/tree/master/Serpent/Serpent.MessageBus</RepositoryUrl>
+    <RepositoryType>Github</RepositoryType>
+    <PackageTags>Message bus, event bus, async</PackageTags>
+    <AssemblyVersion>0.0.50.0</AssemblyVersion>
+    <PackageReleaseNotes></PackageReleaseNotes>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;NETSTANDARD2_0</DefineConstants>
+    <DocumentationFile>bin\Debug\netstandard2.0\Serpent.MessageBus.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\netstandard2.0\Serpent.MessageBus.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="PublishToNuget_NETSTANDARD.cmd" />
+  </ItemGroup>
+
+</Project>
