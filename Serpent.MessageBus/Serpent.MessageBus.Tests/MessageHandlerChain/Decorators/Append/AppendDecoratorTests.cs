@@ -1,5 +1,7 @@
 ﻿// ReSharper disable InconsistentNaming
-namespace Serpent.MessageBus.Tests.MessageHandlerChain.Append
+// ReSharper disable AccessToModifiedClosure
+
+namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
 {
     using System.Threading;
     using System.Threading.Tasks;
@@ -16,15 +18,8 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Append
 
             var counter = 0;
 
-            using (bus.Subscribe(b => 
-                b.Append(msg => msg)
-                .Handler(
-                    async message =>
-                        {
-                            Interlocked.Add(ref counter, message.AddValue);
-                        })).Wrapper())
+            using (bus.Subscribe(b => b.Append(msg => msg).Handler(message => { Interlocked.Add(ref counter, message.AddValue); })).Wrapper())
             {
-
                 for (var i = 0; i < 100; i++)
                 {
                     await bus.PublishAsync(new Message1(1 + (i % 2)));
@@ -35,25 +30,15 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Append
 
             counter = 0;
 
-            using (bus.Subscribe(b => 
-                b.Append(async msg => msg)
-                .Handler(
-                    async message =>
-                        {
-                            Interlocked.Add(ref counter, message.AddValue);
-                        })).Wrapper())
+            using (bus.Subscribe(b => b.Append(async msg => msg).Handler(async message => { Interlocked.Add(ref counter, message.AddValue); })).Wrapper())
             {
-
                 for (var i = 0; i < 100; i++)
                 {
-                    await bus.PublishAsync(new Message1(1 + (i % 2)));
+                    await bus.PublishAsync(new Message1(1 + i % 2));
                 }
 
                 Assert.AreEqual(300, counter);
             }
-
-
-
         }
 
         private class Message1
@@ -63,7 +48,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Append
                 this.AddValue = addValue;
             }
 
-            public int AddValue { get; set; }
+            public int AddValue { get; }
         }
     }
 }

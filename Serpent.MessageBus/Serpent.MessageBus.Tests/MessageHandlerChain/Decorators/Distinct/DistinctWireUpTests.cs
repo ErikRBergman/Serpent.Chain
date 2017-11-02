@@ -8,7 +8,6 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     using Serpent.MessageBus.Interfaces;
-    using Serpent.MessageBus.MessageHandlerChain.Decorators.Distinct;
 
     [TestClass]
     public class DistinctWireUpTests
@@ -22,36 +21,34 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
 
             bus.Subscribe(b => b.WireUp(handler));
 
-            await bus.PublishAsync(new Message()
-                                       {
-                                           Id = "1"
-                                       });
+            await bus.PublishAsync(
+                new Message
+                    {
+                        Id = "1"
+                    });
 
-            await bus.PublishAsync(new Message()
-                                       {
-                                           Id = "1"
-                                       });
+            await bus.PublishAsync(
+                new Message
+                    {
+                        Id = "1"
+                    });
 
-            await bus.PublishAsync(new Message()
-                                       {
-                                           Id = "1"
-                                       });
+            await bus.PublishAsync(
+                new Message
+                    {
+                        Id = "1"
+                    });
 
-            await bus.PublishAsync(new Message()
-                                       {
-                                           Id = "2"
-                                       });
-
+            await bus.PublishAsync(
+                new Message
+                    {
+                        Id = "2"
+                    });
 
             Assert.AreEqual(2, handler.NumberOfInvokations);
 
             bus.Subscribe(b => b.WireUp(handler));
             bus.Subscribe(b => b.WireUp(handler));
-        }
-
-        private class Message
-        {
-            public string Id { get; set; }
         }
 
         [Distinct(nameof(Message.Id))]
@@ -67,5 +64,9 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
             }
         }
 
+        private class Message
+        {
+            public string Id { get; set; }
+        }
     }
 }

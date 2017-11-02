@@ -1,6 +1,6 @@
 ﻿// ReSharper disable InconsistentNaming
 
-namespace Serpent.MessageBus.Tests.MessageHandlerChain
+namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Select
 {
     using System.Threading.Tasks;
 

@@ -64,7 +64,6 @@ namespace Serpent.MessageBus
         /// <param name="messageHandlerChainBuilder">The mhc builder</param>
         /// <param name="handlerFactory">The handler factory method</param>
         /// <param name="neverDispose">Prevent the subscription from disposing the message handler</param>
-        /// <returns>The mhc builder</returns>
         public static void AddHandlerFactory<TMessageType, THandler>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<THandler> handlerFactory, 

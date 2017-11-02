@@ -35,7 +35,7 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Retry
 
             return new RetryConfiguration
             {
-                MaxNumberOfRetries = attempts,
+                MaxNumberOfAttempts = attempts,
                 RetryDelay = delay,
                 UseIMessageHandlerRetry = true
             };
@@ -53,7 +53,11 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Retry
         {
             if (retryAttribute.UseIMessageHandlerRetry && handler is IMessageHandlerRetry<TMessageType> retryHandler)
             {
-                messageHandlerChainBuilder.Retry(retryAttribute.MaxNumberOfAttempts, retryAttribute.RetryDelay, retryHandler);
+                messageHandlerChainBuilder.Retry(
+                    b => b
+                        .MaximumNumberOfAttempts(retryAttribute.MaxNumberOfAttempts)
+                        .RetryDelay(retryAttribute.RetryDelay)
+                        .RetryHandler(retryHandler));
             }
             else
             {
@@ -65,11 +69,15 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Retry
         {
             if (configuration.UseIMessageHandlerRetry && handler is IMessageHandlerRetry<TMessageType> retryHandler)
             {
-                messageHandlerChainBuilder.Retry(configuration.MaxNumberOfRetries, configuration.RetryDelay, retryHandler);
+                messageHandlerChainBuilder.Retry(
+                    b => b
+                        .MaximumNumberOfAttempts(configuration.MaxNumberOfAttempts)
+                        .RetryDelay(configuration.RetryDelay)
+                        .RetryHandler(retryHandler));
             }
             else
             {
-                messageHandlerChainBuilder.Retry(configuration.MaxNumberOfRetries, configuration.RetryDelay);
+                messageHandlerChainBuilder.Retry(configuration.MaxNumberOfAttempts, configuration.RetryDelay);
             }
         }
     }

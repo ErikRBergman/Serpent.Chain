@@ -1,4 +1,4 @@
-﻿namespace Serpent.MessageBus.Tests.MessageHandlerChain.Concurrent
+﻿namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Concurrent
 {
     using System.Threading;
     using System.Threading.Tasks;
@@ -15,15 +15,16 @@
 
             var counter = 0;
 
-            using (bus.Subscribe(b => b
-                .SoftFireAndForget()
-                .Concurrent(10)
-                .Handler(
-                    async message =>
-                        {
-                            await Task.Delay(500);
-                            Interlocked.Increment(ref counter);
-                        })).Wrapper())
+            using (bus.Subscribe(
+                    b => b.SoftFireAndForget()
+                        .Concurrent(10)
+                        .Handler(
+                            async message =>
+                                {
+                                    await Task.Delay(500);
+                                    Interlocked.Increment(ref counter);
+                                }))
+                .Wrapper())
             {
                 await Task.Delay(100);
 

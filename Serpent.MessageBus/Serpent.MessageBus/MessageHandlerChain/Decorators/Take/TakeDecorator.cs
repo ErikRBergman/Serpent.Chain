@@ -21,11 +21,6 @@
             buildNotification.AddNotification(this.SetSubscription);
         }
 
-        private void SetSubscription(IMessageHandlerChain messageHandlerChain)
-        {
-            this.messageHandlerChain = messageHandlerChain;
-        }
-
         /// <summary>
         ///     Handles a message.
         /// </summary>
@@ -53,6 +48,11 @@
             this.messageHandlerChain?.Dispose();
 
             return Task.CompletedTask;
+        }
+
+        private void SetSubscription(IMessageHandlerChain chain)
+        {
+            this.messageHandlerChain = chain;
         }
     }
 }

@@ -45,9 +45,9 @@
             }
         }
 
-        private void MessageHandlerChainBuilt(IMessageHandlerChain messageHandlerChain)
+        private void MessageHandlerChainBuilt(IMessageHandlerChain chain)
         {
-            this.messageHandlerChain = messageHandlerChain;
+            this.messageHandlerChain = chain;
         }
     }
 }

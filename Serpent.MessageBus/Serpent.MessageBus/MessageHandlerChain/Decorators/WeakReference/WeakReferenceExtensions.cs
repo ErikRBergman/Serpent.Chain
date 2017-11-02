@@ -2,7 +2,6 @@
 
 namespace Serpent.MessageBus
 {
-    using Serpent.MessageBus.Helpers;
     using Serpent.MessageBus.MessageHandlerChain.Decorators.WeakReference;
 
     /// <summary>

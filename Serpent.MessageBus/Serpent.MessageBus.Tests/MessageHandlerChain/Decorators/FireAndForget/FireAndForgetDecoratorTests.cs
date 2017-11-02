@@ -1,4 +1,4 @@
-﻿namespace Serpent.MessageBus.Tests.MessageHandlerChain
+﻿namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.FireAndForget
 {
     using System.Threading.Tasks;
 

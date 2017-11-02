@@ -1,6 +1,6 @@
 ﻿// ReSharper disable InconsistentNaming
 
-namespace Serpent.MessageBus.Tests.MessageHandlerChain.Retry
+namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Retry
 {
     using System;
     using System.Collections.Generic;
@@ -10,7 +10,6 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Retry
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     using Serpent.MessageBus.Interfaces;
-    using Serpent.MessageBus.MessageHandlerChain.Decorators.Retry;
 
     [TestClass]
     public class RetryWireUpTests

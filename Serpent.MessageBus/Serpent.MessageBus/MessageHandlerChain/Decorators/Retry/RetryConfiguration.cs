@@ -19,7 +19,7 @@ namespace Serpent.MessageBus
         /// <summary>
         /// The maximum number of attempts
         /// </summary>
-        public int MaxNumberOfRetries { get; set; }
+        public int MaxNumberOfAttempts { get; set; }
 
         /// <summary>
         /// The delay between failed attempts

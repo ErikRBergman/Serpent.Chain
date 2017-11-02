@@ -67,6 +67,7 @@
         /// <param name="serviceProvider">
         ///     The service provider
         /// </param>
+        /// <param name="builderAction">The method used to configure the new subscription</param>
         /// <returns>
         ///     The <see cref="IMessageHandlerChainBuilder&lt;TMessageType&gt;" /> used to setup the message handler chain.
         /// </returns>

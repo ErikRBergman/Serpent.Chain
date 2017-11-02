@@ -1,6 +1,6 @@
 // ReSharper disable InconsistentNaming
 
-namespace Serpent.MessageBus.Tests.MessageHandlerChain
+namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
@@ -8,7 +8,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
-    public class AppendDecoratorTests
+    public class AppendDecoratorTests2
     {
         [TestMethod]
         public async Task AppendDecoratorTest_Subscribe_Normal()
