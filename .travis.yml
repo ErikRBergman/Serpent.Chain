@@ -1,0 +1,9 @@
+language: csharp
+solution: Serpent.MessageBus/Serpent.MessageBus.sln
+ 
+language: csharp
+mono: none
+dotnet: 2.0.0
+dist: trusty
+script:
+ - dotnet restore Serpent.MessageBus/Serpent.MessageBus.sln
