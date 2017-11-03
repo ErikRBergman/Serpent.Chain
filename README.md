@@ -2,8 +2,8 @@
 
 
 |Branch|.NET Core release build|Better code|
-|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-|master|[![Build Status](https://travis-ci.org/ErikRBergman/Serpent.MessageBus.svg?branch=master)](https://travis-ci.org/ErikRBergman/Serpent.MessageBus)|[![BCH compliance](https://bettercodehub.com/edge/badge/ErikRBergman/Serpent.MessageBus?branch=master)](https://bettercodehub.com/)
+|:--:|:--:|:--:|
+|master|[![Build Status](https://travis-ci.org/ErikRBergman/Serpent.MessageBus.svg?branch=master)](https://travis-ci.org/ErikRBergman/Serpent.MessageBus)|[![BCH compliance](https://bettercodehub.com/edge/badge/ErikRBergman/Serpent.MessageBus?branch=master)](https://bettercodehub.com/)|
 
 
 ## Introduction
