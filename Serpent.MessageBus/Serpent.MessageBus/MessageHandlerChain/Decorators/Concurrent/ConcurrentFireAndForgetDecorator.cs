@@ -6,13 +6,15 @@
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.MessageBus.Models;
+
     internal class ConcurrentFireAndForgetDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
     {
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
         private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 
-        private readonly ConcurrentQueue<MessageAndToken> messages = new ConcurrentQueue<MessageAndToken>();
+        private readonly ConcurrentQueue<MessageAndToken<TMessageType>> messages = new ConcurrentQueue<MessageAndToken<TMessageType>>();
 
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(0);
 
@@ -33,7 +35,7 @@
 
         public override Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
-            this.messages.Enqueue(new MessageAndToken(message, token));
+            this.messages.Enqueue(new MessageAndToken<TMessageType>(message, token));
             this.semaphore.Release();
             return Task.CompletedTask;
         }
@@ -59,19 +61,6 @@
                     }
                 }
             }
-        }
-
-        private struct MessageAndToken
-        {
-            public MessageAndToken(TMessageType message, CancellationToken token)
-            {
-                this.Message = message;
-                this.Token = token;
-            }
-
-            public TMessageType Message { get; }
-
-            public CancellationToken Token { get; }
         }
     }
 }

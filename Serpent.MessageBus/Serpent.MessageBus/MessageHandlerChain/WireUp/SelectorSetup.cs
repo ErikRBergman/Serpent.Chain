@@ -4,7 +4,7 @@
     using System.Collections.Concurrent;
     using System.Reflection;
 
-    internal static class SelectorSetup<TMessageType, TIdentifier>
+    internal static class SelectorSetup<TMessageType>
     {
         // ReSharper disable once StaticMemberInGenericType
         private static readonly ConcurrentDictionary<string, Container> Getters = new ConcurrentDictionary<string, Container>();

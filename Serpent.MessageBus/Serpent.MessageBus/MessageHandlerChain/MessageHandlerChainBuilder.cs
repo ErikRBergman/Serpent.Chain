@@ -20,7 +20,7 @@ namespace Serpent.MessageBus
         private readonly Stack<Func<Func<TMessageType, CancellationToken, Task>, MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>>> handlerSetupFuncs =
                 new Stack<Func<Func<TMessageType, CancellationToken, Task>, MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>>>();
 
-        private Func<MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>> createHandlerFunc = null;
+        private Func<MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>> createHandlerFunc;
 
         /// <summary>
         ///     The number of handler setup methods
@@ -31,7 +31,6 @@ namespace Serpent.MessageBus
         /// Returns true if the builder has a handler
         /// </summary>
         public bool HasHandler => this.createHandlerFunc != null;
-
 
         /// <summary>
         ///     Adds a decorator to the message handler chain
@@ -55,9 +54,14 @@ namespace Serpent.MessageBus
         }
 
         /// <summary>
-        ///     Adds a handler to the message handler chain. When a handler is added, no more decorators or handlers can be added
+        /// Adds a handler to the message handler chain. When a handler is added, no more decorators or handlers can be added
         /// </summary>
-        /// <param name="addHandlerFunc">The method called to create and return the message handler chain's message handler</param>
+        /// <param name="addHandlerFunc">
+        /// The method called to create and return the message handler chain's message handler
+        /// </param>
+        /// <returns>
+        /// The <see cref="IMessageHandlerChainBuilder&lt;TMessageType&gt;"/>.
+        /// </returns>
         public IMessageHandlerChainBuilder<TMessageType> Handle(Func<MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>> addHandlerFunc)
         {
             if (this.createHandlerFunc != null)

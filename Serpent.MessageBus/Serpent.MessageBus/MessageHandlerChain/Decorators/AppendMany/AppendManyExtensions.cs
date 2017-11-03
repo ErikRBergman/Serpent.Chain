@@ -8,8 +8,10 @@ namespace Serpent.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.MessageBus.MessageHandlerChain.Decorators.AppendMany;
+
     /// <summary>
-    /// The append many decorator extensions
+    ///     The append many decorator extensions
     /// </summary>
     public static class AppendManyExtensions
     {
@@ -90,8 +92,18 @@ namespace Serpent.MessageBus
             }
 
             return messageHandlerChainBuilder.AddDecorator(
-                innerMessageHandler => 
-                (message, token) => Task.WhenAll(innerMessageHandler(message, token), AppendManyIfAsync(innerMessageHandler, predicate, messageSelector, message, token, isRecursive)));
+                innerMessageHandler => (message, token) => Task.WhenAll(
+                    innerMessageHandler(message, token),
+                    AppendManyIfAsync(
+                        new AppendManyAsyncParameters<TMessageType>
+                            {
+                                InnerMessageHandler = innerMessageHandler,
+                                Predicate = predicate,
+                                MessageSelector = messageSelector,
+                                Message = message,
+                                CancellationToken = token,
+                                IsRecursive = isRecursive
+                            })));
         }
 
         /// <summary>
@@ -186,68 +198,64 @@ namespace Serpent.MessageBus
             }
 
             return messageHandlerChainBuilder.AddDecorator(
-                innerMessageHandler => (message, token) => Task.WhenAll(innerMessageHandler(message, token), AppendManyIfAsync(predicate, messageSelector, innerMessageHandler, message, token, isRecursive)));
+                innerMessageHandler => (message, token) => Task.WhenAll(
+                    innerMessageHandler(message, token),
+                    AppendManyIfAsync(
+                        new AppendManyParameters<TMessageType>
+                            {
+                                Predicate = predicate,
+                                MessageSelector = messageSelector,
+                                InnerMessageHandler = innerMessageHandler,
+                                Message = message,
+                                IsRecursive = isRecursive
+                            })));
         }
 
-        private static Task AppendManyIfAsync<TMessageType>(
-            Func<TMessageType, bool> predicate,
-            Func<TMessageType, IEnumerable<TMessageType>> messageSelector,
-            Func<TMessageType, CancellationToken, Task> innerMessageHandler,
-            TMessageType messages,
-            CancellationToken token,
-            bool isRecursive)
+        private static Task AppendManyIfAsync<TMessageType>(AppendManyParameters<TMessageType> manyParameters)
         {
-            if (predicate(messages) == false)
+            if (manyParameters.Predicate(manyParameters.Message) == false)
             {
                 return Task.CompletedTask;
             }
 
-            var newMessages = messageSelector(messages);
+            var newMessages = manyParameters.MessageSelector(manyParameters.Message);
             if (newMessages == null)
             {
                 return Task.CompletedTask;
             }
 
-            var newMessageTask = Task.WhenAll(newMessages.Select(message => innerMessageHandler(message, token)));
+            var newMessageTask = Task.WhenAll(newMessages.Select(message => manyParameters.InnerMessageHandler(message, manyParameters.Token)));
 
-            if (isRecursive)
+            if (manyParameters.IsRecursive)
             {
-                return Task.WhenAll(
-                    newMessageTask,
-                    Task.WhenAll(newMessages.Select(newMessage => AppendManyIfAsync(predicate, messageSelector, innerMessageHandler, newMessage, token, true))));
+                return Task.WhenAll(newMessageTask, Task.WhenAll(newMessages.Select(newMessage => AppendManyIfAsync(manyParameters.CloneForMessage(newMessage)))));
             }
 
             return newMessageTask;
         }
 
-        private static async Task AppendManyIfAsync<TMessageType>(
-            Func<TMessageType, CancellationToken, Task> messageHandler,
-            Func<TMessageType, CancellationToken, Task<bool>> predicate,
-            Func<TMessageType, CancellationToken, Task<IEnumerable<TMessageType>>> messageSelector,
-            TMessageType originalMessage,
-            CancellationToken token,
-            bool isRecursive)
+        private static async Task AppendManyIfAsync<TMessageType>(AppendManyAsyncParameters<TMessageType> parameters)
         {
-            if (!await predicate(originalMessage, token).ConfigureAwait(false))
+            if (!await parameters.Predicate(parameters.Message, parameters.CancellationToken).ConfigureAwait(false))
             {
                 return;
             }
 
-            var newMessages = await messageSelector(originalMessage, token).ConfigureAwait(false);
+            var newMessages = await parameters.MessageSelector(parameters.Message, parameters.CancellationToken).ConfigureAwait(false);
             if (newMessages == null)
             {
                 return;
             }
 
-            var newMessagesTask = Task.WhenAll(newMessages.Select(message => messageHandler(message, token)));
+            var newMessagesTask = Task.WhenAll(newMessages.Select(message => parameters.InnerMessageHandler(message, parameters.CancellationToken)));
 
-            if (!isRecursive)
+            if (!parameters.IsRecursive)
             {
                 await newMessagesTask.ConfigureAwait(false);
                 return;
             }
 
-            await Task.WhenAll(newMessagesTask, Task.WhenAll(newMessages.Select(newMessage => AppendManyIfAsync(messageHandler, predicate, messageSelector, newMessage, token, true))));
+            await Task.WhenAll(newMessagesTask, Task.WhenAll(newMessages.Select(newMessage => AppendManyIfAsync(parameters.CloneForMessage(newMessage)))));
         }
 
         private static async Task InnerMessageHandlerAsync<TMessageType>(

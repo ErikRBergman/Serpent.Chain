@@ -43,7 +43,7 @@
                 return;
             }
 
-            SelectorSetup<TMessageType, NoDuplicatesWireUp>.WireUp(
+            SelectorSetup<TMessageType>.WireUp(
                 propertyName,
                     typeof(DistinctExtensions).GetMethods()
                     .FirstOrDefault(

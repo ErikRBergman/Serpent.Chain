@@ -6,8 +6,10 @@ namespace Serpent.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.MessageBus.MessageHandlerChain.Decorators.Append;
+
     /// <summary>
-    /// The append decorator extensions
+    ///     The append decorator extensions
     /// </summary>
     public static class AppendExtensions
     {
@@ -62,7 +64,18 @@ namespace Serpent.MessageBus
             }
 
             return messageHandlerChainBuilder.AddDecorator(
-                innerMessageHandler => (message, token) => Task.WhenAll(innerMessageHandler(message, token), AppendIfAsync(innerMessageHandler, predicate, messageSelector, message, token, isRecursive)));
+                innerMessageHandler => (message, token) => Task.WhenAll(
+                    innerMessageHandler(message, token),
+                    AppendIfAsync(
+                        new AppendAsyncParameters<TMessageType>
+                            {
+                                InnerMessageHandler = innerMessageHandler,
+                                Predicate = predicate,
+                                MessageSelector = messageSelector,
+                                Message = message,
+                                CancellationToken = token,
+                                IsRecursive = isRecursive
+                            })));
         }
 
         /// <summary>
@@ -132,51 +145,50 @@ namespace Serpent.MessageBus
             }
 
             return messageHandlerChainBuilder.AddDecorator(
-                innerMessageHandler => (message, token) => Task.WhenAll(innerMessageHandler(message, token), AppendIfAsync(predicate, messageSelector, innerMessageHandler, message, token, isRecursive)));
+                innerMessageHandler => (message, token) => Task.WhenAll(
+                    innerMessageHandler(message, token),
+                    AppendIfAsync(
+                        new AppendParameters<TMessageType>
+                            {
+                                Predicate = predicate,
+                                MessageSelector = messageSelector,
+                                InnerMessageHandler = innerMessageHandler,
+                                Message = message,
+                                CancellationToken = token,
+                                IsRecursive = isRecursive
+                            })));
         }
 
-        private static Task AppendIfAsync<TMessageType>(
-            Func<TMessageType, bool> predicate,
-            Func<TMessageType, TMessageType> messageSelector,
-            Func<TMessageType, CancellationToken, Task> innerMessageHandler,
-            TMessageType message,
-            CancellationToken token,
-            bool isRecursive)
+        private static Task AppendIfAsync<TMessageType>(AppendParameters<TMessageType> parameters)
         {
-            if (predicate(message) == false)
+            if (parameters.Predicate(parameters.Message) == false)
             {
                 return Task.CompletedTask;
             }
 
-            var newMessage = messageSelector(message);
-            var newMessageTask = innerMessageHandler(newMessage, token);
+            var newMessage = parameters.MessageSelector(parameters.Message);
+            var newMessageTask = parameters.InnerMessageHandler(newMessage, parameters.CancellationToken);
 
-            if (isRecursive)
+            if (parameters.IsRecursive)
             {
-                return Task.WhenAll(newMessageTask, AppendIfAsync(predicate, messageSelector, innerMessageHandler, newMessage, token, true));
+                return Task.WhenAll(newMessageTask, AppendIfAsync(parameters.CloneForMessage(newMessage)));
             }
 
             return newMessageTask;
         }
 
-        private static async Task AppendIfAsync<TMessageType>(
-            Func<TMessageType, CancellationToken, Task> messageHandler,
-            Func<TMessageType, Task<bool>> predicate,
-            Func<TMessageType, Task<TMessageType>> messageSelector,
-            TMessageType originalMessage,
-            CancellationToken token,
-            bool isRecursive)
+        private static async Task AppendIfAsync<TMessageType>(AppendAsyncParameters<TMessageType> parameters)
         {
-            if (await predicate(originalMessage).ConfigureAwait(false))
+            if (await parameters.Predicate(parameters.Message).ConfigureAwait(false))
             {
-                var newMessage = await messageSelector(originalMessage).ConfigureAwait(false);
-                if (isRecursive)
+                var newMessage = await parameters.MessageSelector(parameters.Message).ConfigureAwait(false);
+                if (parameters.IsRecursive)
                 {
-                    await Task.WhenAll(messageHandler(newMessage, token), AppendIfAsync(messageHandler, predicate, messageSelector, newMessage, token, true));
+                    await Task.WhenAll(parameters.InnerMessageHandler(newMessage, parameters.CancellationToken), AppendIfAsync(parameters.CloneForMessage(newMessage)));
                 }
                 else
                 {
-                    await messageHandler(newMessage, token).ConfigureAwait(false);
+                    await parameters.InnerMessageHandler(newMessage, parameters.CancellationToken).ConfigureAwait(false);
                 }
             }
         }

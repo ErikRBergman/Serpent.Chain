@@ -10,6 +10,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Retry
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     using Serpent.MessageBus.Interfaces;
+    using Serpent.MessageBus.Models;
 
     [TestClass]
     public class RetryWireUpTests
@@ -75,13 +76,13 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Retry
                 throw new NotImplementedException();
             }
 
-            public Task HandleRetryAsync(Message message, Exception exception, int attemptNumber, int maxNumberOfAttemps, TimeSpan delay, CancellationToken token)
+            public Task HandleRetryAsync(FailedMessageHandlingAttempt<Message> attemptInformation)
             {
-                this.Attempts.Add(attemptNumber);
+                this.Attempts.Add(attemptInformation.AttemptNumber);
                 return Task.CompletedTask;
             }
 
-            public Task MessageHandledSuccessfullyAsync(Message message, int attemptNumber, int maxNumberOfAttemps, TimeSpan delay)
+            public Task MessageHandledSuccessfullyAsync(MessageHandlingAttempt<Message> attemptInformation)
             {
                 return Task.CompletedTask;
             }

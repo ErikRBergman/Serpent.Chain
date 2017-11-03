@@ -8,7 +8,6 @@
     {
         private NullMessageSubscriptions()
         {
-            
         }
 
         public static NullMessageSubscriptions<TMessageType> Default { get; } = new NullMessageSubscriptions<TMessageType>();

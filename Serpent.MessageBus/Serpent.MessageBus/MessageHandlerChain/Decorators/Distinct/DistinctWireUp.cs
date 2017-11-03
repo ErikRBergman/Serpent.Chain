@@ -29,7 +29,7 @@
                 return;
             }
 
-            SelectorSetup<TMessageType, DistinctWireUp>
+            SelectorSetup<TMessageType>
                 .WireUp(
                     attribute.PropertyName,
                         DistinctMethodInfo,
@@ -44,7 +44,7 @@
                 return;
             }
 
-            SelectorSetup<TMessageType, DistinctWireUp>
+            SelectorSetup<TMessageType>
                 .WireUp(
                     configuration.PropertyName,
                     DistinctMethodInfo,

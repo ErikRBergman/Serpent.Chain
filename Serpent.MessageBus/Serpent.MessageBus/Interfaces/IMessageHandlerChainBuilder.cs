@@ -26,7 +26,7 @@ namespace Serpent.MessageBus
         ///     Adds the handler to the message handler chain
         /// </summary>
         /// <param name="addHandlerFunc">A function that returns the method to call when building the chain</param>
-        //// <returns>The builder</returns>
+        /// <returns>The builder</returns>
         IMessageHandlerChainBuilder<TMessageType> Handle(
             Func<MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>> addHandlerFunc);
 

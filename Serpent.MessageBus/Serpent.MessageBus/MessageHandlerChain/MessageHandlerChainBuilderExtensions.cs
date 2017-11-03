@@ -15,7 +15,7 @@ namespace Serpent.MessageBus
     public static class MessageHandlerChainBuilderExtensions
     {
         /// <summary>
-        /// Add a decorator to the message handler chain builder
+        ///     Add a decorator to the message handler chain builder
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The mhc builder</param>
@@ -29,7 +29,7 @@ namespace Serpent.MessageBus
         }
 
         /// <summary>
-        /// Add a decorator to the message handler chain builder
+        ///     Add a decorator to the message handler chain builder
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The mhc builder</param>
@@ -43,7 +43,7 @@ namespace Serpent.MessageBus
         }
 
         /// <summary>
-        /// Add a decorator to the message handler chain builder
+        ///     Add a decorator to the message handler chain builder
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The mhc builder</param>
@@ -66,7 +66,7 @@ namespace Serpent.MessageBus
         /// <param name="neverDispose">Prevent the subscription from disposing the message handler</param>
         public static void AddHandlerFactory<TMessageType, THandler>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
-            Func<THandler> handlerFactory, 
+            Func<THandler> handlerFactory,
             bool neverDispose = false)
             where THandler : IMessageHandler<TMessageType>
         {
@@ -95,7 +95,6 @@ namespace Serpent.MessageBus
                     });
         }
 
-
         /// <summary>
         ///     Set the chain handler method or lambda method. Use this overload if your handler has no need for async or
         ///     cancellationToken
@@ -105,12 +104,11 @@ namespace Serpent.MessageBus
         /// <param name="handlerFunc">The method to invoke</param>
         /// <returns>The mhc builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Handler<TMessageType>(
-            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, 
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, CancellationToken, Task> handlerFunc)
         {
             return messageHandlerChainBuilder.Handle(services => handlerFunc);
         }
-
 
         /// <summary>
         ///     Set the chain handler method or lambda method. Use this overload if your handler has no need for async or
@@ -120,7 +118,9 @@ namespace Serpent.MessageBus
         /// <param name="messageHandlerChainBuilder">The mhc builder</param>
         /// <param name="handlerAction">The action to invoke</param>
         /// <returns>The mhc builder</returns>
-        public static IMessageHandlerChainBuilder<TMessageType> Handler<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, Action<TMessageType> handlerAction)
+        public static IMessageHandlerChainBuilder<TMessageType> Handler<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+            Action<TMessageType> handlerAction)
         {
             return messageHandlerChainBuilder.Handler(
                 (message, token) =>
@@ -137,7 +137,9 @@ namespace Serpent.MessageBus
         /// <param name="messageHandlerChainBuilder">The mhc builder</param>
         /// <param name="handlerFunc">The method to invoke</param>
         /// <returns>The mhc builder</returns>
-        public static IMessageHandlerChainBuilder<TMessageType> Handler<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, Func<TMessageType, Task> handlerFunc)
+        public static IMessageHandlerChainBuilder<TMessageType> Handler<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+            Func<TMessageType, Task> handlerFunc)
         {
             return messageHandlerChainBuilder.Handler((message, token) => handlerFunc(message));
         }
@@ -177,7 +179,9 @@ namespace Serpent.MessageBus
         /// <param name="subscriptions">The subscriptions interface</param>
         /// <param name="setupAction">The method called to configure the message handler chain for the new subscription</param>
         /// <returns>The new message handler chain</returns>
-        public static IMessageHandlerChain<TMessageType> Subscribe<TMessageType>(this IMessageBusSubscriptions<TMessageType> subscriptions, Action<IMessageHandlerChainBuilder<TMessageType>> setupAction)
+        public static IMessageHandlerChain<TMessageType> Subscribe<TMessageType>(
+            this IMessageBusSubscriptions<TMessageType> subscriptions,
+            Action<IMessageHandlerChainBuilder<TMessageType>> setupAction)
         {
             var builder = new MessageHandlerChainBuilder<TMessageType>();
             setupAction(builder);

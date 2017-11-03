@@ -4,6 +4,10 @@
     using System.Threading;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// Provides a way to configure the retry message handler chain decorator
+    /// </summary>
+    /// <typeparam name="TMessageType">The message type</typeparam>
     public interface IRetryBuilder<TMessageType>
     {
         /// <summary>

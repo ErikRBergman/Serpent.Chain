@@ -7,6 +7,7 @@ namespace Serpent.MessageBus
     using System.Threading.Tasks;
 
     using Serpent.MessageBus.MessageHandlerChain.Decorators.Retry;
+    using Serpent.MessageBus.Models;
 
     /// <summary>
     ///     Provides extensions for more flexible retry configuration
@@ -38,6 +39,30 @@ namespace Serpent.MessageBus
             Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task> handlerFailedFunc)
         {
             builder.HandlerFailedFunc = handlerFailedFunc;
+            return builder;
+        }
+
+        /// <summary>
+        ///     Sets the method called when a message handler fails (throws an exception)
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="builder">The retry builder</param>
+        /// <param name="handlerFailedFunc">The method to call when the message handler fails</param>
+        /// <returns>A retry builder</returns>
+        public static IRetryBuilder<TMessageType> OnFail<TMessageType>(
+            this IRetryBuilder<TMessageType> builder,
+            Func<FailedMessageHandlingAttempt<TMessageType>, Task> handlerFailedFunc)
+        {
+            builder.HandlerFailedFunc = (message, exception, attempt, maxAttempts, delay, token) => handlerFailedFunc(new FailedMessageHandlingAttempt<TMessageType>
+            {
+                AttemptNumber = attempt,
+                Message = message,
+                CancellationToken = token,
+                Delay = delay,
+                Exception = exception,
+                MaximumNumberOfAttemps = maxAttempts
+            });
+
             return builder;
         }
 
@@ -123,7 +148,7 @@ namespace Serpent.MessageBus
         /// <returns>A retry builder</returns>
         public static IRetryBuilder<TMessageType> OnFail<TMessageType>(this IRetryBuilder<TMessageType> builder, Func<TMessageType, Exception, int, int, Task> handlerFailedFunc)
         {
-            builder.HandlerFailedFunc = (msg, exception, attempt, maxAttempts, delay, token) => handlerFailedFunc(msg, exception, attempt, maxAttempts);
+            builder.HandlerFailedFunc = (message, exception, attempt, maxAttempts, delay, cancellationToken) => handlerFailedFunc(message, exception, attempt, maxAttempts);
             return builder;
         }
 
@@ -139,6 +164,26 @@ namespace Serpent.MessageBus
             Func<TMessageType, int, int, TimeSpan, Task> handlerSucceededFunc)
         {
             builder.HandlerSucceededFunc = handlerSucceededFunc;
+            return builder;
+        }
+
+        /// <summary>
+        ///     Sets the method called when a message handler succeeds
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="builder">The retry builder</param>
+        /// <param name="handlerSucceededFunc">The method to call when a message handler succeeds</param>
+        /// <returns>A retry builder</returns>
+        public static IRetryBuilder<TMessageType> OnSuccess<TMessageType>(this IRetryBuilder<TMessageType> builder, Func<MessageHandlingAttempt<TMessageType>, Task> handlerSucceededFunc)
+        {
+            builder.HandlerSucceededFunc = (msg, attempt, maxAttempts, delay) => handlerSucceededFunc(
+                new MessageHandlingAttempt<TMessageType>
+                    {
+                        Message = msg,
+                        AttemptNumber = attempt,
+                        MaximumNumberOfAttemps = maxAttempts,
+                        Delay = delay
+                    });
             return builder;
         }
 

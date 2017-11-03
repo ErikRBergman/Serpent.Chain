@@ -33,6 +33,5 @@ namespace Serpent.MessageBus
         {
             return messageHandlerChain.MessageHandlerChainFunc(message, CancellationToken.None);
         }
-
     }
 }

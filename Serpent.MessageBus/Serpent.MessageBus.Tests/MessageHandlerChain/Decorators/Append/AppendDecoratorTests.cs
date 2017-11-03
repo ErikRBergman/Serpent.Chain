@@ -30,11 +30,13 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
 
             counter = 0;
 
+#pragma warning disable 1998 
             using (bus.Subscribe(b => b.Append(async msg => msg).Handler(async message => { Interlocked.Add(ref counter, message.AddValue); })).Wrapper())
+#pragma warning restore 1998
             {
                 for (var i = 0; i < 100; i++)
                 {
-                    await bus.PublishAsync(new Message1(1 + i % 2));
+                    await bus.PublishAsync(new Message1(1 + (i % 2)));
                 }
 
                 Assert.AreEqual(300, counter);

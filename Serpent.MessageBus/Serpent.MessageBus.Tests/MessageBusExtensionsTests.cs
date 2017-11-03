@@ -1,8 +1,5 @@
 ﻿namespace Serpent.MessageBus.Tests
 {
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
