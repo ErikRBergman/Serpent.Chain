@@ -85,6 +85,10 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Append
                 {
                     newMessage = await parameters.MessageSelector(parameters.Message, parameters.CancellationToken).ConfigureAwait(false);
                 }
+                else
+                {
+                    return;
+                }
             }
 
             if (parameters.IsRecursive)
