@@ -1,17 +1,20 @@
-﻿namespace Serpent.MessageBus.Tests
-{
-    using System.Threading.Tasks;
+﻿//namespace Serpent.MessageBus.Tests
+//{
+//    using System;
+//    using System.Collections.Generic;
+//    using System.Linq.Expressions;
+//    using System.Threading.Tasks;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+//    
 
-    [TestClass]
-    public class Experiments
-    {
-        [TestMethod]
-        [Ignore]
-        public async Task TestMethod1()
-        {
-            await Task.Delay(1);
-        }
-    }
-}
+//    
+//    public class Experiments
+//    {
+//        [Fact]
+//        [Ignore]
+//        public async Task TestMethod1()
+//        {
+//            await Task.Delay(1);
+//        }
+//    }
+//}

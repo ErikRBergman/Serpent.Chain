@@ -3,12 +3,11 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Xunit;
 
-    [TestClass]
     public class ConcurrentDecoratorTests
     {
-        [TestMethod]
+        [Fact]
         public async Task ConcurrentDecoratorHandlerTests()
         {
             var bus = new ConcurrentMessageBus<Message1>();
@@ -35,7 +34,7 @@
 
                 await Task.Delay(600);
 
-                Assert.AreEqual(10, counter);
+                Assert.Equal(10, counter);
             }
         }
 

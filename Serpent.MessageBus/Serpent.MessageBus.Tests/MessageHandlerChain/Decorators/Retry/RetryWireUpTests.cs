@@ -7,15 +7,14 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Retry
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-
     using Serpent.MessageBus.Interfaces;
     using Serpent.MessageBus.Models;
 
-    [TestClass]
+    using Xunit;
+
     public class RetryWireUpTests
     {
-        [TestMethod]
+        [Fact]
         public async Task RetryWireUp_RetryHandler_Test()
         {
             var bus = new ConcurrentMessageBus<Message>();
@@ -28,26 +27,23 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Retry
 
             await Task.Delay(400);
 
-            Assert.AreEqual(3, handler.Attempts.Count);
+            Assert.Equal(3, handler.Attempts.Count);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task RetryWireUp_Test()
         {
             var bus = new ConcurrentMessageBus<Message>();
 
             var handler = new NonRetryMessageHandler();
 
-            bus
-                .Subscribe(b => b
-                .SoftFireAndForget()
-                .WireUp(handler));
+            bus.Subscribe(b => b.SoftFireAndForget().WireUp(handler));
 
             await bus.PublishAsync();
 
             await Task.Delay(400);
 
-            Assert.AreEqual(3, handler.NumberOfInvokations);
+            Assert.Equal(3, handler.NumberOfInvokations);
         }
 
         private class Message

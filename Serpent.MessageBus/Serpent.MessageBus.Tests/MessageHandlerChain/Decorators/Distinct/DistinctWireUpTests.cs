@@ -4,15 +4,13 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
 {
     using System.Threading;
     using System.Threading.Tasks;
-
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-
     using Serpent.MessageBus.Interfaces;
 
-    [TestClass]
+    using Xunit;
+
     public class DistinctWireUpTests
     {
-        [TestMethod]
+        [Fact]
         public async Task DistinctWireUp_Attribute_Test()
         {
             var bus = new ConcurrentMessageBus<Message>();
@@ -45,7 +43,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
                         Id = "2"
                     });
 
-            Assert.AreEqual(2, handler.NumberOfInvokations);
+            Assert.Equal(2, handler.NumberOfInvokations);
 
             bus.Subscribe(b => b.WireUp(handler));
             bus.Subscribe(b => b.WireUp(handler));

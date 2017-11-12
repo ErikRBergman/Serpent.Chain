@@ -4,12 +4,11 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Select
 {
     using System.Threading.Tasks;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Xunit;
 
-    [TestClass]
     public class SelectDecoratorTests
     {
-        [TestMethod]
+        [Fact]
         public async Task SelectDecorator_Test()
         {
             var bus = new ConcurrentMessageBus<Message>();
@@ -29,9 +28,9 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Select
 
             await bus.PublishAsync(messageToPublish);
 
-            Assert.IsTrue(messageToPublish.Step1);
-            Assert.IsTrue(messageToPublish.Step2);
-            Assert.IsFalse(messageToPublish.Step3);
+            Assert.True(messageToPublish.Step1);
+            Assert.True(messageToPublish.Step2);
+            Assert.False(messageToPublish.Step3);
         }
 
         private class Message

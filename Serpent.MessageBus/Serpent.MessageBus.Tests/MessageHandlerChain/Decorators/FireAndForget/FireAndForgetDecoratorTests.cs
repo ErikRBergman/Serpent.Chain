@@ -2,12 +2,11 @@
 {
     using System.Threading.Tasks;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Xunit;
 
-    [TestClass]
     public class FireAndForgetDecoratorTests
     {
-        [TestMethod]
+        [Fact]
         public async Task TestFireAndForgetSubscription()
         {
             var bus = new ConcurrentMessageBus<Message1>();
@@ -23,11 +22,11 @@
             var msg = new Message1();
 
             await bus.PublishAsync(msg);
-            Assert.AreNotEqual("Got it!", msg.Status);
+            Assert.NotEqual("Got it!", msg.Status);
             
             await Task.Delay(200);
 
-            Assert.AreEqual("Got it!", msg.Status);
+            Assert.Equal("Got it!", msg.Status);
         }
 
         private class Message1

@@ -4,12 +4,11 @@
     using System.Linq;
     using System.Threading.Tasks;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Xunit;
 
-    [TestClass]
     public class ConcurrentMessageBusTests
     {
-        [TestMethod]
+        [Fact]
         public async Task TestConcurrentMessageBusNormal()
         {
             var messageType1Bus = new ConcurrentMessageBus<MessageType1>();
@@ -26,12 +25,12 @@
             const string Text = "Test";
 
             await messageType1Bus.PublishAsync(new MessageType1(Text));
-            Assert.AreEqual(1, type1Received.Count);
+            Assert.Single(type1Received);
 
-            Assert.AreEqual(Text, type1Received.First().Name);
+            Assert.Equal(Text, type1Received.First().Name);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task TestConcurrentMessageBusPatternMatching()
         {
             // If you would rather have a single message bus for your entire application, that can be done in this way
@@ -59,13 +58,13 @@
 
             await bus.PublishAsync(new MessageType1("John Yolo"));
 
-            Assert.IsTrue(type1Received.Count == 1);
-            Assert.IsTrue(type2Received.Count == 0);
+            Assert.True(type1Received.Count == 1);
+            Assert.True(type2Received.Count == 0);
 
             await bus.PublishAsync(new MessageType2("John Yolo"));
 
-            Assert.IsTrue(type1Received.Count == 1);
-            Assert.IsTrue(type2Received.Count == 1);
+            Assert.True(type1Received.Count == 1);
+            Assert.True(type2Received.Count == 1);
         }
 
         private class MessageBase

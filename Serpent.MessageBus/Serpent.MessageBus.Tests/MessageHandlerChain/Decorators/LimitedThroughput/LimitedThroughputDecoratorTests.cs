@@ -6,12 +6,11 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.LimitedThrough
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Xunit;
 
-    [TestClass]
     public class LimitedThroughputDecoratorTests
     {
-        [TestMethod]
+        [Fact]
         public async Task LimitedThroughput_Subscription_Delay_Tests()
         {
             var bus = new ConcurrentMessageBus<Message1>();
@@ -36,14 +35,14 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.LimitedThrough
 
                 await Task.Delay(150);
 
-                Assert.AreEqual(20, count);
+                Assert.Equal(20, count);
 
                 await Task.Delay(450);
-                Assert.AreEqual(60, count);
+                Assert.Equal(60, count);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public async Task LimitedThroughput_Subscription_Test()
         {
             var bus = new ConcurrentMessageBus<Message1>();
@@ -64,10 +63,10 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.LimitedThrough
 
                 await Task.Delay(150);
 
-                Assert.AreEqual(20, count);
+                Assert.Equal(20, count);
 
                 await Task.Delay(450);
-                Assert.AreEqual(60, count);
+                Assert.Equal(60, count);
             }
         }
 

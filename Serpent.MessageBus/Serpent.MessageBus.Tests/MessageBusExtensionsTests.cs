@@ -1,11 +1,8 @@
 ﻿namespace Serpent.MessageBus.Tests
 {
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-    [TestClass]
     public class MessageBusExtensionsTests
     {
-        ////[TestMethod]
+        ////[Fact]
         ////public void TestSingleBusMultipleTypesExtensions()
         ////{
         ////    var bus = new ConcurrentMessageBus<BaseMessageType>();
@@ -34,8 +31,8 @@
         ////                Name = "Boj"
         ////            });
 
-        ////    Assert.AreEqual(1, type1Received.Count);
-        ////    Assert.AreEqual(1, type2Received.Count);
+        ////    Assert.Equal(1, type1Received.Count);
+        ////    Assert.Equal(1, type2Received.Count);
 
         ////    subscription2.Dispose();
         ////    subscription1.Dispose();

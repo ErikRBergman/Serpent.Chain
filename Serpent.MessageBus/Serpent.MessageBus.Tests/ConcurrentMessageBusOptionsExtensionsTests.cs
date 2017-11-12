@@ -6,12 +6,11 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Xunit;
 
-    [TestClass]
     public class ConcurrentMessageBusOptionsExtensionsTests
     {
-        [TestMethod]
+        [Fact]
         public async Task UseCustomPublisherTests()
         {
             var mypublisher = new MyPublisher();
@@ -21,14 +20,14 @@
             await bus.PublishAsync(1);
             await bus.PublishAsync(5);
 
-            Assert.AreEqual(3, mypublisher.Messages.Count);
+            Assert.Equal(3, mypublisher.Messages.Count);
 
-            Assert.AreEqual(55, mypublisher.Messages[0]);
-            Assert.AreEqual(1, mypublisher.Messages[1]);
-            Assert.AreEqual(5, mypublisher.Messages[2]);
+            Assert.Equal(55, mypublisher.Messages[0]);
+            Assert.Equal(1, mypublisher.Messages[1]);
+            Assert.Equal(5, mypublisher.Messages[2]);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task UseSubscriptionChainWithHandlerTests()
         {
             // Test having message handler decorators both in the publish dispatch and the Subscription
@@ -54,24 +53,24 @@
 
             await Task.Delay(50);
 
-            Assert.AreEqual(1, msg.Log.Count);
-            Assert.IsTrue(msg.Log.ContainsKey("Before"));
+            Assert.Equal(1, msg.Log.Count);
+            Assert.True(msg.Log.ContainsKey("Before"));
 
             await Task.Delay(100);
 
-            Assert.AreEqual(2, msg.Log.Count);
-            Assert.IsTrue(msg.Log.ContainsKey("Before"));
-            Assert.IsTrue(msg.Log.ContainsKey("Handler"));
+            Assert.Equal(2, msg.Log.Count);
+            Assert.True(msg.Log.ContainsKey("Before"));
+            Assert.True(msg.Log.ContainsKey("Handler"));
 
             await Task.Delay(100);
 
-            Assert.AreEqual(3, msg.Log.Count);
-            Assert.IsTrue(msg.Log.ContainsKey("Before"));
-            Assert.IsTrue(msg.Log.ContainsKey("Handler"));
-            Assert.IsTrue(msg.Log.ContainsKey("After"));
+            Assert.Equal(3, msg.Log.Count);
+            Assert.True(msg.Log.ContainsKey("Before"));
+            Assert.True(msg.Log.ContainsKey("Handler"));
+            Assert.True(msg.Log.ContainsKey("After"));
         }
 
-        [TestMethod]
+        [Fact]
         public async Task UseSubscriptionChainWithoutHandlerTests()
         {
             // Test having message handler decorators both in the publisher and the subscription
@@ -96,21 +95,21 @@
 
             await Task.Delay(50);
 
-            Assert.AreEqual(1, msg.Log.Count);
-            Assert.IsTrue(msg.Log.ContainsKey("Before"));
+            Assert.Single(msg.Log);
+            Assert.True(msg.Log.ContainsKey("Before"));
 
             await Task.Delay(100);
 
-            Assert.AreEqual(2, msg.Log.Count);
-            Assert.IsTrue(msg.Log.ContainsKey("Before"));
-            Assert.IsTrue(msg.Log.ContainsKey("Handler"));
+            Assert.Equal(2, msg.Log.Count);
+            Assert.True(msg.Log.ContainsKey("Before"));
+            Assert.True(msg.Log.ContainsKey("Handler"));
 
             await Task.Delay(100);
 
-            Assert.AreEqual(3, msg.Log.Count);
-            Assert.IsTrue(msg.Log.ContainsKey("Before"));
-            Assert.IsTrue(msg.Log.ContainsKey("Handler"));
-            Assert.IsTrue(msg.Log.ContainsKey("After"));
+            Assert.Equal(3, msg.Log.Count);
+            Assert.True(msg.Log.ContainsKey("Before"));
+            Assert.True(msg.Log.ContainsKey("Handler"));
+            Assert.True(msg.Log.ContainsKey("After"));
         }
 
         private class MyPublisher : BusPublisher<int>

@@ -5,12 +5,11 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Branch
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Xunit;
 
-    [TestClass]
     public class BranchDecoratorTests
     {
-        [TestMethod]
+        [Fact]
         public async Task BranchDecorator_Subscribe_Normal_Tests()
         {
             var bus = new ConcurrentMessageBus<int>();
@@ -35,10 +34,10 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Branch
 
             await bus.PublishAsync(1);
 
-            Assert.AreEqual(2, items.Count);
+            Assert.Equal(2, items.Count);
 
-            Assert.IsTrue(items.Contains(1));
-            Assert.IsTrue(items.Contains(2));
+            Assert.Contains(1, items);
+            Assert.Contains(2, items);
         }
     }
 }

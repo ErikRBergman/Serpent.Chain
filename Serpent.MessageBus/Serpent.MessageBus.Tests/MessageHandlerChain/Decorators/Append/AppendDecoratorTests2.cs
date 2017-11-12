@@ -4,19 +4,19 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Serpent.MessageBus;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Xunit;
 
-    [TestClass]
     public class AppendDecoratorTests2
     {
-        [TestMethod]
+        [Fact]
         public async Task AppendDecoratorTest_Subscribe_Normal()
         {
             var bus = new ConcurrentMessageBus<int>();
             var items = new List<int>();
 
-            bus.Subscribe(b => 
+            bus.Subscribe(b =>
                 b.Append(msg => 1)
                 .Handler(
                     msg =>
@@ -29,13 +29,13 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
 
             await bus.PublishAsync(0);
 
-            Assert.AreEqual(2, items.Count);
+            Assert.Equal(2, items.Count);
 
-            Assert.AreEqual(0, items[0]);
-            Assert.AreEqual(1, items[1]);
+            Assert.Equal(0, items[0]);
+            Assert.Equal(1, items[1]);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task AppendDecoratorTest_Subscribe_Normal_Async()
         {
             var bus = new ConcurrentMessageBus<int>();
@@ -59,13 +59,13 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
 
             await bus.PublishAsync(0);
 
-            Assert.AreEqual(2, items.Count);
+            Assert.Equal(2, items.Count);
 
-            Assert.AreEqual(0, items[0]);
-            Assert.AreEqual(1, items[1]);
+            Assert.Equal(0, items[0]);
+            Assert.Equal(1, items[1]);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task AppendDecoratorTest_Subscribe_Predicate()
         {
             var bus = new ConcurrentMessageBus<MyMessage>();
@@ -73,14 +73,8 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
 
             bus.Subscribe(b => b
                 .Append(
-                    msg => msg.Id == 1,
-                     msg =>
-                        {
-                            return new MyMessage
-                            {
-                                Id = msg.Id + 1
-                            };
-                        })
+                    ib =>
+                        ib.Where(msg => msg.Id == 1).Select(msg => new MyMessage { Id = msg.Id + 1 }))
                 .Handler(
                     msg =>
                         {
@@ -96,13 +90,13 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
                     Id = 1
                 });
 
-            Assert.AreEqual(2, items.Count);
+            Assert.Equal(2, items.Count);
 
-            Assert.AreEqual(1, items[0].Id);
-            Assert.AreEqual(2, items[1].Id);
+            Assert.Equal(1, items[0].Id);
+            Assert.Equal(2, items[1].Id);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task AppendDecoratorTest_Subscribe_Predicate_Recursive()
         {
             var bus = new ConcurrentMessageBus<MyMessage>();
@@ -110,7 +104,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
 
             bus.Subscribe(
                 b => b
-                    .Append(msg => msg.InnerMessage != null, msg => msg.InnerMessage, true)
+                    .Append(ib => ib.Recursive().Where(msg => msg.InnerMessage != null).Select(msg => msg.InnerMessage))
                     .Handler(
                         msg =>
                             {
@@ -134,24 +128,21 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
                     }
                 });
 
-            Assert.AreEqual(3, items.Count);
+            Assert.Equal(3, items.Count);
 
-            Assert.AreEqual(1, items[0].Id);
-            Assert.AreEqual(2, items[1].Id);
-            Assert.AreEqual(3, items[2].Id);
+            Assert.Equal(1, items[0].Id);
+            Assert.Equal(2, items[1].Id);
+            Assert.Equal(3, items[2].Id);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task AppendDecoratorTest_Subscribe_Predicate_Recursive_Async()
         {
             var bus = new ConcurrentMessageBus<MyMessage>();
             var items = new List<MyMessage>();
 
             bus.Subscribe(b => b
-                .Append(
-                    msg => Task.FromResult(msg.InnerMessage != null),
-                    msg => Task.FromResult(msg.InnerMessage),
-                    true)
+                .Append(ib => ib.Recursive().Where(msg => msg.InnerMessage != null).Select(msg => msg.InnerMessage))
                 .Handler(
                     msg =>
                         {
@@ -175,15 +166,15 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
                     }
                 });
 
-            Assert.AreEqual(3, items.Count);
+            Assert.Equal(3, items.Count);
 
-            Assert.AreEqual(1, items[0].Id);
-            Assert.AreEqual(2, items[1].Id);
-            Assert.AreEqual(3, items[2].Id);
+            Assert.Equal(1, items[0].Id);
+            Assert.Equal(2, items[1].Id);
+            Assert.Equal(3, items[2].Id);
         }
 
-        [TestMethod]
-        public async Task AppendDecoratorTest_Subscribe_Predicate_Async()
+        [Fact]
+        public async Task AppendDecoratorTest_Subscribe_Async()
         {
             var bus = new ConcurrentMessageBus<MyMessage>();
             var items = new List<MyMessage>();
@@ -213,10 +204,10 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
                     Id = 1
                 });
 
-            Assert.AreEqual(2, items.Count);
+            Assert.Equal(2, items.Count);
 
-            Assert.AreEqual(1, items[0].Id);
-            Assert.AreEqual(2, items[1].Id);
+            Assert.Equal(1, items[0].Id);
+            Assert.Equal(2, items[1].Id);
         }
 
         private class MyMessage

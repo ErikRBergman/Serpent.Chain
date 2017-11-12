@@ -6,12 +6,11 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Xunit;
 
-    [TestClass]
     public class MessageHandlerChainBuilderTests
     {
-        [TestMethod]
+        [Fact]
         public async Task MessageHandlerChainStackAllTest()
         {
             var bus = new ConcurrentMessageBus<Message>();
@@ -51,11 +50,11 @@
 
                 await Task.Delay(300);
 
-                Assert.AreEqual(1, count);
+                Assert.Equal(1, count);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public async Task SubscriptionBuilderStackTests()
         {
             var bus = new ConcurrentMessageBus<Message>();
@@ -91,15 +90,15 @@
                 var msg = new Message();
                 await bus.PublishAsync(msg);
 
-                Assert.AreEqual("yes", msg.HandlerInvoked);
+                Assert.Equal("yes", msg.HandlerInvoked);
 
-                Assert.AreEqual("before1", msg.Steps[0]);
-                Assert.AreEqual("before2", msg.Steps[1]);
+                Assert.Equal("before1", msg.Steps[0]);
+                Assert.Equal("before2", msg.Steps[1]);
 
-                Assert.AreEqual("handler", msg.Steps[2]);
+                Assert.Equal("handler", msg.Steps[2]);
 
-                Assert.AreEqual("after2", msg.Steps[3]);
-                Assert.AreEqual("after1", msg.Steps[4]);
+                Assert.Equal("after2", msg.Steps[3]);
+                Assert.Equal("after1", msg.Steps[4]);
             }
         }
 

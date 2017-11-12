@@ -6,12 +6,11 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Xunit;
 
-    [TestClass]
     public class AppendDecoratorTests
     {
-        [TestMethod]
+        [Fact]
         public async Task Append_Normal_Tests()
         {
             var bus = new ConcurrentMessageBus<Message1>();
@@ -25,7 +24,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
                     await bus.PublishAsync(new Message1(1 + (i % 2)));
                 }
 
-                Assert.AreEqual(300, counter);
+                Assert.Equal(300, counter);
             }
 
             counter = 0;
@@ -39,7 +38,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
                     await bus.PublishAsync(new Message1(1 + (i % 2)));
                 }
 
-                Assert.AreEqual(300, counter);
+                Assert.Equal(300, counter);
             }
         }
 
