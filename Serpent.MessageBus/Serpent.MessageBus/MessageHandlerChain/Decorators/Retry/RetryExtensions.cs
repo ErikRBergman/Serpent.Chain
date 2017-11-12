@@ -25,7 +25,7 @@ namespace Serpent.MessageBus
             int maxNumberOfAttempts,
             TimeSpan retryDelay)
         {
-            var builder = new RetryBuilder<TMessageType>().MaximumNumberOfAttempts(maxNumberOfAttempts).RetryDelay(retryDelay);
+            var builder = new RetryDecoratorBuilder<TMessageType>().MaximumNumberOfAttempts(maxNumberOfAttempts).RetryDelay(retryDelay);
             return messageHandlerChainBuilder.AddDecorator(currentHandler => new RetryDecorator<TMessageType>(currentHandler, builder).HandleMessageAsync);
         }
 
@@ -38,9 +38,9 @@ namespace Serpent.MessageBus
         /// <returns>The MHC builder</returns>
         public static IMessageHandlerChainBuilder<TMessageType> Retry<TMessageType>(
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
-            Action<IRetryBuilder<TMessageType>> configureRetry)
+            Action<IRetryDecoratorBuilder<TMessageType>> configureRetry)
         {
-            var builder = new RetryBuilder<TMessageType>();
+            var builder = new RetryDecoratorBuilder<TMessageType>();
             configureRetry(builder);
 
             return messageHandlerChainBuilder.AddDecorator(currentHandler => new RetryDecorator<TMessageType>(currentHandler, builder).HandleMessageAsync);

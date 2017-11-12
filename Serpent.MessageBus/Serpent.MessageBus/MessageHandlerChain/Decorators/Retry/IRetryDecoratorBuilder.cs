@@ -8,7 +8,7 @@
     /// Provides a way to configure the retry message handler chain decorator
     /// </summary>
     /// <typeparam name="TMessageType">The message type</typeparam>
-    public interface IRetryBuilder<TMessageType>
+    public interface IRetryDecoratorBuilder<TMessageType>
     {
         /// <summary>
         /// The maximum number of tries (first attempts + retries)

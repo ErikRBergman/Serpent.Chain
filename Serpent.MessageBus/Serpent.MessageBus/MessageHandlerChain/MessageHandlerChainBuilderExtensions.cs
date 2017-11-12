@@ -9,16 +9,21 @@ namespace Serpent.MessageBus
     using Serpent.MessageBus.Helpers;
     using Serpent.MessageBus.Interfaces;
     using Serpent.MessageBus.MessageHandlerChain;
+    using Serpent.MessageBus.MessageHandlerChain.Decorators;
 
     /// <summary>
     ///     Extensions for IMessageHandlerChainBuilder
     /// </summary>
     public static class MessageHandlerChainBuilderExtensions
     {
-
         /// <summary>
         /// Builds the message handler chain
         /// </summary>
+        /// <typeparam name="TMessageType">The message type
+        /// </typeparam>
+        /// <param name="messageHandlerChainBuilder">
+        /// The message Handler Chain Builder.
+        /// </param>
         /// <returns>
         /// The <see cref="Func&lt;TmessageType,CancellationToken,Task&gt;"/>.
         /// </returns>
@@ -34,7 +39,6 @@ namespace Serpent.MessageBus
             return func;
         }
 
-
         /// <summary>
         ///     Add a decorator to the message handler chain builder
         /// </summary>
@@ -47,6 +51,20 @@ namespace Serpent.MessageBus
             Func<Func<TMessageType, CancellationToken, Task>, MessageHandlerChainDecorator<TMessageType>> addFunc)
         {
             return messageHandlerChainBuilder.AddDecorator(previousHandler => addFunc(previousHandler).HandleMessageAsync);
+        }
+
+        /// <summary>
+        ///     Add a decorator to the message handler chain builder
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="messageHandlerChainBuilder">The mhc builder</param>
+        /// <param name="decoratorBuilder">The decorator builder</param>
+        /// <returns>The mhc builder</returns>
+        public static IMessageHandlerChainBuilder<TMessageType> AddDecorator<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+            IDecoratorBuilder<TMessageType> decoratorBuilder)
+        {
+            return messageHandlerChainBuilder.AddDecorator(decoratorBuilder.BuildDecorator());
         }
 
         /// <summary>

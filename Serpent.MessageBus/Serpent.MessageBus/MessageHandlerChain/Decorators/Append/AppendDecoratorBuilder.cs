@@ -6,7 +6,7 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Append
     using System.Threading;
     using System.Threading.Tasks;
 
-    internal class AppendDecoratorBuilder<TMessageType> : IAppendDecoratorBuilder<TMessageType>
+    internal class AppendDecoratorBuilder<TMessageType> : IAppendDecoratorBuilder<TMessageType>, IDecoratorBuilder<TMessageType>
     {
         private Func<TMessageType, CancellationToken, Task<TMessageType>> asyncMessageSelector;
 

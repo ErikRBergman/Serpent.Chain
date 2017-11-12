@@ -19,18 +19,18 @@
 
         private readonly Func<TMessageType, int, int, TimeSpan, Task> successFunc;
 
-        public RetryDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, IRetryBuilder<TMessageType> retryBuilder)
+        public RetryDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, IRetryDecoratorBuilder<TMessageType> retryDecoratorBuilder)
         {
             this.handlerFunc = handlerFunc;
-            this.maxNumberOfAttempts = retryBuilder.MaximumNumberOfAttempts;
+            this.maxNumberOfAttempts = retryDecoratorBuilder.MaximumNumberOfAttempts;
             if (this.maxNumberOfAttempts < 1)
             {
                 throw new ArgumentException("Max number of attempts must be at least 1");
             }
 
-            this.retryDelay = retryBuilder.RetryDelay;
-            this.exceptionFunc = retryBuilder.HandlerFailedFunc;
-            this.successFunc = retryBuilder.HandlerSucceededFunc;
+            this.retryDelay = retryDecoratorBuilder.RetryDelay;
+            this.exceptionFunc = retryDecoratorBuilder.HandlerFailedFunc;
+            this.successFunc = retryDecoratorBuilder.HandlerSucceededFunc;
         }
 
         public override async Task HandleMessageAsync(TMessageType message, CancellationToken token)

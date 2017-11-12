@@ -20,7 +20,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Select
                                        Message = message,
                                        Context = "Selector"
                                    })
-                .Filter(msg => msg.Message.Step1 = true)
+                .Action(c => c.Before(msg => msg.Message.Step1 = true))
                 .Select(message => message.Message)
                 .Handler(message => message.Step2 = true));
 

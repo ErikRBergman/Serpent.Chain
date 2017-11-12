@@ -35,7 +35,10 @@
                 options => options.UseSubscriptionChain(
                     (chain, handler) =>
                         {
-                            chain.Filter(message => message.Message.Log.TryAdd("Before", DateTime.Now), message => message.Message.Log.TryAdd("After", DateTime.Now))
+                            chain.Action(
+                                a => 
+                                    a.Before(message => message.Message.Log.TryAdd("Before", DateTime.Now))
+                                     .Finally(message => message.Message.Log.TryAdd("After", DateTime.Now)))
                                 .Handler(handler);
                         }));
 
@@ -77,9 +80,9 @@
             var bus = new ConcurrentMessageBus<TestMessage>(
                 options => options.UseSubscriptionChain(
                     chain => chain
-                        .Filter(
-                            message => message.Message.Log.TryAdd("Before", DateTime.Now), 
-                            message => message.Message.Log.TryAdd("After", DateTime.Now))));
+                        .Action(c => 
+                        c.Before(message => message.Message.Log.TryAdd("Before", DateTime.Now)) 
+                         .Finally(message => message.Message.Log.TryAdd("After", DateTime.Now)))));
 
             bus.Subscribe(builder =>
                 builder.Handler(

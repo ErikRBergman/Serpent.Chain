@@ -17,31 +17,36 @@
 
             var count = 0;
 
-            using (bus.Subscribe(b => b
-                .FireAndForget()
-                .SoftFireAndForget()
-                .NoDuplicates(message => message.Id)
-                .Concurrent(16)
-                .ConcurrentFireAndForget(16)
-                .Exception((msg, e) => Console.WriteLine(e))
-                .Filter(msg => true, null)
-                .FireAndForget()
-                .BranchOut(
-                    branch => { branch.FireAndForget().Delay(TimeSpan.FromSeconds(10)).Handler(message => { Console.WriteLine("Sub branch 1"); }); },
-                    branch => { branch.FireAndForget().Delay(TimeSpan.FromSeconds(20)).Handler(message => { Console.WriteLine("Sub branch 2"); }); })
-                .Retry(5, TimeSpan.FromSeconds(5))
-                .Semaphore(1)
-                .LimitedThroughput(1, TimeSpan.FromSeconds(1))
-                .Delay(TimeSpan.FromMilliseconds(50))
-                .Select(message => new OuterMessage { Message = message, Token = CancellationToken.None })
-                .Handler(
-                    async message =>
-                        {
-                            Debug.WriteLine(DateTime.Now);
-                            await Task.Delay(200);
-                            message.Message.HandlerInvoked = "Sure was";
-                            Interlocked.Increment(ref count);
-                        })))
+            using (bus.Subscribe(
+                b => b.FireAndForget()
+                    .SoftFireAndForget()
+                    .NoDuplicates(message => message.Id)
+                    .Concurrent(16)
+                    .ConcurrentFireAndForget(16)
+                    .Exception((msg, e) => Console.WriteLine(e))
+                    .Where(msg => true)
+                    .FireAndForget()
+                    .BranchOut(
+                        branch => { branch.FireAndForget().Delay(TimeSpan.FromSeconds(10)).Handler(message => { Console.WriteLine("Sub branch 1"); }); },
+                        branch => { branch.FireAndForget().Delay(TimeSpan.FromSeconds(20)).Handler(message => { Console.WriteLine("Sub branch 2"); }); })
+                    .Retry(5, TimeSpan.FromSeconds(5))
+                    .Semaphore(1)
+                    .LimitedThroughput(1, TimeSpan.FromSeconds(1))
+                    .Delay(TimeSpan.FromMilliseconds(50))
+                    .Select(
+                        message => new OuterMessage
+                                       {
+                                           Message = message,
+                                           Token = CancellationToken.None
+                                       })
+                    .Handler(
+                        async message =>
+                            {
+                                Debug.WriteLine(DateTime.Now);
+                                await Task.Delay(200);
+                                message.Message.HandlerInvoked = "Sure was";
+                                Interlocked.Increment(ref count);
+                            })))
             {
                 for (var i = 0; i < 30; i++)
                 {
@@ -59,33 +64,34 @@
         {
             var bus = new ConcurrentMessageBus<Message>();
 
-            using (bus.Subscribe(b => b
-                .Filter(
-                    message => { message.Steps.Add("before1"); },
-                    message =>
-                        {
-                            if (message.Steps.Contains("after2"))
-                            {
-                                message.Steps.Add("after1");
-                            }
-                        })
-                .Filter(
-                    message =>
-                        {
-                            if (message.Steps.Contains("before1"))
-                            {
-                                message.Steps.Add("before2");
-                            }
-
-                            return true;
-                        },
-                    message => { message.Steps.Add("after2"); })
-                .Handler(
-                    message =>
-                        {
-                            message.Steps.Add("handler");
-                            message.HandlerInvoked = "yes";
-                        })).Wrapper())
+            using (bus.Subscribe(
+                    b => b.Action(
+                            c => c.Before(message => message.Steps.Add("before1"))
+                                .Finally(
+                                    message =>
+                                        {
+                                            if (message.Steps.Contains("after2"))
+                                            {
+                                                message.Steps.Add("after1");
+                                            }
+                                        }))
+                        .Action(
+                            c => c.Before(
+                                    message =>
+                                        {
+                                            if (message.Steps.Contains("before1"))
+                                            {
+                                                message.Steps.Add("before2");
+                                            }
+                                        })
+                                .Finally(message => message.Steps.Add("after2")))
+                        .Handler(
+                            message =>
+                                {
+                                    message.Steps.Add("handler");
+                                    message.HandlerInvoked = "yes";
+                                }))
+                .Wrapper())
             {
                 var msg = new Message();
                 await bus.PublishAsync(msg);
@@ -113,9 +119,9 @@
 
         private class OuterMessage
         {
-            public CancellationToken Token { get; set; }
-
             public Message Message { get; set; }
+
+            public CancellationToken Token { get; set; }
         }
     }
 }

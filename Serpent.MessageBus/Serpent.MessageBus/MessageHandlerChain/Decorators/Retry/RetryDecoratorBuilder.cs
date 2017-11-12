@@ -4,7 +4,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    internal class RetryBuilder<TMessageType> : IRetryBuilder<TMessageType>
+    internal class RetryDecoratorBuilder<TMessageType> : IRetryDecoratorBuilder<TMessageType>
     {
         public int MaximumNumberOfAttempts { get; set; }
 
