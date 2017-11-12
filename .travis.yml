@@ -7,3 +7,6 @@ dotnet: 2.0.0
 dist: trusty
 script:
  - dotnet restore Serpent.MessageBus/Serpent.MessageBus.sln
+ - cd /home/travis/build/ErikRBergman/Serpent.MessageBus/Serpent.MessageBus/Serpent.MessageBus.Tests
+ - dotnet xunit
+

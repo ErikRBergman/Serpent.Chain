@@ -41,14 +41,14 @@
                             await Task.Delay(200);
                             message.Message.HandlerInvoked = "Sure was";
                             Interlocked.Increment(ref count);
-                        })).Wrapper())
+                        })))
             {
-                for (var i = 0; i < 1000; i++)
+                for (var i = 0; i < 30; i++)
                 {
-                    await bus.PublishAsync();
+                    bus.Publish();
                 }
 
-                await Task.Delay(300);
+                await Task.Delay(600);
 
                 Assert.Equal(1, count);
             }

@@ -19,25 +19,24 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.LimitedThrough
 
             using (bus.Subscribe(b => b
                 .SoftFireAndForget()
-                .LimitedThroughput(10, TimeSpan.FromMilliseconds(100))
+                .LimitedThroughput(10, TimeSpan.FromMilliseconds(500))
                 .Handler(
                     async msg =>
                         {
                             Interlocked.Increment(ref count);
-                            await Task.Delay(100);
-                        }))
-                .Wrapper())
+                            //await Task.Delay(100);
+                        })))
             {
-                for (var i = 0; i < 2000; i++)
+                for (var i = 0; i < 100; i++)
                 {
-                    await bus.PublishAsync();
+                    bus.Publish();
                 }
 
-                await Task.Delay(150);
+                await Task.Delay(550);
 
                 Assert.Equal(20, count);
 
-                await Task.Delay(450);
+                await Task.Delay(5 * 410);
                 Assert.Equal(60, count);
             }
         }
@@ -54,18 +53,18 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.LimitedThrough
                     .SoftFireAndForget()
                     .LimitedThroughput(10, TimeSpan.FromMilliseconds(100))
                     .Handler(
-                        msgz => Interlocked.Increment(ref count))).Wrapper())
+                        msgz => Interlocked.Increment(ref count))))
             {
-                for (var i = 0; i < 2000; i++)
+                for (var i = 0; i < 100; i++)
                 {
-                    await bus.PublishAsync();
+                    bus.Publish();
                 }
 
-                await Task.Delay(150);
+                await Task.Delay(130);
 
                 Assert.Equal(20, count);
 
-                await Task.Delay(450);
+                await Task.Delay(430);
                 Assert.Equal(60, count);
             }
         }
