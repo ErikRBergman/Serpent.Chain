@@ -1,4 +1,5 @@
 ﻿// ReSharper disable ParameterHidesMember
+
 namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Append
 {
     using System;
@@ -7,30 +8,11 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Append
 
     internal class AppendDecoratorBuilder<TMessageType> : IAppendDecoratorBuilder<TMessageType>
     {
-        private bool isRecursive = false;
-
         private Func<TMessageType, CancellationToken, Task<TMessageType>> asyncMessageSelector;
 
         private Func<TMessageType, CancellationToken, Task<bool>> asyncPredicate;
 
-        public IAppendDecoratorBuilder<TMessageType> Recursive(bool isRecursive = true)
-        {
-            this.isRecursive = isRecursive;
-            return this;
-        }
-
-
-        public IAppendDecoratorBuilder<TMessageType> Select(Func<TMessageType, CancellationToken, Task<TMessageType>> asyncMessageSelector)
-        {
-            this.asyncMessageSelector = asyncMessageSelector;
-            return this;
-        }
-
-        public IAppendDecoratorBuilder<TMessageType> Where(Func<TMessageType, CancellationToken, Task<bool>> predicate)
-        {
-            this.asyncPredicate = predicate;
-            return this;
-        }
+        private bool isRecursive;
 
         public Func<Func<TMessageType, CancellationToken, Task>, Func<TMessageType, CancellationToken, Task>> BuildDecorator()
         {
@@ -54,9 +36,9 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Append
             }
 
             return innerMessageHandler => (message, token) => Task.WhenAll(
-                    innerMessageHandler(message, token),
-                    AppendIfAsync(
-                        new AppendAsyncParameters<TMessageType>
+                innerMessageHandler(message, token),
+                AppendWhenAsync(
+                    new AppendAsyncParameters<TMessageType>
                         {
                             InnerMessageHandler = innerMessageHandler,
                             Predicate = this.asyncPredicate,
@@ -65,42 +47,53 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Append
                             CancellationToken = token,
                             IsRecursive = this.isRecursive
                         }));
-
         }
 
-        private static async Task AppendIfAsync(AppendAsyncParameters<TMessageType> parameters)
+        public IAppendDecoratorBuilder<TMessageType> Recursive(bool isRecursive = true)
         {
+            this.isRecursive = isRecursive;
+            return this;
+        }
+
+        public IAppendDecoratorBuilder<TMessageType> Select(Func<TMessageType, CancellationToken, Task<TMessageType>> asyncMessageSelector)
+        {
+            this.asyncMessageSelector = asyncMessageSelector;
+            return this;
+        }
+
+        public IAppendDecoratorBuilder<TMessageType> Where(Func<TMessageType, CancellationToken, Task<bool>> predicate)
+        {
+            this.asyncPredicate = predicate;
+            return this;
+        }
+
+        private static async Task AppendWhenAsync(AppendAsyncParameters<TMessageType> parameters)
+        {
+            TMessageType newMessage = default(TMessageType);
+
             if (parameters.Predicate == null)
             {
-                var newMessage = await parameters.MessageSelector(parameters.Message, parameters.CancellationToken).ConfigureAwait(false);
+                newMessage = await parameters.MessageSelector(parameters.Message, parameters.CancellationToken).ConfigureAwait(false);
                 if (newMessage == null || newMessage.Equals(default(TMessageType)))
                 {
                     return;
-                }
-
-                if (parameters.IsRecursive)
-                {
-                    await Task.WhenAll(parameters.InnerMessageHandler(newMessage, parameters.CancellationToken), AppendIfAsync(parameters.CloneForMessage(newMessage)));
-                }
-                else
-                {
-                    await parameters.InnerMessageHandler(newMessage, parameters.CancellationToken).ConfigureAwait(false);
                 }
             }
             else
             {
                 if (await parameters.Predicate(parameters.Message, parameters.CancellationToken).ConfigureAwait(false))
                 {
-                    var newMessage = await parameters.MessageSelector(parameters.Message, parameters.CancellationToken).ConfigureAwait(false);
-                    if (parameters.IsRecursive)
-                    {
-                        await Task.WhenAll(parameters.InnerMessageHandler(newMessage, parameters.CancellationToken), AppendIfAsync(parameters.CloneForMessage(newMessage)));
-                    }
-                    else
-                    {
-                        await parameters.InnerMessageHandler(newMessage, parameters.CancellationToken).ConfigureAwait(false);
-                    }
+                    newMessage = await parameters.MessageSelector(parameters.Message, parameters.CancellationToken).ConfigureAwait(false);
                 }
+            }
+
+            if (parameters.IsRecursive)
+            {
+                await Task.WhenAll(parameters.InnerMessageHandler(newMessage, parameters.CancellationToken), AppendWhenAsync(parameters.CloneForMessage(newMessage)));
+            }
+            else
+            {
+                await parameters.InnerMessageHandler(newMessage, parameters.CancellationToken).ConfigureAwait(false);
             }
         }
 

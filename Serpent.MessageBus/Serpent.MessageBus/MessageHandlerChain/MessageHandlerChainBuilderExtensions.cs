@@ -6,6 +6,7 @@ namespace Serpent.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.MessageBus.Helpers;
     using Serpent.MessageBus.Interfaces;
     using Serpent.MessageBus.MessageHandlerChain;
 
@@ -14,6 +15,26 @@ namespace Serpent.MessageBus
     /// </summary>
     public static class MessageHandlerChainBuilderExtensions
     {
+
+        /// <summary>
+        /// Builds the message handler chain
+        /// </summary>
+        /// <returns>
+        /// The <see cref="Func&lt;TmessageType,CancellationToken,Task&gt;"/>.
+        /// </returns>
+        public static Func<TMessageType, CancellationToken, Task> BuildFunc<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder)
+        {
+            var subscriptionNotification = new MessageHandlerChainBuildNotification();
+            var services = new MessageHandlerChainBuilderSetupServices(subscriptionNotification);
+            var func = messageHandlerChainBuilder.BuildFunc(services);
+
+            var chain = new MessageHandlerChain<TMessageType>(func, ActionHelpers.NoAction);
+            subscriptionNotification.Notify(chain);
+
+            return func;
+        }
+
+
         /// <summary>
         ///     Add a decorator to the message handler chain builder
         /// </summary>
