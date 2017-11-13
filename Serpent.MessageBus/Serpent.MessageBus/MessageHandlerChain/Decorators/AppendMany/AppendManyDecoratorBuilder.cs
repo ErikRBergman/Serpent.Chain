@@ -32,7 +32,7 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.AppendMany
                         return (message, token) =>
                             {
                                 var chainedMessageTask = innerMessageHandler(message, token);
-                                return Task.WhenAll(chainedMessageTask, InnerMessageHandlerAsync(innerMessageHandler, (msg, _) => this.asyncMessageSelector(msg, token), message, token));
+                                return Task.WhenAll(chainedMessageTask, this.InnerMessageHandlerAsync(innerMessageHandler, message, token));
                             };
                     };
             }
@@ -102,13 +102,12 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.AppendMany
             await Task.WhenAll(newMessagesTask, Task.WhenAll(newMessages.Select(newMessage => AppendManyWhenAsync(parameters.CloneForMessage(newMessage)))));
         }
 
-        private static async Task InnerMessageHandlerAsync(
+        private async Task InnerMessageHandlerAsync(
             Func<TMessageType, CancellationToken, Task> messageHandler,
-            Func<TMessageType, CancellationToken, Task<IEnumerable<TMessageType>>> messageSelector,
             TMessageType originalMessage,
             CancellationToken token)
         {
-            var newMessages = await messageSelector(originalMessage, token).ConfigureAwait(false);
+            var newMessages = await this.asyncMessageSelector(originalMessage, token).ConfigureAwait(false);
             if (newMessages != null)
             {
                 await Task.WhenAll(newMessages.Select(message => messageHandler(message, token))).ConfigureAwait(false);
