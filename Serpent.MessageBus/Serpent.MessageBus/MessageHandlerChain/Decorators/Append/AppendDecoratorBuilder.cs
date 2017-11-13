@@ -6,6 +6,8 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Append
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.MessageBus.Models;
+
     internal class AppendDecoratorBuilder<TMessageType> : IAppendDecoratorBuilder<TMessageType>, IDecoratorBuilder<TMessageType>
     {
         private Func<TMessageType, CancellationToken, Task<TMessageType>> asyncMessageSelector;
@@ -30,7 +32,7 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Append
                         return async (message, token) =>
                             {
                                 var chainedMessageTask = innerMessageHandler(message, token);
-                                await Task.WhenAll(chainedMessageTask, this.InnerMessageHandlerAsync(innerMessageHandler, message, token));
+                                await Task.WhenAll(chainedMessageTask, this.InnerMessageHandlerAsync(innerMessageHandler, new MessageAndToken<TMessageType>(message, token)));
                             };
                     };
             }
@@ -39,14 +41,14 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Append
                 innerMessageHandler(message, token),
                 AppendWhenAsync(
                     new AppendAsyncParameters<TMessageType>
-                        {
-                            InnerMessageHandler = innerMessageHandler,
-                            Predicate = this.asyncPredicate,
-                            MessageSelector = this.asyncMessageSelector,
-                            Message = message,
-                            CancellationToken = token,
-                            IsRecursive = this.isRecursive
-                        }));
+                    {
+                        InnerMessageHandler = innerMessageHandler,
+                        Predicate = this.asyncPredicate,
+                        MessageSelector = this.asyncMessageSelector,
+                        Message = message,
+                        CancellationToken = token,
+                        IsRecursive = this.isRecursive
+                    }));
         }
 
         public IAppendDecoratorBuilder<TMessageType> Recursive(bool isRecursive = true)
@@ -69,7 +71,7 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Append
 
         private static async Task AppendWhenAsync(AppendAsyncParameters<TMessageType> parameters)
         {
-            TMessageType newMessage = default(TMessageType);
+            TMessageType newMessage;
 
             if (parameters.Predicate == null)
             {
@@ -103,11 +105,10 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Append
 
         private async Task InnerMessageHandlerAsync(
             Func<TMessageType, CancellationToken, Task> messageHandler,
-            TMessageType originalMessage,
-            CancellationToken cancellationToken)
+            MessageAndToken<TMessageType> messageAndToken)
         {
-            var newMessage = await this.asyncMessageSelector(originalMessage, cancellationToken).ConfigureAwait(false);
-            await messageHandler(newMessage, cancellationToken).ConfigureAwait(false);
+            var newMessage = await this.asyncMessageSelector(messageAndToken.Message, messageAndToken.Token).ConfigureAwait(false);
+            await messageHandler(newMessage, messageAndToken.Token).ConfigureAwait(false);
         }
     }
 }

@@ -8,6 +8,8 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.AppendMany
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.MessageBus.Models;
+
     internal class AppendManyDecoratorBuilder<TMessageType> : IAppendManyDecoratorBuilder<TMessageType>, IDecoratorBuilder<TMessageType>
     {
         private Func<TMessageType, CancellationToken, Task<IEnumerable<TMessageType>>> asyncMessageSelector;
@@ -32,7 +34,7 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.AppendMany
                         return (message, token) =>
                             {
                                 var chainedMessageTask = innerMessageHandler(message, token);
-                                return Task.WhenAll(chainedMessageTask, this.InnerMessageHandlerAsync(innerMessageHandler, message, token));
+                                return Task.WhenAll(chainedMessageTask, this.InnerMessageHandlerAsync(innerMessageHandler, new MessageAndToken<TMessageType>(message, token)));
                             };
                     };
             }
@@ -104,13 +106,12 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.AppendMany
 
         private async Task InnerMessageHandlerAsync(
             Func<TMessageType, CancellationToken, Task> messageHandler,
-            TMessageType originalMessage,
-            CancellationToken token)
+            MessageAndToken<TMessageType> messageAndToken)
         {
-            var newMessages = await this.asyncMessageSelector(originalMessage, token).ConfigureAwait(false);
+            var newMessages = await this.asyncMessageSelector(messageAndToken.Message, messageAndToken.Token).ConfigureAwait(false);
             if (newMessages != null)
             {
-                await Task.WhenAll(newMessages.Select(message => messageHandler(message, token))).ConfigureAwait(false);
+                await Task.WhenAll(newMessages.Select(message => messageHandler(message, messageAndToken.Token))).ConfigureAwait(false);
             }
         }
     }
