@@ -12,10 +12,13 @@
 
         private int isActive = 1;
 
-        public TakeWhileDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, bool> predicate)
+        private IMessageHandlerChain messageHandlerChain;
+
+        public TakeWhileDecorator(TakeWhileDecoratorConfiguration<TMessageType> configuration)
         {
-            this.handlerFunc = handlerFunc;
-            this.predicate = predicate;
+            this.handlerFunc = configuration.HandlerFunc;
+            this.predicate = configuration.Predicate;
+            configuration.Services.BuildNotification.AddNotification(this.SetChain);
         }
 
         public override Task HandleMessageAsync(TMessageType message, CancellationToken cancellationToken)
@@ -27,10 +30,16 @@
                     return this.handlerFunc(message, cancellationToken);
                 }
 
+                this.messageHandlerChain?.Dispose();
                 this.isActive = 0;
             }
 
             return Task.CompletedTask;
+        }
+
+        private void SetChain(IMessageHandlerChain chain)
+        {
+            this.messageHandlerChain = chain;
         }
     }
 }

@@ -22,7 +22,12 @@ namespace Serpent.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, bool> predicate)
         {
-            return messageHandlerChainBuilder.AddDecorator(currentHandler => new TakeWhileDecorator<TMessageType>(currentHandler, predicate));
+            return messageHandlerChainBuilder.AddDecorator((currentHandler, services) => new TakeWhileDecorator<TMessageType>(new TakeWhileDecoratorConfiguration<TMessageType>
+            {
+                HandlerFunc = currentHandler,
+                Predicate = predicate,
+                Services = services
+            }));
         }
 
         /// <summary>
@@ -36,7 +41,12 @@ namespace Serpent.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Task<bool>> predicate)
         {
-            return messageHandlerChainBuilder.AddDecorator(currentHandler => new TakeWhileAsyncDecorator<TMessageType>(currentHandler, predicate));
+            return messageHandlerChainBuilder.AddDecorator((currentHandler, services) => new TakeWhileAsyncDecorator<TMessageType>(new TakeWhileAsyncDecoratorConfiguration<TMessageType>
+            {
+                HandlerFunc = currentHandler,
+                Predicate = predicate,
+                Services = services
+            }));
         }
     }
 }

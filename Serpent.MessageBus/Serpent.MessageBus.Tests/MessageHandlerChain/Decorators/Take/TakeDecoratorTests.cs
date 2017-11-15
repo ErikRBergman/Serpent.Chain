@@ -1,12 +1,11 @@
 ﻿// ReSharper disable InconsistentNaming
+
 namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Take
 {
-    using System;
-    using System.Collections.Generic;
     using System.Threading;
 
-    using Serpent.MessageBus.Interfaces;
     using Serpent.MessageBus.MessageHandlerChain;
+    using Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.First;
 
     using Xunit;
 
@@ -17,7 +16,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Take
         {
             var count = 0;
 
-            var notification = new MyNotification();
+            var notification = new TestChainBuildNotification();
             var services = new MessageHandlerChainBuilderSetupServices(notification);
 
             var chain = new MessageHandlerChainBuilder<int>().Take(2).Handler(m => count++).BuildFunc(services);
@@ -40,21 +39,6 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Take
 
             // Skip the rest - still 2
             Assert.Equal(2, count);
-        }
-
-        private class MyNotification : IMessageHandlerChainBuildNotification, IMessageHandlerChain
-        {
-            public bool IsDisposed { get; private set; }
-
-            public void AddNotification(Action<IMessageHandlerChain> messageHandlerChain)
-            {
-                messageHandlerChain(this);
-            }
-
-            public void Dispose()
-            {
-                this.IsDisposed = true;
-            }
         }
     }
 }

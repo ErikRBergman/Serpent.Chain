@@ -18,7 +18,7 @@
         {
             this.handlerFunc = handlerFunc;
             this.count = numberOfMessages;
-            buildNotification.AddNotification(this.SetSubscription);
+            buildNotification.AddNotification(this.SetChain);
         }
 
         /// <summary>
@@ -50,7 +50,7 @@
             return Task.CompletedTask;
         }
 
-        private void SetSubscription(IMessageHandlerChain chain)
+        private void SetChain(IMessageHandlerChain chain)
         {
             this.messageHandlerChain = chain;
         }
