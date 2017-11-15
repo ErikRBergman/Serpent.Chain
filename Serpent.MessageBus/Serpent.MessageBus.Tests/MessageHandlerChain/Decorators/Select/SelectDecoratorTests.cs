@@ -35,21 +35,11 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Select
 
         private class Message
         {
-            public string HandlerInvoked { get; set; }
-
-            public string Id { get; set; }
-
             public bool Step1 { get; set; }
 
             public bool Step2 { get; set; }
 
             public bool Step3 { get; set; }
-
-            public bool Step4 { get; set; }
-
-            public bool Step5 { get; set; }
-
-            public bool Step6 { get; set; }
         }
 
         private class OuterMessage

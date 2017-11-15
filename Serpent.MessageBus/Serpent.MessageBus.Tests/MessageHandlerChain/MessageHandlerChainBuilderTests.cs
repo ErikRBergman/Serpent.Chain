@@ -50,7 +50,10 @@
             {
                 for (var i = 0; i < 30; i++)
                 {
-                    bus.Publish();
+                    bus.Publish(new Message()
+                                    {
+                                        Id = "ABC"
+                                    });
                 }
 
                 await Task.Delay(600);

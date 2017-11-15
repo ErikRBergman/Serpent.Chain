@@ -56,7 +56,7 @@
 
             await Task.Delay(50);
 
-            Assert.Equal(1, msg.Log.Count);
+            Assert.Single(msg.Log);
             Assert.True(msg.Log.ContainsKey("Before"));
 
             await Task.Delay(100);

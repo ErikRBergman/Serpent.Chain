@@ -107,6 +107,24 @@ namespace Serpent.MessageBus
         }
 
         /// <summary>
+        /// Publish a message, returning a Task that that succeeds when the message is handled
+        /// </summary>
+        /// <typeparam name="TMessageType">
+        /// The message type
+        /// </typeparam>
+        /// <param name="publisher">
+        /// The bus publisher
+        /// </param>
+        /// <param name="messages">The messages to publish</param>
+        /// <returns>
+        /// The <see cref="Task"/>.
+        /// </returns>
+        public static Task PublishRangeAsync<TMessageType>(this IMessageBusPublisher<TMessageType> publisher, params TMessageType[] messages)
+        {
+            return Task.WhenAll(messages.Select(message => publisher.PublishAsync(message, CancellationToken.None)));
+        }
+
+        /// <summary>
         /// Publish a range of messages, returning a Task that that succeeds when the messages are handled
         /// </summary>
         /// <typeparam name="TMessageType">
