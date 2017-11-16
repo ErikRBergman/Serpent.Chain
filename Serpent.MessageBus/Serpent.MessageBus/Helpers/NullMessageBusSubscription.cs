@@ -1,13 +1,22 @@
 ﻿namespace Serpent.MessageBus.Helpers
 {
-    internal class NullMessageBusSubscription : IMessageBusSubscription
+    /// <summary>
+    ///  Provides a subscription that does nothing
+    /// </summary>
+    public class NullMessageBusSubscription : IMessageBusSubscription
     {
         private NullMessageBusSubscription()
         {
         }
 
+        /// <summary>
+        ///  The null message bus subscription singleton
+        /// </summary>
         public static IMessageBusSubscription Default { get; } = new NullMessageBusSubscription();
 
+        /// <summary>
+        /// Does nothing
+        /// </summary>
         public void Dispose()
         {
         }

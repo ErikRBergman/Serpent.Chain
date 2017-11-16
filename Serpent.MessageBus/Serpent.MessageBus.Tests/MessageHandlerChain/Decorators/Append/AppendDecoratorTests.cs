@@ -13,43 +13,33 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
         [Fact]
         public async Task Append_Normal_Tests()
         {
-            var bus = new ConcurrentMessageBus<Message1>();
-
             var counter = 0;
 
-            using (bus.Subscribe(b => b.Append(msg => msg).Handler(message => { Interlocked.Add(ref counter, message.AddValue); })).Wrapper())
-            {
-                for (var i = 0; i < 100; i++)
-                {
-                    await bus.PublishAsync(new Message1(1 + (i % 2)));
-                }
+            var func = Create.Func<int>(b => b.Append(msg => msg).Handler(value => { Interlocked.Add(ref counter, value); }));
 
-                Assert.Equal(300, counter);
+            for (var i = 0; i < 100; i++)
+            {
+                await func(1 + (i % 2), CancellationToken.None);
             }
 
-            counter = 0;
-
-#pragma warning disable 1998 
-            using (bus.Subscribe(b => b.Append(async msg => msg).Handler(async message => { Interlocked.Add(ref counter, message.AddValue); })).Wrapper())
-#pragma warning restore 1998
-            {
-                for (var i = 0; i < 100; i++)
-                {
-                    await bus.PublishAsync(new Message1(1 + (i % 2)));
-                }
-
-                Assert.Equal(300, counter);
-            }
+            Assert.Equal(300, counter);
         }
 
-        private class Message1
+        [Fact]
+        private static async Task Append_Async_Test()
         {
-            public Message1(int addValue)
+            int counter = 0;
+
+#pragma warning disable 1998
+            var func = Create.Func<int>(b => b.Append(async msg => msg).Handler(value => { Interlocked.Add(ref counter, value); }));
+#pragma warning restore 1998
+
+            for (var i = 0; i < 100; i++)
             {
-                this.AddValue = addValue;
+                await func(1 + (i % 2), CancellationToken.None);
             }
 
-            public int AddValue { get; }
+            Assert.Equal(300, counter);
         }
     }
 }

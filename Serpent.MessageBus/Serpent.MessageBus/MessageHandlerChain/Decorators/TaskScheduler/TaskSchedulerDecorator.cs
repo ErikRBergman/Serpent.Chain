@@ -16,12 +16,6 @@
             this.taskScheduler = taskScheduler;
         }
 
-        public TaskSchedulerDecorator(MessageHandlerChainDecorator<TMessageType> innerSubscription, TaskScheduler taskScheduler)
-        {
-            this.taskScheduler = taskScheduler;
-            this.handlerFunc = innerSubscription.HandleMessageAsync;
-        }
-
         public override Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
             var task = Task.Factory.StartNew(

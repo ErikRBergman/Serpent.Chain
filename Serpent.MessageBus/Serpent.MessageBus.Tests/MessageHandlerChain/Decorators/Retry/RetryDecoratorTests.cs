@@ -19,7 +19,7 @@
             using (bus.Subscribe(
                     b => b.FireAndForget()
                         .Retry(
-                            _ => _.MaximumNumberOfAttempts(5)
+                            r => r.MaximumNumberOfAttempts(5)
                                 .RetryDelay(TimeSpan.FromMilliseconds(100))
                                 .OnFail(
                                     (message, exception, attempt, maxNumberOfAttempts, delay, token) =>
@@ -27,6 +27,7 @@
                                             Debug.WriteLine(DateTime.Now + $" attempt {attempt} / {maxNumberOfAttempts}");
                                             attemptsCount++;
                                         }))
+
                         .Handler(message => throw new Exception(DateTime.Now.ToString(CultureInfo.CurrentCulture))))
                 .Wrapper())
             {
