@@ -12,21 +12,29 @@
 
         private readonly KeySemaphore<TKeyType> keySemaphore;
 
-        public SemaphoreWithKeyDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector, int maxNumberOfConcurrentMessages)
+        public SemaphoreWithKeyDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, SemaphoreWithKeyDecoratorBuilder<TMessageType, TKeyType> builder)
         {
             this.handlerFunc = handlerFunc;
-            this.keySelector = keySelector;
-            this.MaxNumberOfConcurrentMessages = maxNumberOfConcurrentMessages;
-            this.keySemaphore = new KeySemaphore<TKeyType>(maxNumberOfConcurrentMessages);
-        }
+            this.keySelector = builder.KeySelectorValue;
+            this.MaxNumberOfConcurrentMessages = builder.MaxNumberOfConcurrentMessagesValue;
 
-        public SemaphoreWithKeyDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector, KeySemaphore<TKeyType> keySemaphore)
-        {
-            this.keySemaphore = keySemaphore ?? throw new ArgumentNullException(nameof(keySemaphore));
+            var equalityComparer = builder.EqualityComparerValue;
 
-            this.handlerFunc = handlerFunc;
-            this.keySelector = keySelector;
-            this.MaxNumberOfConcurrentMessages = keySemaphore.MaxNumberOfConcurrentMessages;
+            var keySemaphoreValue = builder.KeySemaphoreValue;
+
+            if (keySemaphoreValue == null)
+            {
+                if (equalityComparer == null)
+                {
+                    keySemaphoreValue = new KeySemaphore<TKeyType>(this.MaxNumberOfConcurrentMessages);
+                }
+                else
+                {
+                    keySemaphoreValue = new KeySemaphore<TKeyType>(this.MaxNumberOfConcurrentMessages, equalityComparer);
+                }
+            }
+
+            this.keySemaphore = keySemaphoreValue;
         }
 
         private int MaxNumberOfConcurrentMessages { get; }

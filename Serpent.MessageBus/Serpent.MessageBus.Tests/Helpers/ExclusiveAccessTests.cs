@@ -48,6 +48,8 @@ namespace Serpent.MessageBus.Tests.Helpers
                             return 20;
                         }));
 
+            await Task.Delay(20);
+
             exclusiveAccess0.Use(v => Assert.Equal(20, v));
 
         }

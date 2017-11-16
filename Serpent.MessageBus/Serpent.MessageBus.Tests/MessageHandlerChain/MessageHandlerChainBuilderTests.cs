@@ -30,7 +30,7 @@
                         branch => { branch.FireAndForget().Delay(TimeSpan.FromSeconds(10)).Handler(message => { Console.WriteLine("Sub branch 1"); }); },
                         branch => { branch.FireAndForget().Delay(TimeSpan.FromSeconds(20)).Handler(message => { Console.WriteLine("Sub branch 2"); }); })
                     .Retry(5, TimeSpan.FromSeconds(5))
-                    .Semaphore(1)
+                    .Semaphore(s => s.MaxNumberOfConcurrentMessages(1))
                     .LimitedThroughput(1, TimeSpan.FromSeconds(1))
                     .Delay(TimeSpan.FromMilliseconds(50))
                     .Select(
