@@ -10,6 +10,8 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.LimitedThrough
 
     public class LimitedThroughputDecoratorTests
     {
+        private const int delayMultiplier = 10;
+
         [Fact]
         public async Task LimitedThroughput_Subscription_Delay_Tests()
         {
@@ -19,7 +21,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.LimitedThrough
 
             using (bus.Subscribe(b => b
                 .SoftFireAndForget()
-                .LimitedThroughput(10, TimeSpan.FromMilliseconds(500))
+                .LimitedThroughput(10, TimeSpan.FromMilliseconds(delayMultiplier * 100))
                 .Handler(
                     async msg =>
                         {
@@ -32,11 +34,11 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.LimitedThrough
                     bus.Publish();
                 }
 
-                await Task.Delay(550);
+                await Task.Delay(delayMultiplier * 110);
 
                 Assert.Equal(20, count);
 
-                await Task.Delay(5 * 410);
+                await Task.Delay(delayMultiplier * 410);
                 Assert.Equal(60, count);
             }
         }
