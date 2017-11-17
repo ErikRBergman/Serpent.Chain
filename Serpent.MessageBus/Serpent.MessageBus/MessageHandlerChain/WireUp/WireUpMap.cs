@@ -96,9 +96,9 @@
         public IMessageHandlerChainBuilder<TMessageType> WireUpHandlerFromConfiguration<TMessageType, THandlerType>(IMessageHandlerChainBuilder<TMessageType> builder, THandlerType handler, IEnumerable<object> wireUpConfigurationObjects)
             where THandlerType : IMessageHandler<TMessageType>
         {
-            foreach (object configurationItem in wireUpConfigurationObjects.Where(c => c != null))
+            foreach (var configurationItem in wireUpConfigurationObjects.Where(c => c != null))
             {
-                if (this.attributeWireUpItems.TryGetValue(configurationItem.GetType(), out var mapItem))
+                if (this.configurationWireUpItems.TryGetValue(configurationItem.GetType(), out var mapItem))
                 {
                     mapItem.WireUpFromConfiguration(configurationItem, builder, handler);
                 }
@@ -107,5 +107,6 @@
             builder.Handler(handler);
             return builder;
         }
+
     }
 }

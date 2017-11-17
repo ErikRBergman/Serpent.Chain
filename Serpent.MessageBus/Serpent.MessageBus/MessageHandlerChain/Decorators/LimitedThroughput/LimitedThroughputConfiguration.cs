@@ -1,5 +1,5 @@
 ﻿// ReSharper disable once CheckNamespace
-namespace Serpent.MessageBus.MessageHandlerChain
+namespace Serpent.MessageBus
 {
     using System;
 

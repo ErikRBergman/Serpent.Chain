@@ -9,9 +9,9 @@ namespace Serpent.MessageBus
     public class NoDuplicatesAttribute : WireUpAttribute
     {
         /// <summary>
-        /// Initializes an attribute where the property named propertyName is used as key to eliminate duplicates
+        /// Initializes an attribute where the property named propertyName on the message is used as key to eliminate duplicates.
         /// </summary>
-        /// <param name="propertyName">The property name</param>
+        /// <param name="propertyName">The property name, on the message</param>
         public NoDuplicatesAttribute(string propertyName)
         {
             this.PropertyName = propertyName;

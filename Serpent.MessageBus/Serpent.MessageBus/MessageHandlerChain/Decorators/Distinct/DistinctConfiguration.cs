@@ -1,4 +1,5 @@
-﻿namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Distinct
+﻿// ReSharper disable CheckNamespace
+namespace Serpent.MessageBus
 {
     using Serpent.MessageBus.MessageHandlerChain.WireUp;
 

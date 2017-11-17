@@ -10,6 +10,8 @@
 
     public class ConcurrentMessageBusOptionsExtensionsTests
     {
+        private const int delayMultiplier = 5;
+
         [Fact]
         public async Task UseCustomPublisherTests()
         {
@@ -36,7 +38,7 @@
                     (chain, handler) =>
                         {
                             chain.Action(
-                                a => 
+                                a =>
                                     a.Before(message => message.Message.Log.TryAdd("Before", DateTime.Now))
                                      .Finally(message => message.Message.Log.TryAdd("After", DateTime.Now)))
                                 .Handler(handler);
@@ -46,9 +48,9 @@
                 .Handler(
                     async message =>
                         {
-                            await Task.Delay(100);
+                            await Task.Delay(delayMultiplier * 100);
                             message.Log.TryAdd("Handler", DateTime.Now);
-                            await Task.Delay(100);
+                            await Task.Delay(delayMultiplier * 100);
                         }));
 
             var msg = new TestMessage();
@@ -59,13 +61,13 @@
             Assert.Single(msg.Log);
             Assert.True(msg.Log.ContainsKey("Before"));
 
-            await Task.Delay(100);
+            await Task.Delay(delayMultiplier * 100);
 
             Assert.Equal(2, msg.Log.Count);
             Assert.True(msg.Log.ContainsKey("Before"));
             Assert.True(msg.Log.ContainsKey("Handler"));
 
-            await Task.Delay(100);
+            await Task.Delay(delayMultiplier * 100);
 
             Assert.Equal(3, msg.Log.Count);
             Assert.True(msg.Log.ContainsKey("Before"));
@@ -80,17 +82,17 @@
             var bus = new ConcurrentMessageBus<TestMessage>(
                 options => options.UseSubscriptionChain(
                     chain => chain
-                        .Action(c => 
-                        c.Before(message => message.Message.Log.TryAdd("Before", DateTime.Now)) 
+                        .Action(c =>
+                        c.Before(message => message.Message.Log.TryAdd("Before", DateTime.Now))
                          .Finally(message => message.Message.Log.TryAdd("After", DateTime.Now)))));
 
             bus.Subscribe(builder =>
                 builder.Handler(
                     async message =>
                         {
-                            await Task.Delay(100);
+                            await Task.Delay(delayMultiplier * 100);
                             message.Log.TryAdd("Handler", DateTime.Now);
-                            await Task.Delay(100);
+                            await Task.Delay(delayMultiplier * 100);
                         }));
 
             var msg = new TestMessage();
@@ -101,13 +103,13 @@
             Assert.Single(msg.Log);
             Assert.True(msg.Log.ContainsKey("Before"));
 
-            await Task.Delay(100);
+            await Task.Delay(delayMultiplier * 100);
 
             Assert.Equal(2, msg.Log.Count);
             Assert.True(msg.Log.ContainsKey("Before"));
             Assert.True(msg.Log.ContainsKey("Handler"));
 
-            await Task.Delay(100);
+            await Task.Delay(delayMultiplier * 100);
 
             Assert.Equal(3, msg.Log.Count);
             Assert.True(msg.Log.ContainsKey("Before"));

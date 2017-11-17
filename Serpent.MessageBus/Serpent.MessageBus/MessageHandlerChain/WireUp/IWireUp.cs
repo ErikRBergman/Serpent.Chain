@@ -1,6 +1,7 @@
 ﻿namespace Serpent.MessageBus.MessageHandlerChain.WireUp
 {
     using System;
+    using System.Collections.Generic;
 
     /// <summary>
     /// The IWireUp interface

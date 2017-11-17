@@ -46,49 +46,6 @@ namespace Serpent.MessageBus
         }
 
         /// <summary>
-        /// Configures the bus to use the parallel publisher. 
-        /// The synchronous part of each message handler is executed sequentially, awaiting all message handlers executing asynchronous to complete
-        /// </summary>
-        /// <typeparam name="TMessageType">
-        /// The message type
-        /// </typeparam>
-        /// <param name="options">
-        /// The options
-        /// </param>
-        /// <returns>
-        /// The options
-        /// </returns>
-        public static ConcurrentMessageBusOptions<TMessageType> UseParallelPublisher<TMessageType>(
-            this ConcurrentMessageBusOptions<TMessageType> options)
-        {
-            options.UseCustomPublisher(ParallelPublisher<TMessageType>.Default);
-            return options;
-        }
-
-        /// <summary>
-        /// Configures the bus to use the func publisher.
-        /// The func publisher is a 
-        /// </summary>
-        /// <typeparam name="TMessageType">
-        /// The message type
-        /// </typeparam>
-        /// <param name="options">
-        /// The options
-        /// </param>
-        /// <param name="publishFunc">
-        /// The function called for each subscription
-        /// </param>
-        /// <returns>
-        /// The options
-        /// </returns>
-        public static ConcurrentMessageBusOptions<TMessageType> UseFuncPublisher<TMessageType>(
-            this ConcurrentMessageBusOptions<TMessageType> options,
-            Func<IEnumerable<Func<TMessageType, CancellationToken, Task>>, TMessageType, Task> publishFunc)
-        {
-            return options.UseCustomPublisher(new FuncPublisher<TMessageType>(publishFunc));
-        }
-
-        /// <summary>
         /// Use the serial publisher. Only a single subscription handler is executed at a time.
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>

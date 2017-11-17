@@ -45,7 +45,7 @@
 
             SelectorSetup<TMessageType>.WireUp(
                 propertyName,
-                    typeof(DistinctExtensions).GetMethods()
+                    typeof(NoDuplicatesExtensions).GetMethods()
                     .FirstOrDefault(
                         m => m.IsGenericMethodDefinition && m.IsStatic && m.GetCustomAttributes<ExtensionMethodSelectorAttribute>().Any(a => a.Identifier == WireUpExtensionName)),
                 (methodInfo, selector) => methodInfo.Invoke(null, new object[] { messageHandlerChainBuilder, selector }));

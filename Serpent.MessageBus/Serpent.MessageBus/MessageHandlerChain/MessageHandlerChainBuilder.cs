@@ -28,14 +28,14 @@ namespace Serpent.MessageBus
         public static MessageHandlerChainBuilder<TMessageType> New => new MessageHandlerChainBuilder<TMessageType>();
 
         /// <summary>
-        ///     The number of handler setup methods
-        /// </summary>
-        public int Count => this.handlerSetupFuncs?.Count ?? 0;
-
-        /// <summary>
         ///     Returns true if the builder has a handler
         /// </summary>
         public bool HasHandler => this.createHandlerFunc != null;
+
+        /// <summary>
+        ///     The number of handler setup methods
+        /// </summary>
+        protected int Count => this.handlerSetupFuncs?.Count ?? 0;
 
         /// <summary>
         ///     Builds a message handler chain from the decorators and the handler added
