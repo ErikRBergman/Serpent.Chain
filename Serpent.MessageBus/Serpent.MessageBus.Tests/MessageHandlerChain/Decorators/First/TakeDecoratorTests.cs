@@ -3,6 +3,7 @@
 namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.First
 {
     using System.Threading;
+    using System.Threading.Tasks;
 
     using Serpent.MessageBus.MessageHandlerChain;
 
@@ -50,7 +51,10 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.First
             var notification = new TestChainBuildNotification();
             var services = new MessageHandlerChainBuilderSetupServices(notification);
 
-            var chain = new MessageHandlerChainBuilder<int>().First(async m => m == 2).Handler(m => count++).BuildFunc(services);
+            var chain = new MessageHandlerChainBuilder<int>()
+                .First(m => Task.FromResult(m == 2))
+                .Handler(m => count++)
+                    .BuildFunc(services);
 
             // The notification is disposed when the Take handler has processed 2 messages, trying to process the 3rd
             Assert.False(notification.IsDisposed);

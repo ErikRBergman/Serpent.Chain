@@ -14,14 +14,14 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.SelectMany
     public class SelectManyDecoratorTests
     {
         [Fact]
-        public void SelectManyDecorator_Test()
+        public void SelectManyAsyncDecorator_Test()
         {
             var count = 0;
 
             var notification = new TestChainBuildNotification();
             var services = new MessageHandlerChainBuilderSetupServices(notification);
             var builder = new MessageHandlerChainBuilder<OuterMessage>();
-            builder.SelectMany(m => m.Messages).Skip(2).Take(2).Handler(m => count++);
+            builder.SelectMany(m => Task.FromResult(m.Messages)).Skip(2).Take(2).Handler(m => count++);
             var chain = builder.BuildFunc(services);
 
             Assert.False(notification.IsDisposed);
@@ -29,10 +29,10 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.SelectMany
 
             chain(
                 new OuterMessage
-                {
-                    Messages = new[] { 1, 2, 3 }
-                },
-            CancellationToken.None);
+                    {
+                        Messages = new[] { 1, 2, 3 }
+                    },
+                CancellationToken.None);
 
             Assert.False(notification.IsDisposed);
             Assert.Equal(1, count);
@@ -48,16 +48,15 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.SelectMany
             Assert.True(notification.IsDisposed);
         }
 
-
         [Fact]
-        public void SelectManyAsyncDecorator_Test()
+        public void SelectManyDecorator_Test()
         {
             var count = 0;
 
             var notification = new TestChainBuildNotification();
             var services = new MessageHandlerChainBuilderSetupServices(notification);
             var builder = new MessageHandlerChainBuilder<OuterMessage>();
-            builder.SelectMany(async m => m.Messages).Skip(2).Take(2).Handler(m => count++);
+            builder.SelectMany(m => m.Messages).Skip(2).Take(2).Handler(m => count++);
             var chain = builder.BuildFunc(services);
 
             Assert.False(notification.IsDisposed);

@@ -70,7 +70,6 @@
         internal MessageHandlerChainDecorator<TMessageType> Build(Func<TMessageType, CancellationToken, Task> currentHandler)
         {
             return new SemaphoreWithKeyDecorator<TMessageType, TKeyType>(currentHandler, this);
-
         }
     }
 }

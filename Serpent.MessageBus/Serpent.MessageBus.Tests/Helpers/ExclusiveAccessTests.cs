@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-// ReSharper disable InconsistentNaming
+﻿// ReSharper disable InconsistentNaming
 
+// ReSharper disable UnusedVariable
 namespace Serpent.MessageBus.Tests.Helpers
 {
-    using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -18,7 +15,6 @@ namespace Serpent.MessageBus.Tests.Helpers
         [Fact]
         public async Task ExclusiveAccess_Test()
         {
-
             var exclusiveAccess0 = new ExclusiveAccess<int>();
             var exclusiveAccess1 = new ExclusiveAccess<int>(1);
 
@@ -51,7 +47,6 @@ namespace Serpent.MessageBus.Tests.Helpers
             await Task.Delay(20);
 
             exclusiveAccess0.Use(v => Assert.Equal(20, v));
-
         }
     }
 }

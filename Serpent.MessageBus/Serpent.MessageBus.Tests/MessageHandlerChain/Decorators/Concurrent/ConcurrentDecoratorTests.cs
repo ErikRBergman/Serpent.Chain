@@ -22,7 +22,6 @@
                                 Interlocked.Increment(ref counter);
                             }));
 
-
             await Task.Delay(100);
 
             for (var i = 0; i < 100; i++)

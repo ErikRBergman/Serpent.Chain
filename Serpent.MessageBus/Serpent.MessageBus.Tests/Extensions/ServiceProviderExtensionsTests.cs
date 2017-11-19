@@ -2,9 +2,7 @@
 {
     using System;
     using System.Collections.Concurrent;
-    using System.Threading.Tasks;
 
-    using Serpent.MessageBus;
     using Serpent.MessageBus.Extensions;
 
     using Xunit;
@@ -16,10 +14,7 @@
         {
             var intBus = new ConcurrentMessageBus<int>();
 
-            var serviceProvider = new MyServiceProvider()
-                .Add<int>(() => 1)
-                .Add<IMessageBusPublisher<int>>(() => intBus)
-                .Add<IMessageBusSubscriptions<int>>(() => intBus);
+            var serviceProvider = new MyServiceProvider().Add<int>(() => 1).Add<IMessageBusPublisher<int>>(() => intBus).Add<IMessageBusSubscriptions<int>>(() => intBus);
 
             var intValue = serviceProvider.GetService<int>();
             Assert.Equal(1, intValue);
@@ -37,8 +32,6 @@
             serviceProvider.PublishRange(new[] { 5, 5, 5 });
 
             Assert.Equal(20, count);
-
-
         }
 
         public class MyServiceProvider : IServiceProvider

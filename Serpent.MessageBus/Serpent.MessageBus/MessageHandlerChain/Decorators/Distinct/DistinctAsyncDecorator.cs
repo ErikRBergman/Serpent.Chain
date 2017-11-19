@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -17,20 +16,17 @@
 
         private int isDefaultInvoked;
 
-        public DistinctAsyncDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, CancellationToken, Task<TKeyType>> keySelector)
+        public DistinctAsyncDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, CancellationToken, Task<TKeyType>> keySelector, IEqualityComparer<TKeyType> equalityComparer = null)
         {
             this.handlerFunc = handlerFunc ?? throw new ArgumentNullException(nameof(handlerFunc));
             this.keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
+
+            if (equalityComparer != null)
+            {
+                this.keyDictionary = new ConcurrentDictionary<TKeyType, bool>(equalityComparer);
+            }
         }
 
-        public DistinctAsyncDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, CancellationToken, Task<TKeyType>> keySelector, IEqualityComparer<TKeyType> equalityComparer)
-        {
-            this.handlerFunc = handlerFunc ?? throw new ArgumentNullException(nameof(handlerFunc));
-            this.keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
-            this.keyDictionary = new ConcurrentDictionary<TKeyType, bool>(equalityComparer);
-        }
-
-        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1126:PrefixCallsCorrectly", Justification = "Reviewed. Suppression is OK here.")]
         public override async Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
             var key = await this.keySelector(message, token);

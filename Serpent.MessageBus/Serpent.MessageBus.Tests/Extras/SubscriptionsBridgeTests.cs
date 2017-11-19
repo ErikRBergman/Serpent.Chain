@@ -1,10 +1,7 @@
 ﻿// ReSharper disable InconsistentNaming
+
 namespace Serpent.MessageBus.Tests.Extras
 {
-    using System;
-    using System.Threading.Tasks;
-
-    using Serpent.MessageBus;
     using Serpent.MessageBus.Extras;
 
     using Xunit;
@@ -16,7 +13,7 @@ namespace Serpent.MessageBus.Tests.Extras
         {
             var bus = new ConcurrentMessageBus<int>();
 
-            int count = 0;
+            var count = 0;
 
             var bridge = new SubscriptionsBridge<int>(bus);
 

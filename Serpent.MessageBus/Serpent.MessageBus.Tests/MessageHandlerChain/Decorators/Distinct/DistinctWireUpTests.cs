@@ -4,7 +4,6 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using Serpent.MessageBus.Interfaces;
 
     using Xunit;
 
@@ -13,58 +12,33 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
         [Fact]
         public async Task DistinctWireUp_Attribute_Test()
         {
-            var bus = new ConcurrentMessageBus<Message>();
-
             var handler = new DistinctMessageHandler();
 
-            bus.Subscribe(b => b.WireUp(handler));
+            var bus = Create.Func<DistinctTestMessage>(s => s.WireUp(handler));
 
-            await bus.PublishAsync(
-                new Message
-                    {
-                        Id = "1"
-                    });
-
-            await bus.PublishAsync(
-                new Message
-                    {
-                        Id = "1"
-                    });
-
-            await bus.PublishAsync(
-                new Message
-                    {
-                        Id = "1"
-                    });
-
-            await bus.PublishAsync(
-                new Message
-                    {
-                        Id = "2"
-                    });
+            await bus(new DistinctTestMessage("1"), CancellationToken.None);
+            await bus(new DistinctTestMessage("1"), CancellationToken.None);
+            await bus(new DistinctTestMessage("1"), CancellationToken.None);
+            await bus(new DistinctTestMessage("2"), CancellationToken.None);
 
             Assert.Equal(2, handler.NumberOfInvokations);
-
-            bus.Subscribe(b => b.WireUp(handler));
-            bus.Subscribe(b => b.WireUp(handler));
         }
 
-        [Distinct(nameof(Message.Id))]
-        private class DistinctMessageHandler : IMessageHandler<Message>
+        [Fact]
+        public async Task DistinctWireUp_ValueType_AttributeNoParameters_Test()
         {
-            public int NumberOfInvokations { get; set; }
+            var handler = new DistinctValueTypeMessageHandler();
 
-            public Task HandleMessageAsync(Message message, CancellationToken cancellationToken)
-            {
-                this.NumberOfInvokations++;
+            var func = Create.Func<int>(s => s.WireUp(handler));
 
-                return Task.CompletedTask;
-            }
-        }
+            await func(1, CancellationToken.None);
+            await func(1, CancellationToken.None);
+            await func(1, CancellationToken.None);
+            await func(1, CancellationToken.None);
+            await func(1, CancellationToken.None);
+            await func(2, CancellationToken.None);
 
-        private class Message
-        {
-            public string Id { get; set; }
+            Assert.Equal(2, handler.NumberOfInvokations);
         }
     }
 }

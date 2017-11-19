@@ -3,18 +3,16 @@
 namespace Serpent.MessageBus
 {
     using System;
-    using System.Threading;
-    using System.Threading.Tasks;
 
     using Serpent.MessageBus.MessageHandlerChain.Decorators.Action;
 
     /// <summary>
-    /// The filter extensions
+    ///     The filter extensions
     /// </summary>
     public static class ActionExtensions
     {
         /// <summary>
-        ///  Adds an action decorator
+        ///     Adds an action decorator
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="messageHandlerChainBuilder">The message handler chain builder</param>

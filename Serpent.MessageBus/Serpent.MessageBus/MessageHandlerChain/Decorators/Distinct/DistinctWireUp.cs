@@ -25,7 +25,7 @@
         {
             if (string.IsNullOrWhiteSpace(attribute.PropertyName))
             {
-                messageHandlerChainBuilder.Distinct(msg => false);
+                messageHandlerChainBuilder.Distinct(msg => msg);
                 return;
             }
 

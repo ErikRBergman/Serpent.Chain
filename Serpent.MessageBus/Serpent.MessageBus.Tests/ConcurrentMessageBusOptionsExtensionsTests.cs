@@ -10,7 +10,7 @@
 
     public class ConcurrentMessageBusOptionsExtensionsTests
     {
-        private const int delayMultiplier = 5;
+        private const int DelayMultiplier = 5;
 
         [Fact]
         public async Task UseCustomPublisherTests()
@@ -48,9 +48,9 @@
                 .Handler(
                     async message =>
                         {
-                            await Task.Delay(delayMultiplier * 100);
+                            await Task.Delay(DelayMultiplier * 100);
                             message.Log.TryAdd("Handler", DateTime.Now);
-                            await Task.Delay(delayMultiplier * 100);
+                            await Task.Delay(DelayMultiplier * 100);
                         }));
 
             var msg = new TestMessage();
@@ -61,13 +61,13 @@
             Assert.Single(msg.Log);
             Assert.True(msg.Log.ContainsKey("Before"));
 
-            await Task.Delay(delayMultiplier * 100);
+            await Task.Delay(DelayMultiplier * 100);
 
             Assert.Equal(2, msg.Log.Count);
             Assert.True(msg.Log.ContainsKey("Before"));
             Assert.True(msg.Log.ContainsKey("Handler"));
 
-            await Task.Delay(delayMultiplier * 100);
+            await Task.Delay(DelayMultiplier * 100);
 
             Assert.Equal(3, msg.Log.Count);
             Assert.True(msg.Log.ContainsKey("Before"));
@@ -90,9 +90,9 @@
                 builder.Handler(
                     async message =>
                         {
-                            await Task.Delay(delayMultiplier * 100);
+                            await Task.Delay(DelayMultiplier * 100);
                             message.Log.TryAdd("Handler", DateTime.Now);
-                            await Task.Delay(delayMultiplier * 100);
+                            await Task.Delay(DelayMultiplier * 100);
                         }));
 
             var msg = new TestMessage();
@@ -103,13 +103,13 @@
             Assert.Single(msg.Log);
             Assert.True(msg.Log.ContainsKey("Before"));
 
-            await Task.Delay(delayMultiplier * 100);
+            await Task.Delay(DelayMultiplier * 100);
 
             Assert.Equal(2, msg.Log.Count);
             Assert.True(msg.Log.ContainsKey("Before"));
             Assert.True(msg.Log.ContainsKey("Handler"));
 
-            await Task.Delay(delayMultiplier * 100);
+            await Task.Delay(DelayMultiplier * 100);
 
             Assert.Equal(3, msg.Log.Count);
             Assert.True(msg.Log.ContainsKey("Before"));

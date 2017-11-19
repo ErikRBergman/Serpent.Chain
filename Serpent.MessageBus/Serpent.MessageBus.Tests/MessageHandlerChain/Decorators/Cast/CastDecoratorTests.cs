@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-// ReSharper disable InconsistentNaming
-
+﻿// ReSharper disable InconsistentNaming
 namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Cast
 {
     using System.Threading;
-    using System.Threading.Tasks;
 
     using Xunit;
 
@@ -28,7 +23,6 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Cast
 
             Assert.Equal(5, result);
         }
-
 
         private class T1
         {

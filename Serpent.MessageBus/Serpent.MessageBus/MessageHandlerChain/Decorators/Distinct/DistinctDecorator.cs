@@ -17,17 +17,15 @@
 
         private int isDefaultInvoked;
 
-        public DistinctDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector)
+        public DistinctDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer = null)
         {
             this.handlerFunc = handlerFunc ?? throw new ArgumentNullException(nameof(handlerFunc));
             this.keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
-        }
 
-        public DistinctDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, TKeyType> keySelector, IEqualityComparer<TKeyType> equalityComparer)
-        {
-            this.handlerFunc = handlerFunc ?? throw new ArgumentNullException(nameof(handlerFunc));
-            this.keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
-            this.keyDictionary = new ConcurrentDictionary<TKeyType, bool>(equalityComparer);
+            if (equalityComparer != null)
+            {
+                this.keyDictionary = new ConcurrentDictionary<TKeyType, bool>(equalityComparer);
+            }
         }
 
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1126:PrefixCallsCorrectly", Justification = "Reviewed. Suppression is OK here.")]
