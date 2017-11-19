@@ -6,18 +6,30 @@
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.MessageBus.Exceptions;
+
     using Xunit;
 
     public class MessageHandlerChainBuilderTests
     {
         [Fact]
+        public void AddDecoratorAfterHandlerTest()
+        {
+            Assert.Throws<MessageHandlerChainHasAHandlerException>(() => Create.SimpleFunc<int>(b => b.SoftFireAndForget().Handler(m => { }).SoftFireAndForget()));
+        }
+
+        [Fact]
+        public void NoHandlerException()
+        {
+            Assert.Throws<MessageHandlerChainHasNoMessageHandlerException>(() => Create.SimpleFunc<int>(b => b.SoftFireAndForget()));
+        }
+
+        [Fact]
         public async Task MessageHandlerChainStackAllTest()
         {
-            var bus = new ConcurrentMessageBus<Message>();
-
             var count = 0;
 
-            using (bus.Subscribe(
+            var func = Create.SimpleFunc<Message>(
                 b => b.FireAndForget()
                     .SoftFireAndForget()
                     .NoDuplicates(message => message.Id)
@@ -46,20 +58,21 @@
                                 await Task.Delay(200);
                                 message.Message.HandlerInvoked = "Sure was";
                                 Interlocked.Increment(ref count);
-                            })))
-            {
+                            }));
+
                 for (var i = 0; i < 30; i++)
                 {
-                    bus.Publish(new Message()
+#pragma warning disable 4014
+                    func(new Message()
                                     {
                                         Id = "ABC"
                                     });
+#pragma warning restore 4014
                 }
 
-                await Task.Delay(600);
+            await Task.Delay(600);
 
                 Assert.Equal(1, count);
-            }
         }
 
         [Fact]

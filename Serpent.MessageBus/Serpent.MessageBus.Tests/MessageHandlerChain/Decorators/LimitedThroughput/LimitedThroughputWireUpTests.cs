@@ -3,7 +3,6 @@
 namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.LimitedThroughput
 {
     using System;
-    using System.Threading;
     using System.Threading.Tasks;
 
     using Serpent.MessageBus.MessageHandlerChain.Decorators.LimitedThroughput;
@@ -21,7 +20,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.LimitedThrough
 
             var func = Create.SimpleFunc<LimitedThroughputTestMessage>(s => s.SoftFireAndForget().WireUp(handler));
 
-            for (int i = 0; i < 100; i++)
+            for (var i = 0; i < 100; i++)
             {
                 await func(new LimitedThroughputTestMessage("1"));
             }
@@ -53,7 +52,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.LimitedThrough
 
             Assert.Equal(0, handler.Count);
 
-            for (int i = 0; i < 100; i++)
+            for (var i = 0; i < 100; i++)
             {
 #pragma warning disable 4014
                 func(new LimitedThroughputTestMessage("1"));

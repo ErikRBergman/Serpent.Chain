@@ -58,6 +58,7 @@
                         exceptions = new List<Exception>(this.maxNumberOfAttempts);
                     }
 
+                    exceptions.Add(exception);
                     lastException = exception;
                 }
 

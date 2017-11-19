@@ -3,7 +3,6 @@
 namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
 {
     using System;
-    using System.Threading;
     using System.Threading.Tasks;
 
     using Serpent.MessageBus.Exceptions;
@@ -79,7 +78,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
 
                 Assert.Equal(2, count);
             }
-
+            
             // ignore case
             {
                 var count = 0;

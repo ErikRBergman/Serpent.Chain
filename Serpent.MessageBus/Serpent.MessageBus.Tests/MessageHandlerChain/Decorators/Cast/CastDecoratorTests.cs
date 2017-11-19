@@ -1,8 +1,7 @@
 ﻿// ReSharper disable InconsistentNaming
+
 namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Cast
 {
-    using System.Threading;
-
     using Xunit;
 
     public class CastDecoratorTests

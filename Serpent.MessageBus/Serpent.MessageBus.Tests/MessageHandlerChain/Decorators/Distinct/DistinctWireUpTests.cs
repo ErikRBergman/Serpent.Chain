@@ -2,7 +2,6 @@
 
 namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
 {
-    using System.Threading;
     using System.Threading.Tasks;
 
     using Xunit;
