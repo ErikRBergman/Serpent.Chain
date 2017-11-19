@@ -29,7 +29,7 @@ namespace Serpent.MessageBus
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Exception, Task<bool>> exceptionHandlerFunc)
         {
-            return messageHandlerChainBuilder.AddDecorator(currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, exceptionHandlerFunc));
+            return messageHandlerChainBuilder.AddDecorator(currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, (message, exception, token) => exceptionHandlerFunc(message, exception)));
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace Serpent.MessageBus
             return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new ExceptionDecorator<TMessageType>(
                     currentHandler,
-                    async (message, exception) =>
+                    async (message, exception, token) =>
                         {
                             await exceptionHandlerFunc(message, exception).ConfigureAwait(false);
                             return false;
@@ -106,7 +106,7 @@ namespace Serpent.MessageBus
             Func<TMessageType, Exception, bool> exceptionHandlerFunc)
         {
             return messageHandlerChainBuilder.AddDecorator(
-                currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, (message, exception) => Task.FromResult(exceptionHandlerFunc(message, exception))));
+                currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, (message, exception, token) => Task.FromResult(exceptionHandlerFunc(message, exception))));
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace Serpent.MessageBus
             return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new ExceptionDecorator<TMessageType>(
                     currentHandler,
-                    (message, exception) =>
+                    (message, exception, token) =>
                         {
                             exceptionHandlerAction(message, exception);
                             return FalseTask;

@@ -10,12 +10,6 @@
 
         private readonly Func<TMessageType, CancellationToken, Task> handlerFunc;
 
-        public ExceptionDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, Exception, Task<bool>> exceptionHandlerFunc)
-        {
-            this.handlerFunc = handlerFunc;
-            this.exceptionHandlerFunc = (message, exception, token) => exceptionHandlerFunc(message, exception);
-        }
-
         public ExceptionDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, Func<TMessageType, Exception, CancellationToken, Task<bool>> exceptionHandlerFunc)
         {
             this.handlerFunc = handlerFunc;
