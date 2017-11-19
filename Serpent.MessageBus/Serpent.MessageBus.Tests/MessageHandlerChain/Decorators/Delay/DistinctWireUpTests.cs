@@ -28,21 +28,19 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Delay
         private static async Task TestDelayWireUpAsync<T>(T handler)
             where T : DelayMessageHandlerBase
         {
-            var builder = new MessageHandlerChainBuilder<int>().WireUp(handler);
-
-            var func = builder.BuildFunc();
+            var func = Create.SimpleFunc<int>(b => b.WireUp(handler));
 
             Assert.Equal(0, handler.NumberOfInvokations);
 
             // Don't await
 #pragma warning disable 4014
-            func(1, CancellationToken.None);
+            func(1);
 #pragma warning restore 4014
 
             Assert.Equal(0, handler.NumberOfInvokations);
 
             await Task.Delay(300);
-            await func(2, CancellationToken.None);
+            await func(2);
 
             Assert.Equal(2, handler.NumberOfInvokations);
         }

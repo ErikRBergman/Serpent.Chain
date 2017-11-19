@@ -18,12 +18,12 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
             {
                 var count = 0;
 
-                var func = Create.Func<string>(s => s.Distinct(b => b.KeySelector(Task.FromResult).EqualityComparer(StringComparer.Ordinal)).Handler(m => count++));
+                var func = Create.SimpleFunc<string>(s => s.Distinct(b => b.KeySelector(Task.FromResult).EqualityComparer(StringComparer.Ordinal)).Handler(m => count++));
 
-                await func("a", CancellationToken.None);
-                await func("a", CancellationToken.None);
-                await func("a", CancellationToken.None);
-                await func("A", CancellationToken.None);
+                await func("a");
+                await func("a");
+                await func("a");
+                await func("A");
 
                 Assert.Equal(2, count);
             }
@@ -32,12 +32,12 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
             {
                 var count = 0;
 
-                var func = Create.Func<string>(s => s.Distinct(b => b.KeySelector(Task.FromResult).EqualityComparer(StringComparer.OrdinalIgnoreCase)).Handler(m => count++));
+                var func = Create.SimpleFunc<string>(s => s.Distinct(b => b.KeySelector(Task.FromResult).EqualityComparer(StringComparer.OrdinalIgnoreCase)).Handler(m => count++));
 
-                await func("a", CancellationToken.None);
-                await func("a", CancellationToken.None);
-                await func("a", CancellationToken.None);
-                await func("A", CancellationToken.None);
+                await func("a");
+                await func("a");
+                await func("a");
+                await func("A");
 
                 Assert.Equal(1, count);
             }
@@ -48,12 +48,12 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
         {
             var count = 0;
 
-            var func = Create.Func<DistinctTestMessage>(s => s.Distinct(b => b.KeySelector(m => Task.FromResult(m.Id))).Handler(m => count++));
+            var func = Create.SimpleFunc<DistinctTestMessage>(s => s.Distinct(b => b.KeySelector(m => Task.FromResult(m.Id))).Handler(m => count++));
 
-            await func(new DistinctTestMessage("1"), CancellationToken.None);
-            await func(new DistinctTestMessage("1"), CancellationToken.None);
-            await func(new DistinctTestMessage("1"), CancellationToken.None);
-            await func(new DistinctTestMessage("2"), CancellationToken.None);
+            await func(new DistinctTestMessage("1"));
+            await func(new DistinctTestMessage("1"));
+            await func(new DistinctTestMessage("1"));
+            await func(new DistinctTestMessage("2"));
 
             Assert.Equal(2, count);
         }
@@ -61,7 +61,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
         [Fact]
         public void Distinct_Builder_EqualityComparer_NoKeySelector_Test()
         {
-            Assert.Throws<KeySelectorMissingException>(() => Create.Func<int>(s => s.Distinct(b => b.EqualityComparer(StringComparer.Ordinal)).Handler(m => { })));
+            Assert.Throws<KeySelectorMissingException>(() => Create.SimpleFunc<int>(s => s.Distinct(b => b.EqualityComparer(StringComparer.Ordinal)).Handler(m => { })));
         }
 
         [Fact]
@@ -70,12 +70,12 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
             {
                 var count = 0;
 
-                var func = Create.Func<string>(s => s.Distinct(b => b.EqualityComparer(StringComparer.Ordinal)).Handler(m => count++));
+                var func = Create.SimpleFunc<string>(s => s.Distinct(b => b.EqualityComparer(StringComparer.Ordinal)).Handler(m => count++));
 
-                await func("a", CancellationToken.None);
-                await func("a", CancellationToken.None);
-                await func("a", CancellationToken.None);
-                await func("A", CancellationToken.None);
+                await func("a");
+                await func("a");
+                await func("a");
+                await func("A");
 
                 Assert.Equal(2, count);
             }
@@ -84,12 +84,12 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
             {
                 var count = 0;
 
-                var func = Create.Func<string>(s => s.Distinct(b => b.EqualityComparer(StringComparer.OrdinalIgnoreCase)).Handler(m => count++));
+                var func = Create.SimpleFunc<string>(s => s.Distinct(b => b.EqualityComparer(StringComparer.OrdinalIgnoreCase)).Handler(m => count++));
 
-                await func("a", CancellationToken.None);
-                await func("a", CancellationToken.None);
-                await func("a", CancellationToken.None);
-                await func("A", CancellationToken.None);
+                await func("a");
+                await func("a");
+                await func("a");
+                await func("A");
 
                 Assert.Equal(1, count);
             }
@@ -100,12 +100,12 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
         {
             var count = 0;
 
-            var func = Create.Func<DistinctTestMessage>(s => s.Distinct(b => b.KeySelector(m => m.Id)).Handler(m => count++));
+            var func = Create.SimpleFunc<DistinctTestMessage>(s => s.Distinct(b => b.KeySelector(m => m.Id)).Handler(m => count++));
 
-            await func(new DistinctTestMessage("1"), CancellationToken.None);
-            await func(new DistinctTestMessage("1"), CancellationToken.None);
-            await func(new DistinctTestMessage("1"), CancellationToken.None);
-            await func(new DistinctTestMessage("2"), CancellationToken.None);
+            await func(new DistinctTestMessage("1"));
+            await func(new DistinctTestMessage("1"));
+            await func(new DistinctTestMessage("1"));
+            await func(new DistinctTestMessage("2"));
 
             Assert.Equal(2, count);
         }
@@ -115,12 +115,12 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
         {
             var count = 0;
 
-            var func = Create.Func<DistinctTestMessage>(s => s.Distinct(m => m.Id).Handler(m => count++));
+            var func = Create.SimpleFunc<DistinctTestMessage>(s => s.Distinct(m => m.Id).Handler(m => count++));
 
-            await func(new DistinctTestMessage("1"), CancellationToken.None);
-            await func(new DistinctTestMessage("1"), CancellationToken.None);
-            await func(new DistinctTestMessage("1"), CancellationToken.None);
-            await func(new DistinctTestMessage("2"), CancellationToken.None);
+            await func(new DistinctTestMessage("1"));
+            await func(new DistinctTestMessage("1"));
+            await func(new DistinctTestMessage("1"));
+            await func(new DistinctTestMessage("2"));
 
             Assert.Equal(2, count);
         }
@@ -130,14 +130,14 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
         {
             var count = 0;
 
-            var func = Create.Func<int>(s => s.Distinct().Handler(m => count++));
+            var func = Create.SimpleFunc<int>(s => s.Distinct().Handler(m => count++));
 
-            await func(1, CancellationToken.None);
-            await func(1, CancellationToken.None);
-            await func(1, CancellationToken.None);
-            await func(1, CancellationToken.None);
-            await func(1, CancellationToken.None);
-            await func(2, CancellationToken.None);
+            await func(1);
+            await func(1);
+            await func(1);
+            await func(1);
+            await func(1);
+            await func(2);
 
             Assert.Equal(2, count);
         }

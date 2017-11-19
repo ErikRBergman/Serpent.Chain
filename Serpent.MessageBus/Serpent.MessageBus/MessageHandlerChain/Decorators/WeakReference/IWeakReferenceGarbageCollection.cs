@@ -10,6 +10,6 @@
         /// Returns true if the object was garbage collected.
         /// </summary>
         /// <returns>true if the object was garbage collected and it's safe to remove all references to this object. </returns>
-        bool DisposeSubscriptionIfReclamiedByGarbageCollection();
+        bool DisposeIfReclamiedByGarbageCollection();
     }
 }

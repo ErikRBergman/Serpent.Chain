@@ -15,7 +15,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.NoDuplicates
         {
             var count = 0;
 
-            var func = Create.Func<Message>(
+            var func = Create.SimpleFunc<Message>(
                 s => s.SoftFireAndForget()
                     .NoDuplicates(b => b.KeySelector(m => m.Id))
                     .Handler(
@@ -25,11 +25,11 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.NoDuplicates
                                 Interlocked.Increment(ref count);
                             }));
 
-            await func(new Message("a"), CancellationToken.None);
-            await func(new Message("a"), CancellationToken.None);
-            await func(new Message("a"), CancellationToken.None);
-            await func(new Message("a"), CancellationToken.None);
-            await func(new Message("A"), CancellationToken.None);
+            await func(new Message("a"));
+            await func(new Message("a"));
+            await func(new Message("a"));
+            await func(new Message("a"));
+            await func(new Message("A"));
 
             await Task.Delay(300);
 
@@ -41,7 +41,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.NoDuplicates
         {
             var count = 0;
 
-            var func = Create.Func<string>(
+            var func = Create.SimpleFunc<string>(
                 s => s.SoftFireAndForget()
                     .NoDuplicates()
                     .Handler(
@@ -51,11 +51,11 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.NoDuplicates
                                 Interlocked.Increment(ref count);
                             }));
 
-            await func("a", CancellationToken.None);
-            await func("a", CancellationToken.None);
-            await func("a", CancellationToken.None);
-            await func("a", CancellationToken.None);
-            await func("A", CancellationToken.None);
+            await func("a");
+            await func("a");
+            await func("a");
+            await func("a");
+            await func("A");
 
             await Task.Delay(300);
 
@@ -67,7 +67,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.NoDuplicates
         {
             var count = 0;
 
-            var func = Create.Func<string>(
+            var func = Create.SimpleFunc<string>(
                 s => s.SoftFireAndForget()
                     .NoDuplicates(b => b.EqualityComparer(StringComparer.OrdinalIgnoreCase))
                     .Handler(
@@ -77,11 +77,11 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.NoDuplicates
                                 Interlocked.Increment(ref count);
                             }));
 
-            await func("a", CancellationToken.None);
-            await func("a", CancellationToken.None);
-            await func("a", CancellationToken.None);
-            await func("a", CancellationToken.None);
-            await func("A", CancellationToken.None);
+            await func("a");
+            await func("a");
+            await func("a");
+            await func("a");
+            await func("A");
 
             await Task.Delay(300);
 
@@ -93,7 +93,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.NoDuplicates
         {
             var count = 0;
 
-            var func = Create.Func<Message>(
+            var func = Create.SimpleFunc<Message>(
                 s => s.SoftFireAndForget()
                     .NoDuplicates(b => b.EqualityComparer(StringComparer.Ordinal).KeySelector(m => m.Id))
                     .Handler(
@@ -103,11 +103,11 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.NoDuplicates
                                 Interlocked.Increment(ref count);
                             }));
 
-            await func(new Message("a"), CancellationToken.None);
-            await func(new Message("a"), CancellationToken.None);
-            await func(new Message("a"), CancellationToken.None);
-            await func(new Message("a"), CancellationToken.None);
-            await func(new Message("A"), CancellationToken.None);
+            await func(new Message("a"));
+            await func(new Message("a"));
+            await func(new Message("a"));
+            await func(new Message("a"));
+            await func(new Message("A"));
 
             await Task.Delay(300);
 
@@ -119,7 +119,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.NoDuplicates
         {
             var count = 0;
 
-            var func = Create.Func<Message>(
+            var func = Create.SimpleFunc<Message>(
                 s => s.SoftFireAndForget()
                     .NoDuplicates(b => b.KeySelector(m => m.Id).EqualityComparer(StringComparer.OrdinalIgnoreCase))
                     .Handler(
@@ -129,11 +129,11 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.NoDuplicates
                                 Interlocked.Increment(ref count);
                             }));
 
-            await func(new Message("a"), CancellationToken.None);
-            await func(new Message("a"), CancellationToken.None);
-            await func(new Message("a"), CancellationToken.None);
-            await func(new Message("a"), CancellationToken.None);
-            await func(new Message("A"), CancellationToken.None);
+            await func(new Message("a"));
+            await func(new Message("a"));
+            await func(new Message("a"));
+            await func(new Message("a"));
+            await func(new Message("A"));
 
             await Task.Delay(300);
 

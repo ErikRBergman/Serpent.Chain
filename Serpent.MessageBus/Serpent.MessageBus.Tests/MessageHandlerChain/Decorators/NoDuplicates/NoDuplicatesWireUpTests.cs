@@ -16,16 +16,16 @@
         {
             var handler = new Handler();
 
-            var func = Create.Func<Message>(b => b.WireUp(handler));
+            var func = Create.SimpleFunc<Message>(b => b.WireUp(handler));
 
             Assert.Equal(0, handler.Count);
             var m = new Func<int, Message>(v => new Message(v));
 
 #pragma warning disable 4014
-            func(m(1), CancellationToken.None);
-            func(m(1), CancellationToken.None);
-            func(m(1), CancellationToken.None);
-            func(m(1), CancellationToken.None);
+            func(m(1));
+            func(m(1));
+            func(m(1));
+            func(m(1));
 #pragma warning restore 4014
 
             await Task.Delay(300);
@@ -48,17 +48,17 @@
 
             var handler = new Handler();
 
-            var func = Create.Func<Message>(b => b.WireUp(handler, new[] { config }));
+            var func = Create.SimpleFunc<Message>(b => b.WireUp(handler, new[] { config }));
 
             Assert.Equal(0, handler.Count);
 
             var m = new Func<int, Message>(v => new Message(v));
 
 #pragma warning disable 4014
-            func(m(1), CancellationToken.None);
-            func(m(1), CancellationToken.None);
-            func(m(1), CancellationToken.None);
-            func(m(1), CancellationToken.None);
+            func(m(1));
+            func(m(1));
+            func(m(1));
+            func(m(1));
 #pragma warning restore 4014
 
             await Task.Delay(300);

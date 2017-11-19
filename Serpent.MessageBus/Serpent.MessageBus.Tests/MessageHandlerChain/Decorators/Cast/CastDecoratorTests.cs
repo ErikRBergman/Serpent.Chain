@@ -12,14 +12,13 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Cast
         {
             var result = 0;
 
-            var func = Create.Func<T2>(b => b.Cast<T2, T1>().Handler(m => result = m.BaseProp));
+            var func = Create.SimpleFunc<T2>(b => b.Cast<T2, T1>().Handler(m => result = m.BaseProp));
 
             func(
                 new T2
                     {
                         BaseProp = 5
-                    },
-                CancellationToken.None);
+                    });
 
             Assert.Equal(5, result);
         }

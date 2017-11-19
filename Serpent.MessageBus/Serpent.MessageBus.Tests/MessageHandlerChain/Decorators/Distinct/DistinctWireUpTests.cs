@@ -14,12 +14,12 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
         {
             var handler = new DistinctMessageHandler();
 
-            var bus = Create.Func<DistinctTestMessage>(s => s.WireUp(handler));
+            var bus = Create.SimpleFunc<DistinctTestMessage>(s => s.WireUp(handler));
 
-            await bus(new DistinctTestMessage("1"), CancellationToken.None);
-            await bus(new DistinctTestMessage("1"), CancellationToken.None);
-            await bus(new DistinctTestMessage("1"), CancellationToken.None);
-            await bus(new DistinctTestMessage("2"), CancellationToken.None);
+            await bus(new DistinctTestMessage("1"));
+            await bus(new DistinctTestMessage("1"));
+            await bus(new DistinctTestMessage("1"));
+            await bus(new DistinctTestMessage("2"));
 
             Assert.Equal(2, handler.NumberOfInvokations);
         }
@@ -29,14 +29,14 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
         {
             var handler = new DistinctValueTypeMessageHandler();
 
-            var func = Create.Func<int>(s => s.WireUp(handler));
+            var func = Create.SimpleFunc<int>(s => s.WireUp(handler));
 
-            await func(1, CancellationToken.None);
-            await func(1, CancellationToken.None);
-            await func(1, CancellationToken.None);
-            await func(1, CancellationToken.None);
-            await func(1, CancellationToken.None);
-            await func(2, CancellationToken.None);
+            await func(1);
+            await func(1);
+            await func(1);
+            await func(1);
+            await func(1);
+            await func(2);
 
             Assert.Equal(2, handler.NumberOfInvokations);
         }

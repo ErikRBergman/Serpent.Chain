@@ -4,6 +4,7 @@
     using System.Threading.Tasks;
 
     using Serpent.MessageBus.Interfaces;
+    using Serpent.MessageBus.MessageHandlerChain.Decorators.Concurrent;
 
     using Xunit;
 
@@ -14,13 +15,39 @@
         {
             var handler = new ConcurrentMessageHandler();
 
-            var func = Create.Func<Message>(b => b.SoftFireAndForget().WireUp(handler));
-
-            await Task.Delay(100);
+            var func = Create.SimpleFunc<int>(b => b.SoftFireAndForget().WireUp(handler));
 
             for (var i = 0; i < 100; i++)
             {
-                await func(new Message(), CancellationToken.None);
+                await func(1);
+            }
+
+            await Task.Delay(600);
+
+            Assert.Equal(10, handler.NumberOfInvokations);
+        }
+
+        [Fact]
+        public async Task TestWireUpFromConfiguration()
+        {
+            var wireUp = new ConcurrentWireUp();
+
+            var config = wireUp.CreateConfigurationFromDefaultValue("10");
+
+            var limitedThroughputConfiguration = config as ConcurrentConfiguration;
+            Assert.NotNull(limitedThroughputConfiguration);
+
+            Assert.Equal(10, limitedThroughputConfiguration.MaxNumberOfConcurrentMessages);
+
+            var handler = new ConcurrentMessageHandler();
+
+            var func = Create.SimpleFunc<int>(b => b.SoftFireAndForget().WireUp(handler, new[] { config }));
+
+            Assert.Equal(0, handler.NumberOfInvokations);
+
+            for (var i = 0; i < 100; i++)
+            {
+                await func(1);
             }
 
             await Task.Delay(600);
@@ -29,13 +56,13 @@
         }
 
         [Concurrent(10)]
-        private class ConcurrentMessageHandler : IMessageHandler<Message>
+        private class ConcurrentMessageHandler : IMessageHandler<int>
         {
             private int numberOfInvokations;
 
             public int NumberOfInvokations => this.numberOfInvokations;
 
-            public async Task HandleMessageAsync(Message message, CancellationToken cancellationToken)
+            public async Task HandleMessageAsync(int message, CancellationToken cancellationToken)
             {
                 await Task.Delay(500, cancellationToken);
                 Interlocked.Increment(ref this.numberOfInvokations);
@@ -44,7 +71,12 @@
 
         private class Message
         {
-            public string Id { get; set; }
+            public Message(string id)
+            {
+                this.Id = id;
+            }
+
+            public string Id { get; }
         }
     }
 }

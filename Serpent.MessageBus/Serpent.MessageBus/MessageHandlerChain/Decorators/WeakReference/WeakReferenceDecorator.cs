@@ -37,7 +37,7 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.WeakReference
         }
 
         /// <inheritdoc />
-        public bool DisposeSubscriptionIfReclamiedByGarbageCollection()
+        public bool DisposeIfReclamiedByGarbageCollection()
         {
             if (this.handlerFunc.TryGetTarget(out var _))
             {

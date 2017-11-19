@@ -12,7 +12,7 @@
         {
             var counter = 0;
 
-            var func = Create.Func<Message>(
+            var func = Create.SimpleFunc<Message>(
                 b => b.SoftFireAndForget()
                     .Concurrent(10)
                     .Handler(
@@ -26,7 +26,7 @@
 
             for (var i = 0; i < 100; i++)
             {
-                await func(new Message(), CancellationToken.None);
+                await func(new Message());
             }
 
             await Task.Delay(600);

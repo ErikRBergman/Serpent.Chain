@@ -62,5 +62,30 @@ namespace Serpent.MessageBus
 
             return func;
         }
+
+        /// <summary>
+        /// Creates a new message handler func
+        /// </summary>
+        /// <param name="config">
+        /// The config.
+        /// </param>
+        /// <typeparam name="T">
+        /// The message type
+        /// </typeparam>
+        /// <returns>
+        /// A message handler chain builder
+        /// </returns>
+        public static Func<T, Task> SimpleFunc<T>(Action<IMessageHandlerChainBuilder<T>> config)
+        {
+            var builder = Builder<T>();
+            config(builder);
+            var notifier = new MessageHandlerChainBuildNotification();
+
+            var func = builder.BuildFunc(new MessageHandlerChainBuilderSetupServices(notifier));
+
+            notifier.Notify(new MessageHandlerChain<T>(func));
+
+            return msg => func(msg, CancellationToken.None);
+        }
     }
 }

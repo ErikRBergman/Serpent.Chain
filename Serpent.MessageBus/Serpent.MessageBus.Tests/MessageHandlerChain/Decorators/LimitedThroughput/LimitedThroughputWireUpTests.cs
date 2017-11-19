@@ -19,11 +19,11 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.LimitedThrough
         {
             var handler = new LimitedThroughputMessageHandler();
 
-            var func = Create.Func<LimitedThroughputTestMessage>(s => s.SoftFireAndForget().WireUp(handler));
+            var func = Create.SimpleFunc<LimitedThroughputTestMessage>(s => s.SoftFireAndForget().WireUp(handler));
 
             for (int i = 0; i < 100; i++)
             {
-                await func(new LimitedThroughputTestMessage("1"), CancellationToken.None);
+                await func(new LimitedThroughputTestMessage("1"));
             }
 
             await Task.Delay(DelayMultiplier * 110);
@@ -49,14 +49,14 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.LimitedThrough
 
             var handler = new LimitedThroughputMessageHandler();
 
-            var func = Create.Func<LimitedThroughputTestMessage>(b => b.SoftFireAndForget().WireUp(handler, new[] { config }));
+            var func = Create.SimpleFunc<LimitedThroughputTestMessage>(b => b.SoftFireAndForget().WireUp(handler, new[] { config }));
 
             Assert.Equal(0, handler.Count);
 
             for (int i = 0; i < 100; i++)
             {
 #pragma warning disable 4014
-                func(new LimitedThroughputTestMessage("1"), CancellationToken.None);
+                func(new LimitedThroughputTestMessage("1"));
 #pragma warning restore 4014
             }
 

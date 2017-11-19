@@ -15,11 +15,11 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
         {
             var counter = 0;
 
-            var func = Create.Func<int>(b => b.Append(msg => msg).Handler(value => { Interlocked.Add(ref counter, value); }));
+            var func = Create.SimpleFunc<int>(b => b.Append(msg => msg).Handler(value => { Interlocked.Add(ref counter, value); }));
 
             for (var i = 0; i < 100; i++)
             {
-                await func(1 + (i % 2), CancellationToken.None);
+                await func(1 + (i % 2));
             }
 
             Assert.Equal(300, counter);
@@ -31,12 +31,12 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Append
             int counter = 0;
 
 #pragma warning disable 1998
-            var func = Create.Func<int>(b => b.Append(async msg => msg).Handler(value => { Interlocked.Add(ref counter, value); }));
+            var func = Create.SimpleFunc<int>(b => b.Append(async msg => msg).Handler(value => { Interlocked.Add(ref counter, value); }));
 #pragma warning restore 1998
 
             for (var i = 0; i < 100; i++)
             {
-                await func(1 + (i % 2), CancellationToken.None);
+                await func(1 + (i % 2));
             }
 
             Assert.Equal(300, counter);

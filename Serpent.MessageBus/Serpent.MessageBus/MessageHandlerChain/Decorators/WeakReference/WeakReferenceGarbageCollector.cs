@@ -55,7 +55,7 @@
         {
             foreach (var weakReference in this.weakReferences.Keys)
             {
-                if (weakReference.DisposeSubscriptionIfReclamiedByGarbageCollection())
+                if (weakReference.DisposeIfReclamiedByGarbageCollection())
                 {
                     this.weakReferences.TryRemove(weakReference, out var _);
                 }
