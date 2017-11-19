@@ -8,6 +8,8 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Distinct
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.MessageBus.Exceptions;
+
     /// <summary>
     ///     Provides a builder for the distinct decorator
     /// </summary>

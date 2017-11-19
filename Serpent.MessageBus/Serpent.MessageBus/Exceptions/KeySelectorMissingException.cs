@@ -1,4 +1,4 @@
-﻿namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Distinct
+﻿namespace Serpent.MessageBus.Exceptions
 {
     using System;
 
@@ -10,7 +10,6 @@
         /// <inheritdoc />
         public KeySelectorMissingException(string message) : base(message)
         {
-            
         }
     }
 }

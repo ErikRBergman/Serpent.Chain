@@ -6,7 +6,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Serpent.MessageBus.MessageHandlerChain.Decorators.Distinct;
+    using Serpent.MessageBus.Exceptions;
 
     using Xunit;
 
@@ -28,6 +28,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
                 Assert.Equal(2, count);
             }
 
+            // Ignore case
             {
                 var count = 0;
 
@@ -58,6 +59,12 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
         }
 
         [Fact]
+        public void Distinct_Builder_EqualityComparer_NoKeySelector_Test()
+        {
+            Assert.Throws<KeySelectorMissingException>(() => Create.Func<int>(s => s.Distinct(b => b.EqualityComparer(StringComparer.Ordinal)).Handler(m => { })));
+        }
+
+        [Fact]
         public async Task Distinct_Builder_EqualityComparer_Test()
         {
             {
@@ -73,6 +80,7 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
                 Assert.Equal(2, count);
             }
 
+            // ignore case
             {
                 var count = 0;
 
@@ -85,12 +93,6 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
 
                 Assert.Equal(1, count);
             }
-        }
-
-        [Fact]
-        public void Distinct_Builder_EqualityComparer_NoKeySelector_Test()
-        {
-            Assert.Throws<KeySelectorMissingException>(() => Create.Func<int>(s => s.Distinct(b => b.EqualityComparer(StringComparer.Ordinal)).Handler(m => { })));
         }
 
         [Fact]
