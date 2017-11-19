@@ -28,7 +28,7 @@
         public void SimpleFuncTest()
         {
             var count = 0;
-            var func = Create.SimpleFunc<int>(b => b.First().Handler(m => { }));
+            var func = Create.SimpleFunc<int>(b => b.First().Handler(m => { count++; }));
             func(0);
             Assert.Equal(1, count);
         }
