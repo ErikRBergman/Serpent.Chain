@@ -2,7 +2,11 @@
 
 namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
 {
+    using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
+
+    using Serpent.MessageBus.MessageHandlerChain.Decorators.Distinct;
 
     using Xunit;
 
@@ -38,6 +42,30 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Distinct
             await func(2);
 
             Assert.Equal(2, handler.NumberOfInvokations);
+        }
+
+        [Fact]
+        public async Task DistinctWireUp_Configuration_Test()
+        {
+
+            var wireUp = new DistinctWireUp();
+            var propertyName = nameof(DistinctTestMessage.Id);
+
+            var config = wireUp.CreateConfigurationFromDefaultValue(propertyName);
+
+            var count = 0;
+
+            var bus = Create.SimpleFunc<DistinctTestMessage>(
+                s => s
+                    .WireUp((IEnumerable<object>)new[] { config })
+                    .Handler(_ => count++));
+
+            await bus(new DistinctTestMessage("1"));
+            await bus(new DistinctTestMessage("1"));
+            await bus(new DistinctTestMessage("1"));
+            await bus(new DistinctTestMessage("2"));
+
+            Assert.Equal(2, count);
         }
     }
 }

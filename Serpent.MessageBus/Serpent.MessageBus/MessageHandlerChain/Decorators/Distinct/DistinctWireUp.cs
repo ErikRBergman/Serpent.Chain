@@ -15,7 +15,10 @@
 
         protected override DistinctConfiguration CreateAndParseConfigurationFromDefaultValue(string text)
         {
-            return new DistinctConfiguration();
+            return new DistinctConfiguration
+                       {
+                           PropertyName = text
+                       };
         }
 
         protected override void WireUpFromAttribute<TMessageType, THandlerType>(
