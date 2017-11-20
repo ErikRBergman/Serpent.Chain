@@ -2,6 +2,9 @@
 {
     using System;
 
+    /// <summary>
+    /// Thrown when a wire up could not parse the configuration text
+    /// </summary>
     public class CouldNotParseConfigTextToTimeSpanException : Exception
     {
         /// <inheritdoc />
@@ -11,6 +14,9 @@
             this.InvalidText = invalidText;
         }
 
+        /// <summary>
+        /// Gets the text that failed parsing
+        /// </summary>
         public string InvalidText { get; }
     }
 }

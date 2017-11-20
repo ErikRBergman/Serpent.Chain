@@ -2,7 +2,7 @@
 {
     using System.Threading.Tasks;
 
-    public static class TaskHelper
+    internal static class TaskHelper
     {
         public static Task<bool> FalseTask { get; } = Task.FromResult(false);
 
