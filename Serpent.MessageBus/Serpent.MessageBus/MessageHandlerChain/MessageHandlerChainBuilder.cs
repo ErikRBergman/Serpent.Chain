@@ -9,6 +9,7 @@ namespace Serpent.MessageBus
     using System.Threading.Tasks;
 
     using Serpent.MessageBus.Exceptions;
+    using Serpent.MessageBus.Helpers;
     using Serpent.MessageBus.MessageHandlerChain;
 
     /// <summary>
@@ -17,7 +18,7 @@ namespace Serpent.MessageBus
     /// <typeparam name="TMessageType">The message type</typeparam>
     public class MessageHandlerChainBuilder<TMessageType> : IMessageHandlerChainBuilder<TMessageType>
     {
-        private readonly Stack<Func<Func<TMessageType, CancellationToken, Task>, MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>>> handlerSetupFuncs =
+        private readonly Stack<Func<Func<TMessageType, CancellationToken, Task>, MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>>> decoratorSetupFuncs =
                 new Stack<Func<Func<TMessageType, CancellationToken, Task>, MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>>>();
 
         private Func<MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>> createHandlerFunc;
@@ -35,34 +36,29 @@ namespace Serpent.MessageBus
         /// <summary>
         ///     The number of handler setup methods
         /// </summary>
-        protected int Count => this.handlerSetupFuncs?.Count ?? 0;
+        protected int Count => this.decoratorSetupFuncs?.Count ?? 0;
 
         /// <summary>
-        ///     Builds a message handler chain from the decorators and the handler added
+        /// Builds a message handler chain from the decorators and the handler added
         /// </summary>
+        /// <param name="disposeAction">
+        /// The action to call when the chain dispose method is called.
+        /// </param>
         /// <returns>
-        ///     The <see cref="Func&lt;TmessageType,CancellationToken,Task&gt;" />.
+        /// The <see cref="Func&lt;TmessageType,CancellationToken,Task&gt;"/>.
         /// </returns>
-        public IMessageHandlerChain<TMessageType> BuildChain()
+        public IMessageHandlerChain<TMessageType> BuildChain(Action disposeAction = null)
         {
-            if (this.createHandlerFunc == null)
-            {
-                throw new MessageHandlerChainHasNoMessageHandlerException("The message handler chain does not have a message handler");
-            }
-
             var subscriptionNotification = new MessageHandlerChainBuildNotification();
             var services = new MessageHandlerChainBuilderSetupServices(subscriptionNotification);
 
-            var handlerFunc = this.createHandlerFunc(services);
+            var func = this.BuildFunc(services);
+            disposeAction = disposeAction ?? ActionHelpers.NoAction;
 
-            if (this.handlerSetupFuncs == null || this.handlerSetupFuncs.Count == 0)
-            {
-                return new MessageHandlerChain<TMessageType>(handlerFunc);
-            }
+            var chain = new MessageHandlerChain<TMessageType>(func, disposeAction);
+            subscriptionNotification.Notify(chain);
 
-            var func = this.handlerSetupFuncs.Aggregate(handlerFunc, (current, handlerSetupFunc) => handlerSetupFunc(current, services));
-
-            return new MessageHandlerChain<TMessageType>(func);
+            return chain;
         }
 
         /// <summary>
@@ -83,12 +79,12 @@ namespace Serpent.MessageBus
 
             var handlerFunc = this.createHandlerFunc(services);
 
-            if (this.handlerSetupFuncs == null || this.handlerSetupFuncs.Count == 0)
+            if (this.decoratorSetupFuncs == null || this.decoratorSetupFuncs.Count == 0)
             {
                 return handlerFunc;
             }
 
-            return this.handlerSetupFuncs.Aggregate(handlerFunc, (current, handlerSetupFunc) => handlerSetupFunc(current, services));
+            return this.decoratorSetupFuncs.Aggregate(handlerFunc, (current, handlerSetupFunc) => handlerSetupFunc(current, services));
         }
 
         /// <summary>
@@ -108,7 +104,7 @@ namespace Serpent.MessageBus
                 throw new MessageHandlerChainHasAHandlerException("The message handler chain has a handler. Decorators can not be added when then chain has a handler.");
             }
 
-            this.handlerSetupFuncs.Push(addFunc);
+            this.decoratorSetupFuncs.Push(addFunc);
             return this;
         }
 

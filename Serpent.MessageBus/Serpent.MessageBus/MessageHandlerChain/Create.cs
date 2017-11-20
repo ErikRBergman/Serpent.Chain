@@ -25,17 +25,18 @@ namespace Serpent.MessageBus
         /// <param name="config">
         /// The config.
         /// </param>
+        /// <param name="disposeAction">The action called when the chain is disposed</param>
         /// <typeparam name="T">
         /// The message type
         /// </typeparam>
         /// <returns>
         /// A message handler chain builder
         /// </returns>
-        public static IMessageHandlerChain<T> CreateChain<T>(Action<IMessageHandlerChainBuilder<T>> config)
+        public static IMessageHandlerChain<T> CreateChain<T>(Action<IMessageHandlerChainBuilder<T>> config, Action disposeAction = null)
         {
             var builder = Builder<T>();
             config(builder);
-            return builder.BuildChain();
+            return builder.BuildChain(disposeAction);
         }
 
         /// <summary>

@@ -21,7 +21,7 @@
         /// Uses 60 seconds as the default garbage collection interval
         /// </summary>
         public WeakReferenceGarbageCollector()
-            : this(TimeSpan.FromSeconds(60))
+            : this(TimeSpan.FromMinutes(1))
         {
         }
 
@@ -40,7 +40,7 @@
         /// <summary>
         /// The default weak references garbage collector, used in situations where a garbage collector is not specified
         /// </summary>
-        public static WeakReferenceGarbageCollector Default { get; } = new WeakReferenceGarbageCollector(TimeSpan.FromMinutes(1));
+        public static WeakReferenceGarbageCollector Default { get; } = new WeakReferenceGarbageCollector();
 
         /// <summary>
         /// Adds a reference to check for garbage collection

@@ -13,6 +13,7 @@
     using Serpent.MessageBus.MessageHandlerChain.Decorators.NoDuplicates;
     using Serpent.MessageBus.MessageHandlerChain.Decorators.Retry;
     using Serpent.MessageBus.MessageHandlerChain.Decorators.SoftFireAndForget;
+    using Serpent.MessageBus.MessageHandlerChain.Decorators.WeakReference;
 
     /// <summary>
     /// Wires up message handler chain subscriptions
@@ -32,6 +33,7 @@
                 .AddWireUp(new SoftFireAndForgetWireUp())
                 .AddWireUp(new LimitedThroughputWireUp())
                 .AddWireUp(new DistinctWireUp())
+                .AddWireUp(new WeakReferenceWireUp())
                 .AddWireUp(new NoDuplicatesWireUp());
         }
 
@@ -104,7 +106,11 @@
                 }
             }
 
-            builder.Handler(handler);
+            if (handler != null)
+            {
+                builder.Handler(handler);
+            }
+
             return builder;
         }
     }

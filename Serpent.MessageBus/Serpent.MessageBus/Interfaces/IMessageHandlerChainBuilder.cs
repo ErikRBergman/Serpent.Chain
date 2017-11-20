@@ -31,12 +31,15 @@ namespace Serpent.MessageBus
             Func<MessageHandlerChainBuilderSetupServices, Func<TMessageType, CancellationToken, Task>> addHandlerFunc);
 
         /// <summary>
-        ///     Builds a message handler chain from the decorators and the handler added
+        /// Builds a message handler chain from the decorators and the handler added
         /// </summary>
+        /// <param name="disposeAction">
+        /// The action to call when the chain dispose method is called.
+        /// </param>
         /// <returns>
-        ///     The <see cref="Func&lt;TmessageType,CancellationToken,Task&gt;" />.
+        /// The <see cref="Func&lt;TmessageType,CancellationToken,Task&gt;"/>.
         /// </returns>
-        IMessageHandlerChain<TMessageType> BuildChain();
+        IMessageHandlerChain<TMessageType> BuildChain(Action disposeAction = null);
 
         /// <summary>
         /// Builds the message handler chain

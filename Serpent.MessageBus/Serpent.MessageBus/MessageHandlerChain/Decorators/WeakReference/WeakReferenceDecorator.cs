@@ -27,11 +27,8 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.WeakReference
                 return target(message, token);
             }
 
-            if (this.messageHandlerChain != null)
-            {
-                this.messageHandlerChain.Dispose();
-                this.messageHandlerChain = null;
-            }
+            this.messageHandlerChain?.Dispose();
+            this.messageHandlerChain = null;
 
             return Task.CompletedTask;
         }
@@ -44,11 +41,8 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.WeakReference
                 return false;
             }
 
-            if (this.messageHandlerChain != null)
-            {
-                this.messageHandlerChain.Dispose();
-                this.messageHandlerChain = null;
-            }
+            this.messageHandlerChain?.Dispose();
+            this.messageHandlerChain = null;
 
             return true;
         }

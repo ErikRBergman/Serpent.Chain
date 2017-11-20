@@ -74,5 +74,27 @@ namespace Serpent.MessageBus
         {
             return WireUpMap.Default.WireUpHandlerFromConfiguration(messageHandlerChainBuilder, handler, wireUpConfigurationObjects);
         }
+
+        /// <summary>
+        /// Wires up a message handler from configuration on the message handler type
+        /// </summary>
+        /// <typeparam name="TMessageType">
+        /// The message type
+        /// </typeparam>
+        /// <param name="messageHandlerChainBuilder">
+        /// The message handler chain builder
+        /// </param>
+        /// <param name="wireUpConfigurationObjects">
+        /// The wire Up Configuration Objects.
+        /// </param>
+        /// <returns>
+        /// A message handler chain builder
+        /// </returns>
+        public static IMessageHandlerChainBuilder<TMessageType> WireUp<TMessageType>(
+            this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
+            IEnumerable<object> wireUpConfigurationObjects)
+        {
+            return WireUpMap.Default.WireUpHandlerFromConfiguration(messageHandlerChainBuilder, (IMessageHandler<TMessageType>)null, wireUpConfigurationObjects);
+        }
     }
 }
