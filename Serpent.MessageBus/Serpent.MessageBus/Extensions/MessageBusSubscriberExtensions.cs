@@ -6,10 +6,13 @@ namespace Serpent.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.MessageHandlerChain;
+    using Serpent.MessageHandlerChain.Notification;
+
     /// <summary>
     /// The message bus subscriber extension types
     /// </summary>
-    public static class MessageBusSubscriberExtensions
+    public static class MessageBusSubscriptionsExtensions
     {
         /// <summary>
         ///     Registers a subscription that through a factory creates a unique message handler for each message and then calls a
@@ -36,6 +39,32 @@ namespace Serpent.MessageBus
                         var handlerFunc = messageHandlerFactoryFuncSelector(handler);
                         return handlerFunc(message, token);
                     });
+        }
+
+        /// <summary>
+        ///     Create a message handler chain to set up a subscription
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="subscriptions">The subscriptions interface</param>
+        /// <param name="setupAction">The method called to configure the message handler chain for the new subscription</param>
+        /// <returns>The new message handler chain</returns>
+        public static IMessageHandlerChain<TMessageType> Subscribe<TMessageType>(
+            this IMessageBusSubscriptions<TMessageType> subscriptions,
+            Action<IMessageHandlerChainBuilder<TMessageType>> setupAction)
+        {
+            var builder = new MessageHandlerChainBuilder<TMessageType>();
+            setupAction(builder);
+
+            var subscriptionNotification = new MessageHandlerChainBuildNotification();
+            var services = new MessageHandlerChainBuilderSetupServices(subscriptionNotification);
+            var chainFunc = builder.BuildFunc(services);
+
+            var subscription = subscriptions.Subscribe(chainFunc);
+
+            var chain = new MessageHandlerChain<TMessageType>(chainFunc, subscription.Dispose);
+            subscriptionNotification.Notify(chain);
+
+            return chain;
         }
 
         /// <summary>

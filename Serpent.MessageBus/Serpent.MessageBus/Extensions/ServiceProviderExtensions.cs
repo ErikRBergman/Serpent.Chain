@@ -3,6 +3,8 @@
     using System;
     using System.Collections.Generic;
 
+    using Serpent.MessageHandlerChain;
+
     /// <summary>
     /// The service provider extensions
     /// </summary>
@@ -69,7 +71,7 @@
         /// </param>
         /// <param name="builderAction">The method used to configure the new subscription</param>
         /// <returns>
-        ///     The <see cref="IMessageHandlerChainBuilder&lt;TMessageType&gt;" /> used to setup the message handler chain.
+        ///     The <see cref="IMessageHandlerChainBuilder{TMessageType}" /> used to setup the message handler chain.
         /// </returns>
         public static IMessageHandlerChain<TMessageType> Subscribe<TMessageType>(this IServiceProvider serviceProvider, Action<IMessageHandlerChainBuilder<TMessageType>> builderAction)
         {

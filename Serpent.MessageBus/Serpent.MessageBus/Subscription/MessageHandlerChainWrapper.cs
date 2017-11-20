@@ -2,6 +2,8 @@
 
 namespace Serpent.MessageBus
 {
+    using Serpent.MessageHandlerChain;
+
     /// <summary>
     ///     The subscription wrapper type. Unsubscribes when disposed or runs out of scope
     /// </summary>

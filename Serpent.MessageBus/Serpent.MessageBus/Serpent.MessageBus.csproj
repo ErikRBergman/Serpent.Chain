@@ -29,4 +29,8 @@
     <None Remove="PublishToNuget_NETSTANDARD.cmd" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Serpent.MessageHandlerChain" Version="0.0.0.2" />
+  </ItemGroup>
+
 </Project>

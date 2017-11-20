@@ -9,4 +9,8 @@ script:
  - dotnet restore Serpent.MessageBus/Serpent.MessageBus.sln
  - cd /home/travis/build/ErikRBergman/Serpent.MessageBus/Serpent.MessageBus/Serpent.MessageBus.Tests
  - dotnet xunit
+ - cd /home/travis/build/ErikRBergman/Serpent.MessageBus/Serpent.MessageHandlerChain
+ - dotnet restore Serpent.MessageHandlerChain.sln
+ - cd /home/travis/build/ErikRBergman/Serpent.MessageBus/Serpent.MessageHandlerChain/Serpent.MessageHandlerChain.Tests
+ - dotnet xunit
 

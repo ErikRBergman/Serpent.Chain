@@ -4,6 +4,7 @@
     using System.Collections.Concurrent;
 
     using Serpent.MessageBus.Extensions;
+    using Serpent.MessageHandlerChain;
 
     using Xunit;
 

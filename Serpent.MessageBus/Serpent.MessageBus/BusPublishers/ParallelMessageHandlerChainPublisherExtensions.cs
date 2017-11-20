@@ -7,8 +7,9 @@ namespace Serpent.MessageBus
     using System.Threading.Tasks;
 
     using Serpent.MessageBus.BusPublishers;
-    using Serpent.MessageBus.MessageHandlerChain;
     using Serpent.MessageBus.Models;
+    using Serpent.MessageHandlerChain;
+    using Serpent.MessageHandlerChain.Notification;
 
     /// <summary>
     ///     Extensions for parallel message handler chain publisher

@@ -2,7 +2,7 @@
 {
     using System.Collections.Generic;
 
-    using Serpent.MessageBus.Interfaces;
+    using Serpent.MessageHandlerChain.Interfaces;
 
     /// <summary>
     /// The message and handlers type
