@@ -14,7 +14,7 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Action
 
         private Func<TMessageType, Task> onCancelFunc;
 
-        private Func<TMessageType, Exception, Task> onExceptionFunc;
+        private Func<TMessageType, Exception, Task<bool>> onExceptionFunc;
 
         private Func<TMessageType, Task> onSuccessFunc;
 
@@ -73,7 +73,10 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Action
                                     lastException = exception;
                                     if (this.onExceptionFunc != null)
                                     {
-                                        await this.onExceptionFunc(message, exception).ConfigureAwait(false);
+                                        if (await this.onExceptionFunc(message, exception).ConfigureAwait(false))
+                                        {
+                                            throw;
+                                        }
                                     }
                                 }
                             }
@@ -100,7 +103,7 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Action
             return this;
         }
 
-        public IActionDecoratorBuilder<TMessageType> OnException(Func<TMessageType, Exception, Task> onExceptionFunc)
+        public IActionDecoratorBuilder<TMessageType> OnException(Func<TMessageType, Exception, Task<bool>> onExceptionFunc)
         {
             this.onExceptionFunc = onExceptionFunc;
             return this;

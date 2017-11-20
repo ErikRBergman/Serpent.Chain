@@ -34,7 +34,7 @@
                     {
                         try
                         {
-                            await this.handlerFunc(message, token);
+                            await this.handlerFunc(message, token).ConfigureAwait(false);
                         }
                         finally
                         {

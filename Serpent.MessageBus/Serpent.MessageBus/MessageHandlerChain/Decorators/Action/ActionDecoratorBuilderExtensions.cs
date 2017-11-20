@@ -6,6 +6,8 @@ namespace Serpent.MessageBus
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.MessageBus.Helpers;
+
     /// <summary>
     ///     Provides extensions for configuring the append decorator
     /// </summary>
@@ -119,6 +121,25 @@ namespace Serpent.MessageBus
         /// <param name="builder">The action builder</param>
         /// <param name="onCancelFunc">The method</param>
         /// <returns>A builder</returns>
+        public static IActionDecoratorBuilder<TMessageType> OnCancel<TMessageType>(this IActionDecoratorBuilder<TMessageType> builder, Action<TMessageType> onCancelFunc)
+        {
+            return builder.OnCancel(
+                message =>
+                    {
+                        onCancelFunc(message);
+                        return Task.CompletedTask;
+                    });
+        }
+
+        /// <summary>
+        ///     Invokes a method when a message is cancelled
+        /// </summary>
+        /// <typeparam name="TMessageType">
+        ///     The message type
+        /// </typeparam>
+        /// <param name="builder">The action builder</param>
+        /// <param name="onCancelFunc">The method</param>
+        /// <returns>A builder</returns>
         public static IActionDecoratorBuilder<TMessageType> OnCancel<TMessageType>(this IActionDecoratorBuilder<TMessageType> builder, Func<TMessageType, Task> onCancelFunc)
         {
             return builder.Before((message, token) => onCancelFunc(message));
@@ -141,7 +162,28 @@ namespace Serpent.MessageBus
                 (message, exception) =>
                     {
                         onExceptionFunc(message, exception);
-                        return Task.CompletedTask;
+                        return TaskHelper.TrueTask;
+                    });
+        }
+
+                /// <summary>
+        ///     Invokes a method when a message handler throws an exception
+        /// </summary>
+        /// <typeparam name="TMessageType">
+        ///     The message type
+        /// </typeparam>
+        /// <param name="builder">The action builder</param>
+        /// <param name="onExceptionFunc">The method</param>
+        /// <returns>A builder</returns>
+        public static IActionDecoratorBuilder<TMessageType> OnException<TMessageType>(
+            this IActionDecoratorBuilder<TMessageType> builder,
+            Action<TMessageType> onExceptionFunc)
+        {
+            return builder.OnException(
+                (message, exception) =>
+                    {
+                        onExceptionFunc(message);
+                        return TaskHelper.TrueTask;
                     });
         }
 
@@ -156,8 +198,8 @@ namespace Serpent.MessageBus
         /// <returns>A builder</returns>
         public static IActionDecoratorBuilder<TMessageType> OnSuccess<TMessageType>(this IActionDecoratorBuilder<TMessageType> builder, Action<TMessageType> onSuccessAction)
         {
-            return builder.Before(
-                (message, token) =>
+            return builder.OnSuccess(
+                message =>
                     {
                         onSuccessAction(message);
                         return Task.CompletedTask;

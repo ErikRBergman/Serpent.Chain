@@ -66,7 +66,7 @@
         {
             while (this.shutdownToken.IsCancellationRequested == false)
             {
-                await Task.Delay(this.collectionInterval);
+                await Task.Delay(this.collectionInterval).ConfigureAwait(false);
                 this.DoGarbageCollection();
             }
         }

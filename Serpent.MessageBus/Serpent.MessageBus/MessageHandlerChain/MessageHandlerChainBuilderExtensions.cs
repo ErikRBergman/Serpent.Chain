@@ -117,7 +117,7 @@ namespace Serpent.MessageBus
                             var handler = handlerFactory();
                             try
                             {
-                                await handler.HandleMessageAsync(message, token);
+                                await handler.HandleMessageAsync(message, token).ConfigureAwait(false);
                             }
                             finally
                             {

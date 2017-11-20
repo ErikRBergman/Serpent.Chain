@@ -3,6 +3,7 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Delay
 {
     using System;
 
+    using Serpent.MessageBus.Exceptions;
     using Serpent.MessageBus.MessageHandlerChain.WireUp;
 
     internal class DelayWireUp : BaseWireUp<DelayAttribute, DelayConfiguration>
@@ -17,7 +18,7 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Delay
                            };
             }
 
-            throw new Exception("Delay: Could not parse text to timespan: " + text);
+            throw new CouldNotParseConfigTextToTimeSpanException("Delay: Could not parse text to timespan: " + text, text);
         }
 
         protected override void WireUpFromAttribute<TMessageType, THandlerType>(

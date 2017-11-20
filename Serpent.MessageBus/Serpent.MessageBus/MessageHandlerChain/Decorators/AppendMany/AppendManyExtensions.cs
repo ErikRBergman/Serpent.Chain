@@ -15,8 +15,6 @@ namespace Serpent.MessageBus
     /// </summary>
     public static class AppendManyExtensions
     {
-        private static readonly Task<bool> TrueTask = Task.FromResult(true);
-
         /// <summary>
         ///     Append a range of messages for each message passed through
         /// </summary>

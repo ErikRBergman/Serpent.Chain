@@ -39,7 +39,7 @@ namespace Serpent.MessageBus
         /// </summary>
         /// <param name="onExceptionFunc">The method</param>
         /// <returns>A builder</returns>
-        IActionDecoratorBuilder<TMessageType> OnException(Func<TMessageType, Exception, Task> onExceptionFunc);
+        IActionDecoratorBuilder<TMessageType> OnException(Func<TMessageType, Exception, Task<bool>> onExceptionFunc);
 
         /// <summary>
         ///     Invokes a method when a message is handled successfully

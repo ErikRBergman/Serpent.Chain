@@ -101,7 +101,7 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.AppendMany
                 return;
             }
 
-            await Task.WhenAll(newMessagesTask, Task.WhenAll(newMessages.Select(newMessage => AppendManyWhenAsync(parameters.CloneForMessage(newMessage)))));
+            await Task.WhenAll(newMessagesTask, Task.WhenAll(newMessages.Select(newMessage => AppendManyWhenAsync(parameters.CloneForMessage(newMessage))))).ConfigureAwait(false);
         }
 
         private async Task InnerMessageHandlerAsync(

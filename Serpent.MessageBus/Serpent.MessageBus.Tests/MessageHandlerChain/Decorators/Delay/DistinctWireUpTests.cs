@@ -2,10 +2,14 @@
 
 namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Delay
 {
+    using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.MessageBus.Exceptions;
     using Serpent.MessageBus.Interfaces;
+    using Serpent.MessageBus.MessageHandlerChain.Decorators.Delay;
 
     using Xunit;
 
@@ -23,6 +27,37 @@ namespace Serpent.MessageBus.Tests.MessageHandlerChain.Decorators.Delay
         {
             var handler = new DelayMessageHandler();
             await TestDelayWireUpAsync(handler);
+        }
+
+        [Fact]
+        public async Task Test_Delay_WireUp()
+        {
+            var wireUp = new DelayWireUp();
+
+            var invalidText = "abc123";
+
+            var exception = Assert.Throws<CouldNotParseConfigTextToTimeSpanException>(() => { wireUp.CreateConfigurationFromDefaultValue(invalidText); });
+
+            Assert.Equal(invalidText, exception.InvalidText);
+
+            var config = wireUp.CreateConfigurationFromDefaultValue("00:00:00.500");
+
+            var count = 0;
+
+            var func = Create.SimpleFunc<int>(b => b.WireUp((IEnumerable<object>)new[] { config }).Handler(_ => count++));
+
+            var sw = Stopwatch.StartNew();
+
+            var task = func(0);
+
+            Assert.Equal(0, count);
+
+            await task;
+            sw.Stop();
+
+            Assert.True(sw.ElapsedMilliseconds >= 500);
+
+            Assert.Equal(1, count);
         }
 
         private static async Task TestDelayWireUpAsync<T>(T handler)

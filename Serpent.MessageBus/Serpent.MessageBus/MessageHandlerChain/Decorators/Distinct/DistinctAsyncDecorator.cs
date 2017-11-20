@@ -29,13 +29,13 @@
 
         public override async Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
-            var key = await this.keySelector(message, token);
+            var key = await this.keySelector(message, token).ConfigureAwait(false);
 
             if (key == null)
             {
                 if (Interlocked.CompareExchange(ref this.isDefaultInvoked, 1, 0) == 0)
                 {
-                    await this.handlerFunc(message, token);
+                    await this.handlerFunc(message, token).ConfigureAwait(false);
                 }
 
                 return;
@@ -43,7 +43,7 @@
 
             if (this.keyDictionary.TryAdd(key, true))
             {
-                await this.handlerFunc(message, token);
+                await this.handlerFunc(message, token).ConfigureAwait(false);
             }
         }
     }

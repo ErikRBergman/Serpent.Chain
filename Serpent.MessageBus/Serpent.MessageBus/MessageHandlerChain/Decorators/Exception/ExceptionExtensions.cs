@@ -145,7 +145,7 @@ namespace Serpent.MessageBus
                             {
                                 try
                                 {
-                                    await innerMessageHandler(message, token);
+                                    await innerMessageHandler(message, token).ConfigureAwait(false);
                                 }
                                 catch (Exception)
                                 {

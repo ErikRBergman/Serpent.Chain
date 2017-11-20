@@ -32,7 +32,7 @@ namespace Serpent.MessageBus.MessageHandlerChain.Decorators.Append
                         return async (message, token) =>
                             {
                                 var chainedMessageTask = innerMessageHandler(message, token);
-                                await Task.WhenAll(chainedMessageTask, this.InnerMessageHandlerAsync(innerMessageHandler, new MessageAndToken<TMessageType>(message, token)));
+                                await Task.WhenAll(chainedMessageTask, this.InnerMessageHandlerAsync(innerMessageHandler, new MessageAndToken<TMessageType>(message, token))).ConfigureAwait(false);
                             };
                     };
             }

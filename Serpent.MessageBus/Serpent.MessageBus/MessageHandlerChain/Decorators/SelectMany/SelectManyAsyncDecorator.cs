@@ -26,7 +26,7 @@
         {
             await Task.WhenAll(
                 (await this.selector(message).ConfigureAwait(false))
-                    .Select(msg => this.newChain.HandleMessageAsync(msg, cancellationToken)));
+                    .Select(msg => this.newChain.HandleMessageAsync(msg, cancellationToken))).ConfigureAwait(false);
         }
 
         public void MessageHandlerChainBuilt(IMessageHandlerChain messageHandlerChain)

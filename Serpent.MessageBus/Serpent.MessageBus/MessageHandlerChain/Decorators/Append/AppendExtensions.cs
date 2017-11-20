@@ -35,7 +35,7 @@ namespace Serpent.MessageBus
                         return async (message, token) =>
                             {
                                 var chainedMessageTask = innerMessageHandler(message, token);
-                                await Task.WhenAll(chainedMessageTask, InnerMessageHandlerAsync(innerMessageHandler, messageSelector, message, token));
+                                await Task.WhenAll(chainedMessageTask, InnerMessageHandlerAsync(innerMessageHandler, messageSelector, message, token)).ConfigureAwait(false);
                             };
                     });
         }
