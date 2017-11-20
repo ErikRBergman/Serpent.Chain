@@ -17,12 +17,12 @@
 
             var func = Create.SimpleFunc<int>(b => b.SoftFireAndForget().WireUp(handler));
 
-            for (var i = 0; i < 100; i++)
+            for (var i = 0; i < 20; i++)
             {
                 await func(1);
             }
 
-            await Task.Delay(600);
+            await Task.Delay(1500);
 
             Assert.Equal(10, handler.NumberOfInvokations);
         }
@@ -45,12 +45,12 @@
 
             Assert.Equal(0, handler.NumberOfInvokations);
 
-            for (var i = 0; i < 100; i++)
+            for (var i = 0; i < 20; i++)
             {
                 await func(1);
             }
 
-            await Task.Delay(600);
+            await Task.Delay(1500);
 
             Assert.Equal(10, handler.NumberOfInvokations);
         }
@@ -64,7 +64,7 @@
 
             public async Task HandleMessageAsync(int message, CancellationToken cancellationToken)
             {
-                await Task.Delay(500, cancellationToken);
+                await Task.Delay(1000, cancellationToken);
                 Interlocked.Increment(ref this.numberOfInvokations);
             }
         }
