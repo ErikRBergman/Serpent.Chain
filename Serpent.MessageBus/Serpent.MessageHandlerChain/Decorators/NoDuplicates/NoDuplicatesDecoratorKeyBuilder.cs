@@ -8,7 +8,6 @@ namespace Serpent.MessageHandlerChain.Decorators.NoDuplicates
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Serpent.MessageHandlerChain.Decorators.Distinct;
     using Serpent.MessageHandlerChain.Exceptions;
 
     /// <summary>
@@ -23,10 +22,8 @@ namespace Serpent.MessageHandlerChain.Decorators.NoDuplicates
     /// <returns>
     ///     A builder
     /// </returns>
-    public class NoDuplicatesDecoratorBuilder<TMessageType, TKeyType> : DecoratorBuilder<TMessageType>
+    public class NoDuplicatesDecoratorKeyBuilder<TMessageType, TKeyType> : DecoratorBuilder<TMessageType>
     {
-        private Func<TMessageType, CancellationToken, Task<TKeyType>> asyncKeySelector;
-
         private IEqualityComparer<TKeyType> equalityComparer;
 
         private Func<TMessageType, TKeyType> keySelector;
@@ -34,17 +31,12 @@ namespace Serpent.MessageHandlerChain.Decorators.NoDuplicates
         /// <inheritdoc />
         public override Func<Func<TMessageType, CancellationToken, Task>, Func<TMessageType, CancellationToken, Task>> BuildDecorator()
         {
-            if (this.asyncKeySelector != null)
-            {
-                return innerHandler => new DistinctAsyncDecorator<TMessageType, TKeyType>(innerHandler, this.asyncKeySelector, this.equalityComparer).HandleMessageAsync;
-            }
-
             if (this.keySelector == null)
             {
                 throw new KeySelectorMissingException("KeySelector not set and it can not be inferred from equality comparer");
             }
 
-            return innerHandler => new DistinctDecorator<TMessageType, TKeyType>(innerHandler, this.keySelector, this.equalityComparer).HandleMessageAsync;
+            return innerHandler => new NoDuplicatesDecorator<TMessageType, TKeyType>(innerHandler, this.keySelector, this.equalityComparer).HandleMessageAsync;
         }
 
         /// <summary>
@@ -52,7 +44,7 @@ namespace Serpent.MessageHandlerChain.Decorators.NoDuplicates
         /// </summary>
         /// <param name="equalityComparer">The key equality comparer</param>
         /// <returns>A builder</returns>
-        public NoDuplicatesDecoratorBuilder<TMessageType, TKeyType> EqualityComparer(IEqualityComparer<TKeyType> equalityComparer)
+        public NoDuplicatesDecoratorKeyBuilder<TMessageType, TKeyType> EqualityComparer(IEqualityComparer<TKeyType> equalityComparer)
         {
             this.equalityComparer = equalityComparer;
             return this;
@@ -63,24 +55,10 @@ namespace Serpent.MessageHandlerChain.Decorators.NoDuplicates
         /// </summary>
         /// <param name="keySelector">The key selector</param>
         /// <returns>A builder</returns>
-        public NoDuplicatesDecoratorBuilder<TMessageType, TKeyType> KeySelector(Func<TMessageType, TKeyType> keySelector)
+        public NoDuplicatesDecoratorKeyBuilder<TMessageType, TKeyType> KeySelector(Func<TMessageType, TKeyType> keySelector)
         {
             keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
             this.keySelector = keySelector;
-            this.asyncKeySelector = null;
-            return this;
-        }
-
-        /// <summary>
-        ///     Sets the key selector
-        /// </summary>
-        /// <param name="keySelector">The key selector</param>
-        /// <returns>A builder</returns>
-        public NoDuplicatesDecoratorBuilder<TMessageType, TKeyType> KeySelector(Func<TMessageType, CancellationToken, Task<TKeyType>> keySelector)
-        {
-            keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
-            this.asyncKeySelector = keySelector;
-            this.keySelector = null;
             return this;
         }
     }

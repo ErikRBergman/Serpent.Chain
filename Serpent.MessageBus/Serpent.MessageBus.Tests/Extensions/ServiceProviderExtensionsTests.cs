@@ -23,6 +23,8 @@
             var publisher = serviceProvider.Publisher<int>();
             Assert.Equal(publisher, intBus);
 
+            serviceProvider.GetService<ServiceProviderExtensionsTests>();
+
             var count = 0;
             serviceProvider.Subscribe<int>(s => s.Handler(m => count += m));
 
@@ -37,7 +39,7 @@
 
         public class MyServiceProvider : IServiceProvider
         {
-            public ConcurrentDictionary<Type, Func<object>> Types { get; set; } = new ConcurrentDictionary<Type, Func<object>>();
+            public ConcurrentDictionary<Type, Func<object>> Types { get; } = new ConcurrentDictionary<Type, Func<object>>();
 
             public MyServiceProvider Add<T>(Func<object> factory)
             {

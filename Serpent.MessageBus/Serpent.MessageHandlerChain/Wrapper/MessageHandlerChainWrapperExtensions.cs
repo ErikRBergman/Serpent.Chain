@@ -1,12 +1,10 @@
 ﻿// ReSharper disable once CheckNamespace
-namespace Serpent.MessageBus
+namespace Serpent.MessageHandlerChain
 {
-    using Serpent.MessageHandlerChain;
-
     /// <summary>
     /// Provides extensions for subscription wrapper.
     /// </summary>
-    public static class SubscriptionWrapperExtensions 
+    public static class MessageHandlerChainWrapperExtensions 
     {
         /// <summary>
         /// Creates a new subscription wrapper for this subscription

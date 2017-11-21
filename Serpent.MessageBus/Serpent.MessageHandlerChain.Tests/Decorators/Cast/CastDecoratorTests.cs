@@ -29,7 +29,6 @@ namespace Serpent.MessageHandlerChain.Tests.Decorators.Cast
 
         private class T2 : T1
         {
-            public int OuterProp { get; set; }
         }
     }
 }

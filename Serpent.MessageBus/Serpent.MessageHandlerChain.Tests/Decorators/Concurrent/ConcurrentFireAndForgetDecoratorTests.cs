@@ -5,16 +5,16 @@
 
     using Xunit;
 
-    public class ConcurrentDecoratorTests
+    public class ConcurrentFireAndForgetDecoratorTests
     {
         [Fact]
-        public async Task ConcurrentDecoratorHandlerTests()
+        public async Task ConcurrentFireAndForgetDecoratorHandlerTests()
         {
             var counter = 0;
 
-            var func = Create.SimpleFunc<Message>(
-                b => b.SoftFireAndForget()
-                    .Concurrent(10)
+            var func = Create.SimpleFunc<int>(
+                b => b
+                    .ConcurrentFireAndForget(10)
                     .Handler(
                         async message =>
                             {
@@ -24,16 +24,12 @@
 
             for (var i = 0; i < 20; i++)
             {
-                await func(new Message());
+                await func(0);
             }
 
             await Task.Delay(600);
 
             Assert.Equal(10, counter);
-        }
-
-        private class Message
-        {
         }
     }
 }

@@ -37,6 +37,30 @@ namespace Serpent.MessageHandlerChain.Tests.Decorators.NoDuplicates
         }
 
         [Fact]
+        public async Task NoDuplicates_Builder_KeySelector_PassThrough_Test()
+        {
+            var count = 0;
+
+            var func = Create.SimpleFunc<Message>(
+                s => s
+                    .NoDuplicates(b => b.KeySelector(m => m.Id))
+                    .Handler(
+                        async m =>
+                            {
+                                await Task.Delay(200);
+                                Interlocked.Increment(ref count);
+                            }));
+
+            await func(new Message("a"));
+            await func(new Message("a"));
+            await func(new Message("a"));
+            await func(new Message("a"));
+            await func(new Message("A"));
+
+            Assert.Equal(5, count);
+        }
+
+        [Fact]
         public async Task NoDuplicates_Builder_No_KeySelector_Test()
         {
             var count = 0;

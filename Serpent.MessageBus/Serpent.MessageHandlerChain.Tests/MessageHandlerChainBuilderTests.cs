@@ -1,8 +1,6 @@
 ﻿namespace Serpent.MessageHandlerChain.Tests
 {
-    using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -23,58 +21,7 @@
         {
             Assert.Throws<MessageHandlerChainHasNoMessageHandlerException>(() => Create.SimpleFunc<int>(b => b.SoftFireAndForget()));
         }
-
-        [Fact]
-        public async Task MessageHandlerChainStackAllTest()
-        {
-            var count = 0;
-
-            var func = Create.SimpleFunc<Message>(
-                b => b.FireAndForget()
-                    .SoftFireAndForget()
-                    .NoDuplicates(message => message.Id)
-                    .Concurrent(16)
-                    .ConcurrentFireAndForget(16)
-                    .Exception((msg, e) => Console.WriteLine(e))
-                    .Where(msg => true)
-                    .FireAndForget()
-                    .BranchOut(
-                        branch => { branch.FireAndForget().Delay(TimeSpan.FromSeconds(10)).Handler(message => { Console.WriteLine("Sub branch 1"); }); },
-                        branch => { branch.FireAndForget().Delay(TimeSpan.FromSeconds(20)).Handler(message => { Console.WriteLine("Sub branch 2"); }); })
-                    .Retry(5, TimeSpan.FromSeconds(5))
-                    .Semaphore(s => s.MaxNumberOfConcurrentMessages(1))
-                    .LimitedThroughput(1, TimeSpan.FromSeconds(1))
-                    .Delay(TimeSpan.FromMilliseconds(50))
-                    .Select(
-                        message => new OuterMessage
-                        {
-                            Message = message,
-                            Token = CancellationToken.None
-                        })
-                    .Handler(
-                        async message =>
-                            {
-                                Debug.WriteLine(DateTime.Now);
-                                await Task.Delay(200);
-                                message.Message.HandlerInvoked = "Sure was";
-                                Interlocked.Increment(ref count);
-                            }));
-
-            for (var i = 0; i < 30; i++)
-            {
-#pragma warning disable 4014
-                func(new Message()
-                {
-                    Id = "ABC"
-                });
-#pragma warning restore 4014
-            }
-
-            await Task.Delay(600);
-
-            Assert.Equal(1, count);
-        }
-
+        
         [Fact]
         public async Task SubscriptionBuilderStackTests()
         {

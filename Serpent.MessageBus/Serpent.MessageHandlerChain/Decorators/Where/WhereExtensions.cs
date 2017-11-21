@@ -3,6 +3,7 @@
 namespace Serpent.MessageHandlerChain
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -54,7 +55,12 @@ namespace Serpent.MessageHandlerChain
                 return messageHandlerChainBuilder;
             }
 
-            return messageHandlerChainBuilder.AddDecorator(innerMessageHandler => (message, cancellationToken) =>
+            return messageHandlerChainBuilder.AddDecorator(WhereDecoratorFunc(predicate));
+        }
+
+        internal static Func<Func<TMessageType, CancellationToken, Task>, Func<TMessageType, CancellationToken, Task>> WhereDecoratorFunc<TMessageType>(Func<TMessageType, bool> predicate)
+        {
+            return innerMessageHandler => (message, cancellationToken) =>
                 {
                     if (predicate(message))
                     {
@@ -62,7 +68,7 @@ namespace Serpent.MessageHandlerChain
                     }
 
                     return Task.CompletedTask;
-                });
+                };
         }
     }
 }

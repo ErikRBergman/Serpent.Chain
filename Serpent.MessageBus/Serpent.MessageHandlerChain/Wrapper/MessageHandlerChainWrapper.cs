@@ -1,9 +1,7 @@
 ﻿//// ReSharper disable CheckNamespace
 
-namespace Serpent.MessageBus
+namespace Serpent.MessageHandlerChain
 {
-    using Serpent.MessageHandlerChain;
-
     /// <summary>
     ///     The subscription wrapper type. Unsubscribes when disposed or runs out of scope
     /// </summary>

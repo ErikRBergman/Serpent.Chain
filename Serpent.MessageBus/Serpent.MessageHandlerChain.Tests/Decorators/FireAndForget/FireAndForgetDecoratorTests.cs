@@ -22,7 +22,7 @@
             await bus(msg);
             Assert.NotEqual("Got it!", msg.Status);
             
-            await Task.Delay(200);
+            await Task.Delay(1000);
 
             Assert.Equal("Got it!", msg.Status);
         }

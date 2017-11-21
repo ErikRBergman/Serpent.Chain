@@ -1,9 +1,10 @@
-﻿namespace Serpent.MessageBus.Tests
+﻿namespace Serpent.MessageHandlerChain.Tests.Decorators.OfType
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
     using Serpent.MessageHandlerChain;
+
     using Xunit;
 
     public class MessageBusExtensionsTests
@@ -11,37 +12,28 @@
         [Fact]
         public void TestSingleBusMultipleTypesExtensions()
         {
-            var bus = new ConcurrentMessageBus<BaseMessageType>();
-
             var type1Received = new List<MessageType1>();
             var type2Received = new List<MessageType2>();
 
-            var subscription1 = bus.Subscribe(b => b.OfType<BaseMessageType, MessageType1>().Handler(
+            var messageType1Func = Create.SimpleFunc<BaseMessageType>(b => b.OfType<BaseMessageType, MessageType1>().Handler(
                 msg =>
                     {
                         type1Received.Add(msg);
                         return Task.CompletedTask;
                     }));
 
-            var subscription2 = bus.Subscribe(b => b.OfType<BaseMessageType, MessageType2>().Handler(
+            var messageType2Func = Create.SimpleFunc<BaseMessageType>(b => b.OfType<BaseMessageType, MessageType2>().Handler(
                 msg =>
                     {
                         type2Received.Add(msg);
                         return Task.CompletedTask;
                     }));
 
-            bus.PublishAsync(new MessageType1("Haj"));
-            bus.PublishAsync(
-                new MessageType2()
-                {
-                    Name = "Boj"
-                });
+            messageType1Func(new MessageType1("Haj"));
+            messageType2Func(new MessageType2 { Name = "Boj" });
 
             Assert.Single(type1Received);
             Assert.Single(type2Received);
-
-            subscription2.Dispose();
-            subscription1.Dispose();
         }
 
         private class BaseMessageType
