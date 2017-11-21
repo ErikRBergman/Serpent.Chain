@@ -19,6 +19,5 @@
         {
             Assert.False(await TaskHelper.FalseTask);
         }
-
     }
 }
