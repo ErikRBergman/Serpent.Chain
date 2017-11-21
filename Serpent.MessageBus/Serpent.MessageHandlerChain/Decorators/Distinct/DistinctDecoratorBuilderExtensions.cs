@@ -34,6 +34,11 @@ namespace Serpent.MessageHandlerChain
             this DistinctDecoratorBuilder<TMessageType, TKeyType> builder,
             Func<TMessageType, Task<TKeyType>> keySelector)
         {
+            if (keySelector == null)
+            {
+                throw new ArgumentNullException(nameof(keySelector));
+            }
+
             return builder.KeySelector((msg, token) => keySelector(msg));
         }
 
@@ -59,6 +64,11 @@ namespace Serpent.MessageHandlerChain
             this DistinctDecoratorBuilder<TMessageType> builder,
             Func<TMessageType, Task<TKeyType>> keySelector)
         {
+            if (keySelector == null)
+            {
+                throw new ArgumentNullException(nameof(keySelector));
+            }
+
             return builder.KeySelector((msg, token) => keySelector(msg));
         }
     }

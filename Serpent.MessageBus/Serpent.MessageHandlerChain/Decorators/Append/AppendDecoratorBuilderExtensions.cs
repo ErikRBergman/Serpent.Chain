@@ -38,6 +38,11 @@ namespace Serpent.MessageHandlerChain
         /// </returns>
         public static IAppendDecoratorBuilder<TMessageType> Select<TMessageType>(this IAppendDecoratorBuilder<TMessageType> builder, Func<TMessageType, TMessageType> messageSelector)
         {
+            if (messageSelector == null)
+            {
+                throw new ArgumentNullException(nameof(messageSelector));
+            }
+
             return builder.Select((message, token) => Task.FromResult(messageSelector(message)));
         }
 
@@ -53,6 +58,11 @@ namespace Serpent.MessageHandlerChain
         /// <returns>A builder</returns>
         public static IAppendDecoratorBuilder<TMessageType> Where<TMessageType>(this IAppendDecoratorBuilder<TMessageType> builder, Func<TMessageType, Task<bool>> predicate)
         {
+            if (predicate == null)
+            {
+                throw new ArgumentNullException(nameof(predicate));
+            }
+
             return builder.Where((message, token) => predicate(message));
         }
 

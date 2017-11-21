@@ -34,6 +34,11 @@ namespace Serpent.MessageHandlerChain
         /// </returns>
         public static IMessageHandlerChain<T> CreateChain<T>(Action<IMessageHandlerChainBuilder<T>> config, Action disposeAction = null)
         {
+            if (config == null)
+            {
+                throw new ArgumentNullException(nameof(config));
+            }
+
             var builder = Builder<T>();
             config(builder);
             return builder.BuildChain(disposeAction);
@@ -53,13 +58,20 @@ namespace Serpent.MessageHandlerChain
         /// </returns>
         public static Func<T, CancellationToken, Task> Func<T>(Action<IMessageHandlerChainBuilder<T>> config)
         {
+            if (config == null)
+            {
+                throw new ArgumentNullException(nameof(config));
+            }
+
             var builder = Builder<T>();
             config(builder);
             var notifier = new MessageHandlerChainBuildNotification();
 
             var func = builder.BuildFunc(new MessageHandlerChainBuilderSetupServices(notifier));
 
+#pragma warning disable CC0022 // Should dispose object
             notifier.Notify(new MessageHandlerChain<T>(func));
+#pragma warning restore CC0022 // Should dispose object
 
             return func;
         }
@@ -78,6 +90,11 @@ namespace Serpent.MessageHandlerChain
         /// </returns>
         public static Func<T, Task> SimpleFunc<T>(Action<IMessageHandlerChainBuilder<T>> config)
         {
+            if (config == null)
+            {
+                throw new ArgumentNullException(nameof(config));
+            }
+
             var builder = Builder<T>();
             config(builder);
             var notifier = new MessageHandlerChainBuildNotification();

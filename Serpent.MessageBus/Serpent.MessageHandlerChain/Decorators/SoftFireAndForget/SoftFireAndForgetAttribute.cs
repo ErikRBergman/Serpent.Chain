@@ -6,7 +6,7 @@ namespace Serpent.MessageHandlerChain
     /// <summary>
     /// Makes a message handler .SoftFireAndForget()
     /// </summary>
-    public class SoftFireAndForgetAttribute : WireUpAttribute
+    public sealed class SoftFireAndForgetAttribute : WireUpAttribute
     {
     }
 }

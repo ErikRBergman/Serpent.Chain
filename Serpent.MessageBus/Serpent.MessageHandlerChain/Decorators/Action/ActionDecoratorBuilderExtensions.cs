@@ -30,6 +30,11 @@ namespace Serpent.MessageHandlerChain
         /// </returns>
         public static IActionDecoratorBuilder<TMessageType> Before<TMessageType>(this IActionDecoratorBuilder<TMessageType> builder, Func<TMessageType, Task> beforeFunc)
         {
+            if (beforeFunc == null)
+            {
+                throw new ArgumentNullException(nameof(beforeFunc));
+            }
+
             return builder.Before((message, token) => beforeFunc(message));
         }
 
@@ -50,6 +55,11 @@ namespace Serpent.MessageHandlerChain
         /// </returns>
         public static IActionDecoratorBuilder<TMessageType> Before<TMessageType>(this IActionDecoratorBuilder<TMessageType> builder, Action<TMessageType> beforeFunc)
         {
+            if (beforeFunc == null)
+            {
+                throw new ArgumentNullException(nameof(beforeFunc));
+            }
+
             return builder.Before(
                 (message, token) =>
                     {
@@ -69,6 +79,11 @@ namespace Serpent.MessageHandlerChain
         /// <returns>A builder</returns>
         public static IActionDecoratorBuilder<TMessageType> Finally<TMessageType>(this IActionDecoratorBuilder<TMessageType> builder, Func<TMessageType, Task> finallyFunc)
         {
+            if (finallyFunc == null)
+            {
+                throw new ArgumentNullException(nameof(finallyFunc));
+            }
+
             return builder.Finally((message, token, exception) => finallyFunc(message));
         }
 
@@ -85,6 +100,11 @@ namespace Serpent.MessageHandlerChain
             this IActionDecoratorBuilder<TMessageType> builder,
             Action<TMessageType, CancellationToken, Exception> finallyAction)
         {
+            if (finallyAction == null)
+            {
+                throw new ArgumentNullException(nameof(finallyAction));
+            }
+
             return builder.Finally(
                 (message, token, exception) =>
                     {
@@ -104,6 +124,11 @@ namespace Serpent.MessageHandlerChain
         /// <returns>A builder</returns>
         public static IActionDecoratorBuilder<TMessageType> Finally<TMessageType>(this IActionDecoratorBuilder<TMessageType> builder, Action<TMessageType> finallyAction)
         {
+            if (finallyAction == null)
+            {
+                throw new ArgumentNullException(nameof(finallyAction));
+            }
+
             return builder.Finally(
                 (message, token, exception) =>
                     {
@@ -123,6 +148,11 @@ namespace Serpent.MessageHandlerChain
         /// <returns>A builder</returns>
         public static IActionDecoratorBuilder<TMessageType> OnCancel<TMessageType>(this IActionDecoratorBuilder<TMessageType> builder, Action<TMessageType> onCancelFunc)
         {
+            if (onCancelFunc == null)
+            {
+                throw new ArgumentNullException(nameof(onCancelFunc));
+            }
+
             return builder.OnCancel(
                 message =>
                     {
@@ -142,6 +172,11 @@ namespace Serpent.MessageHandlerChain
         /// <returns>A builder</returns>
         public static IActionDecoratorBuilder<TMessageType> OnCancel<TMessageType>(this IActionDecoratorBuilder<TMessageType> builder, Func<TMessageType, Task> onCancelFunc)
         {
+            if (onCancelFunc == null)
+            {
+                throw new ArgumentNullException(nameof(onCancelFunc));
+            }
+
             return builder.Before((message, token) => onCancelFunc(message));
         }
 
@@ -158,6 +193,11 @@ namespace Serpent.MessageHandlerChain
             this IActionDecoratorBuilder<TMessageType> builder,
             Action<TMessageType, Exception> onExceptionFunc)
         {
+            if (onExceptionFunc == null)
+            {
+                throw new ArgumentNullException(nameof(onExceptionFunc));
+            }
+
             return builder.OnException(
                 (message, exception) =>
                     {
@@ -179,6 +219,11 @@ namespace Serpent.MessageHandlerChain
             this IActionDecoratorBuilder<TMessageType> builder,
             Action<TMessageType> onExceptionFunc)
         {
+            if (onExceptionFunc == null)
+            {
+                throw new ArgumentNullException(nameof(onExceptionFunc));
+            }
+
             return builder.OnException(
                 (message, exception) =>
                     {
@@ -198,6 +243,11 @@ namespace Serpent.MessageHandlerChain
         /// <returns>A builder</returns>
         public static IActionDecoratorBuilder<TMessageType> OnSuccess<TMessageType>(this IActionDecoratorBuilder<TMessageType> builder, Action<TMessageType> onSuccessAction)
         {
+            if (onSuccessAction == null)
+            {
+                throw new ArgumentNullException(nameof(onSuccessAction));
+            }
+
             return builder.OnSuccess(
                 message =>
                     {

@@ -11,6 +11,12 @@
 
         public static void WireUp(string propertyName, MethodInfo genericMethodInfo, Action<MethodInfo, Delegate> invokeDecoratorAction)
         {
+            if (invokeDecoratorAction == null)
+            {
+                throw new ArgumentNullException(nameof(invokeDecoratorAction));
+            }
+
+
             var container = Getters.GetOrAdd(
                 propertyName,
                 pn =>

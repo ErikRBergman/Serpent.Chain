@@ -6,7 +6,7 @@ namespace Serpent.MessageHandlerChain
     /// <summary>
     /// The NoDuplicates attribute
     /// </summary>
-    public class NoDuplicatesAttribute : WireUpAttribute
+    public sealed class NoDuplicatesAttribute : WireUpAttribute
     {
         /// <summary>
         /// Initializes an attribute where the property named propertyName on the message is used as key to eliminate duplicates.

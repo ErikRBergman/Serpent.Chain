@@ -20,6 +20,11 @@ namespace Serpent.MessageHandlerChain
         /// <returns>A builder</returns>
         public static IAppendManyDecoratorBuilder<TMessageType> Select<TMessageType>(this IAppendManyDecoratorBuilder<TMessageType> builder, Func<TMessageType, Task<IEnumerable<TMessageType>>> messageSelector)
         {
+            if (messageSelector == null)
+            {
+                throw new ArgumentNullException(nameof(messageSelector));
+            }
+
             return builder.Select((message, token) => messageSelector(message));
         }
 
@@ -39,6 +44,11 @@ namespace Serpent.MessageHandlerChain
         /// </returns>
         public static IAppendManyDecoratorBuilder<TMessageType> Select<TMessageType>(this IAppendManyDecoratorBuilder<TMessageType> builder, Func<TMessageType, IEnumerable<TMessageType>> messageSelector)
         {
+            if (messageSelector == null)
+            {
+                throw new ArgumentNullException(nameof(messageSelector));
+            }
+
             return builder.Select((message, token) => Task.FromResult(messageSelector(message)));
         }
 
@@ -54,6 +64,11 @@ namespace Serpent.MessageHandlerChain
         /// <returns>A builder</returns>
         public static IAppendManyDecoratorBuilder<TMessageType> Where<TMessageType>(this IAppendManyDecoratorBuilder<TMessageType> builder, Func<TMessageType, Task<bool>> predicate)
         {
+            if (predicate == null)
+            {
+                throw new ArgumentNullException(nameof(predicate));
+            }
+
             return builder.Where((message, token) => predicate(message));
         }
 
@@ -69,6 +84,11 @@ namespace Serpent.MessageHandlerChain
         /// <returns>A builder</returns>
         public static IAppendManyDecoratorBuilder<TMessageType> Where<TMessageType>(this IAppendManyDecoratorBuilder<TMessageType> builder, Func<TMessageType, bool> predicate)
         {
+            if (predicate == null)
+            {
+                throw new ArgumentNullException(nameof(predicate));
+            }
+
             return builder.Where((message, token) => Task.FromResult(predicate(message)));
         }
     }

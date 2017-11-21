@@ -29,7 +29,9 @@
 
         public Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
-            return Task.WhenAll(this.handlers.Select(h => h(message, token)));
+#pragma warning disable CC0031 // Check for null before calling a delegate
+            return Task.WhenAll(this.handlers.Select(handler => handler(message, token)));
+#pragma warning restore CC0031 // Check for null before calling a delegate
         }
 
         public void MessageHandlerChainBuilt(IMessageHandlerChain messageHandlerChain)

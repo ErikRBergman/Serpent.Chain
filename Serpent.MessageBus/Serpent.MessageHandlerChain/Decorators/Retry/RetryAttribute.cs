@@ -9,7 +9,7 @@ namespace Serpent.MessageHandlerChain
     /// <summary>
     ///     The retry decorator wire up attribute
     /// </summary>
-    public class RetryAttribute : WireUpAttribute
+    public sealed class RetryAttribute : WireUpAttribute
     {
         /// <summary>
         ///     Initializes a new instance of the <see cref="RetryAttribute" /> class.

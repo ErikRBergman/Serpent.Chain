@@ -33,7 +33,9 @@ namespace Serpent.MessageHandlerChain
                         {
                             if (await asyncPredicate(message).ConfigureAwait(false))
                             {
+#pragma warning disable CC0031 // Check for null before calling a delegate
                                 await innerMessageHandler(message, token).ConfigureAwait(false);
+#pragma warning restore CC0031 // Check for null before calling a delegate
                             }
                         };
                 });
@@ -55,16 +57,23 @@ namespace Serpent.MessageHandlerChain
                 return messageHandlerChainBuilder;
             }
 
-            return messageHandlerChainBuilder.AddDecorator(WhereDecoratorFunc(predicate));
+            return messageHandlerChainBuilder.AddDecorator(CreateWhereDecoratorFunc(predicate));
         }
 
-        internal static Func<Func<TMessageType, CancellationToken, Task>, Func<TMessageType, CancellationToken, Task>> WhereDecoratorFunc<TMessageType>(Func<TMessageType, bool> predicate)
+        internal static Func<Func<TMessageType, CancellationToken, Task>, Func<TMessageType, CancellationToken, Task>> CreateWhereDecoratorFunc<TMessageType>(Func<TMessageType, bool> predicate)
         {
+            if (predicate == null)
+            {
+                throw new ArgumentNullException(nameof(predicate));
+            }
+
             return innerMessageHandler => (message, cancellationToken) =>
                 {
                     if (predicate(message))
                     {
+#pragma warning disable CC0031 // Check for null before calling a delegate
                         return innerMessageHandler(message, cancellationToken);
+#pragma warning restore CC0031 // Check for null before calling a delegate
                     }
 
                     return Task.CompletedTask;

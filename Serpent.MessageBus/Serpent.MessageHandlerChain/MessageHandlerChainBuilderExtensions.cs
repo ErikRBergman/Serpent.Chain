@@ -50,6 +50,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<Func<TMessageType, CancellationToken, Task>, MessageHandlerChainDecorator<TMessageType>> addFunc)
         {
+            if (addFunc == null)
+            {
+                throw new ArgumentNullException(nameof(addFunc));
+            }
+
             return messageHandlerChainBuilder.AddDecorator(previousHandler => addFunc(previousHandler).HandleMessageAsync);
         }
 
@@ -64,6 +69,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             IDecoratorBuilder<TMessageType> decoratorBuilder)
         {
+            if (decoratorBuilder == null)
+            {
+                throw new ArgumentNullException(nameof(decoratorBuilder));
+            }
+
             return messageHandlerChainBuilder.AddDecorator(decoratorBuilder.BuildDecorator());
         }
 
@@ -78,6 +88,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<Func<TMessageType, CancellationToken, Task>, MessageHandlerChainBuilderSetupServices, MessageHandlerChainDecorator<TMessageType>> addFunc)
         {
+            if (addFunc == null)
+            {
+                throw new ArgumentNullException(nameof(addFunc));
+            }
+
             return messageHandlerChainBuilder.Decorate((previousHandler, services) => addFunc(previousHandler, services).HandleMessageAsync);
         }
 
@@ -92,6 +107,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<Func<TMessageType, CancellationToken, Task>, Func<TMessageType, CancellationToken, Task>> addFunc)
         {
+            if (addFunc == null)
+            {
+                throw new ArgumentNullException(nameof(addFunc));
+            }
+
             return messageHandlerChainBuilder.Decorate((previousHandler, services) => addFunc(previousHandler));
         }
 
@@ -109,6 +129,11 @@ namespace Serpent.MessageHandlerChain
             bool neverDispose = false)
             where THandler : IMessageHandler<TMessageType>
         {
+            if (handlerFactory == null)
+            {
+                throw new ArgumentNullException(nameof(handlerFactory));
+            }
+
             if (neverDispose == false && typeof(IDisposable).IsAssignableFrom(typeof(THandler)))
             {
                 messageHandlerChainBuilder.Handler(
@@ -146,6 +171,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, CancellationToken, Task> handlerFunc)
         {
+            if (handlerFunc == null)
+            {
+                throw new ArgumentNullException(nameof(handlerFunc));
+            }
+
             return messageHandlerChainBuilder.Handle(services => handlerFunc);
         }
 
@@ -161,6 +191,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Action<TMessageType> handlerAction)
         {
+            if (handlerAction == null)
+            {
+                throw new ArgumentNullException(nameof(handlerAction));
+            }
+
             return messageHandlerChainBuilder.Handler(
                 (message, token) =>
                     {
@@ -180,6 +215,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Task> handlerFunc)
         {
+            if (handlerFunc == null)
+            {
+                throw new ArgumentNullException(nameof(handlerFunc));
+            }
+
             return messageHandlerChainBuilder.Handler((message, token) => handlerFunc(message));
         }
 
@@ -208,6 +248,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             IMessageHandler<TMessageType> messageHandler)
         {
+            if (messageHandler == null)
+            {
+                throw new ArgumentNullException(nameof(messageHandler));
+            }
+
             return messageHandlerChainBuilder.Handler(messageHandler.HandleMessageAsync);
         }
     }

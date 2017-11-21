@@ -8,7 +8,7 @@ namespace Serpent.MessageHandlerChain
     /// <summary>
     /// Make the handler class await a fixed time before calling the handler
     /// </summary>
-    public class DelayAttribute : WireUpAttribute
+    public sealed class DelayAttribute : WireUpAttribute
     {
         /// <summary>
         /// Delay a TimeSpan (D:HH:mm:ss.ms)
@@ -27,7 +27,7 @@ namespace Serpent.MessageHandlerChain
         {
             this.Delay = TimeSpan.FromSeconds(delayInSeconds);
         }
-        
+
         /// <summary>
         /// The delay to wait
         /// </summary>

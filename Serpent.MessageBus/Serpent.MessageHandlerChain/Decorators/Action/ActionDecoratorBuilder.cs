@@ -55,7 +55,9 @@ namespace Serpent.MessageHandlerChain.Decorators.Action
 
                                 try
                                 {
+#pragma warning disable CC0031 // Check for null before calling a delegate
                                     await innerMessageHandler(message, token).ConfigureAwait(false);
+#pragma warning restore CC0031 // Check for null before calling a delegate
 
                                     if (this.onSuccessFunc != null)
                                     {
@@ -77,6 +79,10 @@ namespace Serpent.MessageHandlerChain.Decorators.Action
                                         {
                                             throw;
                                         }
+                                    }
+                                    else
+                                    {
+                                        throw;
                                     }
                                 }
                             }

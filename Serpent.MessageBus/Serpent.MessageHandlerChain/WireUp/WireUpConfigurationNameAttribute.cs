@@ -5,7 +5,7 @@
     /// <summary>
     /// Sets the name a type has when retrieving wire up from configuration
     /// </summary>
-    public class WireUpConfigurationNameAttribute : Attribute
+    public sealed class WireUpConfigurationNameAttribute : Attribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="WireUpConfigurationNameAttribute"/> class. 

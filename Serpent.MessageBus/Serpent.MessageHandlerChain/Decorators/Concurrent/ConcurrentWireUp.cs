@@ -11,7 +11,7 @@ namespace Serpent.MessageHandlerChain.Decorators.Concurrent
         {
             if (int.TryParse(text, out var concurrencyLevel))
             {
-                return new ConcurrentConfiguration()
+                return new ConcurrentConfiguration
                            {
                                MaxNumberOfConcurrentMessages = concurrencyLevel
                            };

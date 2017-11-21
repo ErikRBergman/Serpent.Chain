@@ -61,6 +61,11 @@
         /// <returns>A task</returns>
         public async Task ExecuteConcurrently<TMessageType>(TKeyType key, TMessageType message, CancellationToken cancellationToken, Func<TMessageType, CancellationToken, Task> handler)
         {
+            if (handler == null)
+            {
+                throw new ArgumentNullException(nameof(handler));
+            }
+
             var semaphore = this.semaphores.GetOrAdd(key, _ => new SemaphoreSlim(this.MaxNumberOfConcurrentMessages));
 
             await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);

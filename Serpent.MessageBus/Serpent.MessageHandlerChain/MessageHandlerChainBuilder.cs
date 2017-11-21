@@ -77,6 +77,7 @@ namespace Serpent.MessageHandlerChain
                 throw new MessageHandlerChainHasNoMessageHandlerException("The message handler chain does not have a message handler");
             }
 
+
             var handlerFunc = this.createHandlerFunc(services);
 
             if (this.decoratorSetupFuncs == null || this.decoratorSetupFuncs.Count == 0)
@@ -84,7 +85,9 @@ namespace Serpent.MessageHandlerChain
                 return handlerFunc;
             }
 
+#pragma warning disable CC0031 // Check for null before calling a delegate
             return this.decoratorSetupFuncs.Aggregate(handlerFunc, (current, handlerSetupFunc) => handlerSetupFunc(current, services));
+#pragma warning restore CC0031 // Check for null before calling a delegate
         }
 
         /// <summary>

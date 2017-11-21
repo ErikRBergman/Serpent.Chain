@@ -12,7 +12,7 @@ namespace Serpent.MessageHandlerChain
     /// <summary>
     ///     Provides extensions for more flexible retry configuration
     /// </summary>
-    public static class RetryBuilderExtensions
+    public static class RetryDecoratorBuilderExtensions
     {
         /// <summary>
         ///     Sets the maximum number of attempts to handle messages
@@ -38,7 +38,7 @@ namespace Serpent.MessageHandlerChain
             this IRetryDecoratorBuilder<TMessageType> builder,
             Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task> handlerFailedFunc)
         {
-            builder.HandlerFailedFunc = handlerFailedFunc;
+            builder.HandlerFailedFunc = handlerFailedFunc ?? throw new ArgumentNullException(nameof(handlerFailedFunc));
             return builder;
         }
 
@@ -51,6 +51,11 @@ namespace Serpent.MessageHandlerChain
         /// <returns>A retry builder</returns>
         public static IRetryDecoratorBuilder<TMessageType> OnFail<TMessageType>(this IRetryDecoratorBuilder<TMessageType> builder, Action handlerFailedFunc)
         {
+            if (handlerFailedFunc == null)
+            {
+                throw new ArgumentNullException(nameof(handlerFailedFunc));
+            }
+
             return builder.OnFail(
                 attempt =>
                     {
@@ -70,6 +75,11 @@ namespace Serpent.MessageHandlerChain
             this IRetryDecoratorBuilder<TMessageType> builder,
             Func<FailedMessageHandlingAttempt<TMessageType>, Task> handlerFailedFunc)
         {
+            if (handlerFailedFunc == null)
+            {
+                throw new ArgumentNullException(nameof(handlerFailedFunc));
+            }
+
             builder.HandlerFailedFunc = (message, exception, attempt, maxAttempts, delay, token) => handlerFailedFunc(
                 new FailedMessageHandlingAttempt<TMessageType>
                     {
@@ -95,6 +105,11 @@ namespace Serpent.MessageHandlerChain
             this IRetryDecoratorBuilder<TMessageType> builder,
             Action<TMessageType, Exception, int, int, TimeSpan, CancellationToken> handlerFailedAction)
         {
+            if (handlerFailedAction == null)
+            {
+                throw new ArgumentNullException(nameof(handlerFailedAction));
+            }
+
             builder.HandlerFailedFunc = (msg, exception, attempts, maxAttempts, delay, token) =>
                 {
                     handlerFailedAction(msg, exception, attempts, maxAttempts, delay, token);
@@ -115,6 +130,11 @@ namespace Serpent.MessageHandlerChain
             this IRetryDecoratorBuilder<TMessageType> builder,
             Action<TMessageType, Exception, int, int, TimeSpan> handlerFailedAction)
         {
+            if (handlerFailedAction == null)
+            {
+                throw new ArgumentNullException(nameof(handlerFailedAction));
+            }
+
             builder.HandlerFailedFunc = (msg, exception, attempts, maxAttempts, delay, token) =>
                 {
                     handlerFailedAction(msg, exception, attempts, maxAttempts, delay);
@@ -135,6 +155,11 @@ namespace Serpent.MessageHandlerChain
             this IRetryDecoratorBuilder<TMessageType> builder,
             Action<TMessageType, Exception, int, int> handlerFailedAction)
         {
+            if (handlerFailedAction == null)
+            {
+                throw new ArgumentNullException(nameof(handlerFailedAction));
+            }
+
             builder.HandlerFailedFunc = (msg, exception, attempts, maxAttempts, delay, token) =>
                 {
                     handlerFailedAction(msg, exception, attempts, maxAttempts);
@@ -155,6 +180,11 @@ namespace Serpent.MessageHandlerChain
             this IRetryDecoratorBuilder<TMessageType> builder,
             Func<TMessageType, Exception, int, int, TimeSpan, Task> handlerFailedFunc)
         {
+            if (handlerFailedFunc == null)
+            {
+                throw new ArgumentNullException(nameof(handlerFailedFunc));
+            }
+
             builder.HandlerFailedFunc = (msg, exception, attempt, maxAttempts, delay, token) => handlerFailedFunc(msg, exception, attempt, maxAttempts, delay);
             return builder;
         }
@@ -170,6 +200,11 @@ namespace Serpent.MessageHandlerChain
             this IRetryDecoratorBuilder<TMessageType> builder,
             Func<TMessageType, Exception, int, int, Task> handlerFailedFunc)
         {
+            if (handlerFailedFunc == null)
+            {
+                throw new ArgumentNullException(nameof(handlerFailedFunc));
+            }
+
             builder.HandlerFailedFunc = (message, exception, attempt, maxAttempts, delay, cancellationToken) => handlerFailedFunc(message, exception, attempt, maxAttempts);
             return builder;
         }
@@ -185,7 +220,12 @@ namespace Serpent.MessageHandlerChain
             this IRetryDecoratorBuilder<TMessageType> builder,
             Func<TMessageType, int, int, TimeSpan, Task> handlerSucceededFunc)
         {
-            builder.HandlerSucceededFunc = handlerSucceededFunc;
+            if (handlerSucceededFunc == null)
+            {
+                throw new ArgumentNullException(nameof(handlerSucceededFunc));
+            }
+
+            builder.HandlerSucceededFunc = handlerSucceededFunc ?? throw new ArgumentNullException(nameof(handlerSucceededFunc));
             return builder;
         }
 
@@ -200,6 +240,11 @@ namespace Serpent.MessageHandlerChain
             this IRetryDecoratorBuilder<TMessageType> builder,
             Func<MessageHandlingAttempt<TMessageType>, Task> handlerSucceededFunc)
         {
+            if (handlerSucceededFunc == null)
+            {
+                throw new ArgumentNullException(nameof(handlerSucceededFunc));
+            }
+
             builder.HandlerSucceededFunc = (msg, attempt, maxAttempts, delay) => handlerSucceededFunc(
                 new MessageHandlingAttempt<TMessageType>
                     {
@@ -222,6 +267,11 @@ namespace Serpent.MessageHandlerChain
             this IRetryDecoratorBuilder<TMessageType> builder,
             Func<TMessageType, int, int, Task> handlerSucceededFunc)
         {
+            if (handlerSucceededFunc == null)
+            {
+                throw new ArgumentNullException(nameof(handlerSucceededFunc));
+            }
+
             builder.HandlerSucceededFunc = (msg, attempt, maxAttempts, delay) => handlerSucceededFunc(msg, attempt, maxAttempts);
             return builder;
         }
@@ -237,6 +287,11 @@ namespace Serpent.MessageHandlerChain
             this IRetryDecoratorBuilder<TMessageType> builder,
             Action<TMessageType, int, int, TimeSpan> handlerSucceededAction)
         {
+            if (handlerSucceededAction == null)
+            {
+                throw new ArgumentNullException(nameof(handlerSucceededAction));
+            }
+
             builder.HandlerSucceededFunc = (msg, attempt, maxAttempts, delay) =>
                 {
                     handlerSucceededAction(msg, attempt, maxAttempts, delay);
@@ -256,6 +311,11 @@ namespace Serpent.MessageHandlerChain
             this IRetryDecoratorBuilder<TMessageType> builder,
             Action<TMessageType, int, int> handlerSucceededAction)
         {
+            if (handlerSucceededAction == null)
+            {
+                throw new ArgumentNullException(nameof(handlerSucceededAction));
+            }
+
             builder.HandlerSucceededFunc = (msg, attempt, maxAttempts, delay) =>
                 {
                     handlerSucceededAction(msg, attempt, maxAttempts);

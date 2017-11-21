@@ -32,7 +32,9 @@ namespace Serpent.MessageHandlerChain
                         return (message, token) =>
                             {
                                 var prependMessageTask = InnerMessageHandlerAsync(innerMessageHandler, messagePrependFunc, message, token);
+#pragma warning disable CC0031 // Check for null before calling a delegate
                                 var chainedMessageTask = innerMessageHandler(message, token);
+#pragma warning restore CC0031 // Check for null before calling a delegate
                                 return Task.WhenAll(chainedMessageTask, prependMessageTask);
                             };
                     });
@@ -59,8 +61,10 @@ namespace Serpent.MessageHandlerChain
                     {
                         return (message, token) =>
                             {
+#pragma warning disable CC0031 // Check for null before calling a delegate
                                 var newMessageTask = innerMessageHandler(messageAppendFunc(message), token);
                                 var originalMessageTask = innerMessageHandler(message, token);
+#pragma warning restore CC0031 // Check for null before calling a delegate
                                 return Task.WhenAll(originalMessageTask, newMessageTask);
                             };
                     });
@@ -72,8 +76,10 @@ namespace Serpent.MessageHandlerChain
             TMessageType originalMessage,
             CancellationToken token)
         {
+#pragma warning disable CC0031 // Check for null before calling a delegate
             var newMessage = await prependMessageFunc(originalMessage).ConfigureAwait(false);
             await messageHandler(newMessage, token).ConfigureAwait(false);
+#pragma warning restore CC0031 // Check for null before calling a delegate
         }
     }
 }

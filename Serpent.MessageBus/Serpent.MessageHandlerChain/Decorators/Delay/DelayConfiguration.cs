@@ -8,7 +8,7 @@
     /// The delay decorator configuration
     /// </summary>
     [WireUpConfigurationName("Delay")]
-    public class DelayConfiguration
+    public sealed class DelayConfiguration
     {
         /// <summary>
         /// The delay to await before a message is passed on

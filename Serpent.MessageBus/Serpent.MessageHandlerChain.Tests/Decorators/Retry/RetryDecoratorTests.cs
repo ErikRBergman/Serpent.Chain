@@ -4,9 +4,11 @@
     using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using Serpent.MessageHandlerChain.Exceptions;
+    using Serpent.MessageHandlerChain.Models;
 
     using Xunit;
 
@@ -62,6 +64,64 @@
             await Task.Delay(900);
 
             Assert.Equal(5, attemptsCount);
+        }
+
+
+        [Fact]
+        public async Task TestRetryHandler()
+        {
+            var handler = new RetryLogger<int>();
+
+            var func = Create.SimpleFunc<int>(
+                b => b
+                    .FireAndForget()
+                    .Retry(
+                        r => r.MaximumNumberOfAttempts(1)
+                            .RetryDelay(TimeSpan.FromMilliseconds(100))
+                            .RetryHandler(handler))
+                    .Handler(message => throw new Exception(DateTime.Now.ToString(CultureInfo.CurrentCulture))));
+
+            await func(0);
+
+            await Task.Delay(900);
+
+            Assert.Equal(1, handler.RetryInvokedCount);
+
+            func = Create.SimpleFunc<int>(
+                b => b
+                    .Retry(
+                        r => r.MaximumNumberOfAttempts(5)
+                            .RetryDelay(TimeSpan.FromMilliseconds(100))
+                            .RetryHandler(handler))
+                    .Handler(message => { }));
+
+            await func(0);
+
+            Assert.Equal(1, handler.SuccessInvokedCount);
+
+        }
+
+        internal class RetryLogger<TMessageType> : IMessageHandlerRetry<TMessageType>
+        {
+            private int retryInvokedCount;
+
+            private int successInvokedCount;
+
+            public int RetryInvokedCount => this.retryInvokedCount;
+
+            public int SuccessInvokedCount => this.successInvokedCount;
+
+            public Task HandleRetryAsync(FailedMessageHandlingAttempt<TMessageType> attemptInformation)
+            {
+                Interlocked.Increment(ref this.retryInvokedCount);
+                return Task.CompletedTask;
+            }
+
+            public Task MessageHandledSuccessfullyAsync(MessageHandlingAttempt<TMessageType> attemptInformation)
+            {
+                Interlocked.Increment(ref this.successInvokedCount);
+                return Task.CompletedTask;
+            }
         }
     }
 }

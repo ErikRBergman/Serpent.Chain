@@ -6,7 +6,7 @@ namespace Serpent.MessageHandlerChain
     /// <summary>
     /// When a handler decorated witht his attribute is Wired up, it's parallelized
     /// </summary>
-    public class ConcurrentAttribute : WireUpAttribute
+    public sealed class ConcurrentAttribute : WireUpAttribute
     {
         /// <summary>
         /// Make the handler run up to X concurrent messages

@@ -31,14 +31,18 @@ namespace Serpent.MessageHandlerChain.Decorators.Append
                     {
                         return async (message, token) =>
                             {
+#pragma warning disable CC0031 // Check for null before calling a delegate
                                 var chainedMessageTask = innerMessageHandler(message, token);
+#pragma warning restore CC0031 // Check for null before calling a delegate
                                 await Task.WhenAll(chainedMessageTask, this.InnerMessageHandlerAsync(innerMessageHandler, new MessageAndToken<TMessageType>(message, token))).ConfigureAwait(false);
                             };
                     };
             }
 
             return innerMessageHandler => (message, token) => Task.WhenAll(
+#pragma warning disable CC0031 // Check for null before calling a delegate
                 innerMessageHandler(message, token),
+#pragma warning restore CC0031 // Check for null before calling a delegate
                 AppendWhenAsync(
                     new AppendAsyncParameters<TMessageType>
                     {
@@ -108,7 +112,9 @@ namespace Serpent.MessageHandlerChain.Decorators.Append
             MessageAndToken<TMessageType> messageAndToken)
         {
             var newMessage = await this.asyncMessageSelector(messageAndToken.Message, messageAndToken.Token).ConfigureAwait(false);
+#pragma warning disable CC0031 // Check for null before calling a delegate
             await messageHandler(newMessage, messageAndToken.Token).ConfigureAwait(false);
+#pragma warning restore CC0031 // Check for null before calling a delegate
         }
     }
 }

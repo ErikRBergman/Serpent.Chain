@@ -12,9 +12,9 @@
         protected override NoDuplicatesConfiguration CreateAndParseConfigurationFromDefaultValue(string text)
         {
             return new NoDuplicatesConfiguration
-                       {
-                           PropertyName = text
-                       };
+            {
+                PropertyName = text
+            };
         }
 
         protected override void WireUpFromAttribute<TMessageType, THandlerType>(

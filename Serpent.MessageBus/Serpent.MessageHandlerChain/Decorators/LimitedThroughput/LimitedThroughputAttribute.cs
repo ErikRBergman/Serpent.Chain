@@ -9,7 +9,7 @@ namespace Serpent.MessageHandlerChain
     /// <summary>
     /// The limited throughput decorator wire up attribute
     /// </summary>
-    public class LimitedThroughputAttribute : WireUpAttribute
+    public sealed class LimitedThroughputAttribute : WireUpAttribute
     {
         /// <summary>
         /// Initializes a new instance of the limited throughput decorator attribute

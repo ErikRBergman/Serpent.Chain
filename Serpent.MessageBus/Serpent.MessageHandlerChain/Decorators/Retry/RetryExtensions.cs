@@ -40,6 +40,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Action<IRetryDecoratorBuilder<TMessageType>> configureRetry)
         {
+            if (configureRetry == null)
+            {
+                throw new ArgumentNullException(nameof(configureRetry));
+            }
+
             var builder = new RetryDecoratorBuilder<TMessageType>();
             configureRetry(builder);
 

@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -74,7 +75,7 @@
                 }
             }
 
-            throw new RetryFailedException("Message handler failed " + this.maxNumberOfAttempts + " attempts.", this.maxNumberOfAttempts, this.retryDelay, exceptions);
+            throw new RetryFailedException("Message handler failed " + this.maxNumberOfAttempts + " attempts. Errors: " + (exceptions != null ? string.Join(",", exceptions?.Select((e, i) => (i + 1).ToString() + "." + e.Message)) : string.Empty), this.maxNumberOfAttempts, this.retryDelay, exceptions);
         }
     }
 }

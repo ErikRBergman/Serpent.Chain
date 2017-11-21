@@ -29,6 +29,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Exception, Task<bool>> exceptionHandlerFunc)
         {
+            if (exceptionHandlerFunc == null)
+            {
+                throw new ArgumentNullException(nameof(exceptionHandlerFunc));
+            }
+
             return messageHandlerChainBuilder.AddDecorator(currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, (message, exception, token) => exceptionHandlerFunc(message, exception)));
         }
 
@@ -46,6 +51,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Exception, CancellationToken, Task<bool>> exceptionHandlerFunc)
         {
+            if (exceptionHandlerFunc == null)
+            {
+                throw new ArgumentNullException(nameof(exceptionHandlerFunc));
+            }
+
             return messageHandlerChainBuilder.AddDecorator(currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, exceptionHandlerFunc));
         }
 
@@ -60,6 +70,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Exception, Task> exceptionHandlerFunc)
         {
+            if (exceptionHandlerFunc == null)
+            {
+                throw new ArgumentNullException(nameof(exceptionHandlerFunc));
+            }
+
             return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new ExceptionDecorator<TMessageType>(
                     currentHandler,
@@ -81,6 +96,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Exception, CancellationToken, Task> exceptionHandlerFunc)
         {
+            if (exceptionHandlerFunc == null)
+            {
+                throw new ArgumentNullException(nameof(exceptionHandlerFunc));
+            }
+
             return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new ExceptionDecorator<TMessageType>(
                     currentHandler,
@@ -105,6 +125,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Exception, bool> exceptionHandlerFunc)
         {
+            if (exceptionHandlerFunc == null)
+            {
+                throw new ArgumentNullException(nameof(exceptionHandlerFunc));
+            }
+
             return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, (message, exception, token) => Task.FromResult(exceptionHandlerFunc(message, exception))));
         }
@@ -120,6 +145,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Action<TMessageType, Exception> exceptionHandlerAction)
         {
+            if (exceptionHandlerAction == null)
+            {
+                throw new ArgumentNullException(nameof(exceptionHandlerAction));
+            }
+
             return messageHandlerChainBuilder.AddDecorator(
                 currentHandler => new ExceptionDecorator<TMessageType>(
                     currentHandler,
@@ -145,12 +175,16 @@ namespace Serpent.MessageHandlerChain
                             {
                                 try
                                 {
+#pragma warning disable CC0031 // Check for null before calling a delegate
                                     await innerMessageHandler(message, token).ConfigureAwait(false);
+#pragma warning restore CC0031 // Check for null before calling a delegate
                                 }
+#pragma warning disable CC0004 // Catch block cannot be empty
                                 catch (Exception)
                                 {
                                     // ignored
                                 }
+#pragma warning restore CC0004 // Catch block cannot be empty
                             };
                     });
         }

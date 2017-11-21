@@ -6,7 +6,7 @@ namespace Serpent.MessageHandlerChain
     /// <summary>
     /// The distinct attribute
     /// </summary>
-    public class DistinctAttribute : WireUpAttribute
+    public sealed class DistinctAttribute : WireUpAttribute
     {
         /// <summary>
         /// Ensures a message of a certain key only passes once
