@@ -28,7 +28,7 @@ namespace Serpent.MessageHandlerChain.Tests.Decorators.Append
         [Fact]
         private static async Task Append_Async_Test()
         {
-            int counter = 0;
+            var counter = 0;
 
 #pragma warning disable 1998
             var func = Create.SimpleFunc<int>(b => b.Append(async msg => msg).Handler(value => { Interlocked.Add(ref counter, value); }));

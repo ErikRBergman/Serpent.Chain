@@ -75,7 +75,7 @@
                 }
             }
 
-            throw new RetryFailedException("Message handler failed " + this.maxNumberOfAttempts + " attempts. Errors: " + (exceptions != null ? string.Join(",", exceptions?.Select((e, i) => (i + 1).ToString() + "." + e.Message)) : string.Empty), this.maxNumberOfAttempts, this.retryDelay, exceptions);
+            throw new RetryFailedException("Message handler failed after " + this.maxNumberOfAttempts + " attempts. Errors: " + (exceptions != null ? string.Join(",", exceptions.Select((e, i) => (i + 1).ToString() + "." + e.Message)) : string.Empty), this.maxNumberOfAttempts, this.retryDelay, exceptions);
         }
     }
 }

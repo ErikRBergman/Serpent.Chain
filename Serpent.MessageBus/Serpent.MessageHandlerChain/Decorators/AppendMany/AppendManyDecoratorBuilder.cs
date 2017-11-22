@@ -33,7 +33,9 @@ namespace Serpent.MessageHandlerChain.Decorators.AppendMany
                     {
                         return (message, token) =>
                             {
+#pragma warning disable CC0031 // Check for null before calling a delegate
                                 var chainedMessageTask = innerMessageHandler(message, token);
+#pragma warning restore CC0031 // Check for null before calling a delegate
                                 return Task.WhenAll(chainedMessageTask, this.InnerMessageHandlerAsync(innerMessageHandler, new MessageAndToken<TMessageType>(message, token)));
                             };
                     };
@@ -41,7 +43,9 @@ namespace Serpent.MessageHandlerChain.Decorators.AppendMany
 
             return innerMessageHandler => 
                 (message, token) => Task.WhenAll(
+#pragma warning disable CC0031 // Check for null before calling a delegate
                     innerMessageHandler(message, token),
+#pragma warning restore CC0031 // Check for null before calling a delegate
                     AppendManyWhenAsync(
                         new AppendManyAsyncParameters<TMessageType>
                             {
@@ -111,7 +115,9 @@ namespace Serpent.MessageHandlerChain.Decorators.AppendMany
             var newMessages = await this.asyncMessageSelector(messageAndToken.Message, messageAndToken.Token).ConfigureAwait(false);
             if (newMessages != null)
             {
+#pragma warning disable CC0031 // Check for null before calling a delegate
                 await Task.WhenAll(newMessages.Select(message => messageHandler(message, messageAndToken.Token))).ConfigureAwait(false);
+#pragma warning restore CC0031 // Check for null before calling a delegate
             }
         }
     }

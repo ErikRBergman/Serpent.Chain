@@ -25,7 +25,7 @@ namespace Serpent.MessageHandlerChain
             TimeSpan? periodSpan = null)
         {
             return messageHandlerChainBuilder.AddDecorator(
-                currentHandler => new LimitedThroughputDecorator<TMessageType>(currentHandler, maxMessagesPerPeriod, periodSpan ?? TimeSpan.FromSeconds(1)).HandleMessageAsync);
+                currentHandler => new LimitedThroughputDecorator<TMessageType>(currentHandler, maxMessagesPerPeriod, periodSpan ?? TimeSpan.FromSeconds(1)));
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace Serpent.MessageHandlerChain
             TimeSpan? periodSpan = null)
         {
             return messageHandlerChainBuilder.AddDecorator(
-                currentHandler => new LimitedThroughputFireAndForgetDecorator<TMessageType>(currentHandler, maxMessagesPerPeriod, periodSpan ?? TimeSpan.FromSeconds(1)).HandleMessageAsync);
+                currentHandler => new LimitedThroughputFireAndForgetDecorator<TMessageType>(currentHandler, maxMessagesPerPeriod, periodSpan ?? TimeSpan.FromSeconds(1)));
         }
     }
 }

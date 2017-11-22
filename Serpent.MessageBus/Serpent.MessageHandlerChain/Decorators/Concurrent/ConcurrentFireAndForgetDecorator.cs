@@ -8,7 +8,7 @@
 
     using Serpent.MessageHandlerChain.Models;
 
-    internal class ConcurrentFireAndForgetDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
+    internal class ConcurrentFireAndForgetDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>, IDisposable
     {
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
@@ -33,6 +33,13 @@
             }
         }
 
+        /// <inheritdoc cref="IDisposable.Dispose" />
+        public void Dispose()
+        {
+            this.cancellationTokenSource.Dispose();
+            this.semaphore.Dispose();
+        }
+
         public override Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
             this.messages.Enqueue(new MessageAndToken<TMessageType>(message, token));
@@ -45,7 +52,7 @@
         {
             var token = this.cancellationTokenSource.Token;
 
-            while (token.IsCancellationRequested == false)
+            while (!token.IsCancellationRequested)
             {
                 await this.semaphore.WaitAsync(token).ConfigureAwait(false);
 
@@ -55,10 +62,14 @@
                     {
                         await this.handlerFunc(message.Message, message.Token).ConfigureAwait(false);
                     }
+
+#pragma warning disable CC0004 // Catch block cannot be empty
                     catch (Exception)
                     {
                         // don't ruin the subscription when the user has not caught an exception
                     }
+
+#pragma warning restore CC0004 // Catch block cannot be empty
                 }
             }
         }

@@ -60,6 +60,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Action<NoDuplicatesDecoratorBuilder<TMessageType>> config)
         {
+            if (config == null)
+            {
+                throw new ArgumentNullException(nameof(config));
+            }
+
             var builder = new NoDuplicatesDecoratorBuilder<TMessageType>();
             config(builder);
             return messageHandlerChainBuilder.AddDecorator(builder);

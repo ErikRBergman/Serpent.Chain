@@ -10,6 +10,11 @@
 
         public void AddNotification(Action<IMessageHandlerChain> messageHandlerChain)
         {
+            if (messageHandlerChain == null)
+            {
+                throw new ArgumentNullException(nameof(messageHandlerChain));
+            }
+
             messageHandlerChain(this);
         }
 

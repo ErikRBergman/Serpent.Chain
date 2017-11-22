@@ -8,7 +8,7 @@
 
     using Serpent.MessageHandlerChain.Models;
 
-    internal class ConcurrentDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
+    internal class ConcurrentDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>, IDisposable
     {
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
@@ -33,6 +33,13 @@
             }
         }
 
+        /// <inheritdoc cref="IDisposable.Dispose"/>
+        public void Dispose()
+        {
+            this.semaphore.Dispose();
+            this.cancellationTokenSource.Dispose();
+        }
+
         public override Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
             var taskCompletionSource = new TaskCompletionSource<TMessageType>();
@@ -46,7 +53,7 @@
         {
             var token = this.cancellationTokenSource.Token;
 
-            while (token.IsCancellationRequested == false)
+            while (!token.IsCancellationRequested)
             {
                 await this.semaphore.WaitAsync(token).ConfigureAwait(false);
 

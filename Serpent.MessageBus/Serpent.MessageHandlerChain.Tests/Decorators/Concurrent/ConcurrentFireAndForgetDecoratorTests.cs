@@ -27,7 +27,7 @@
                 await func(0);
             }
 
-            await Task.Delay(600);
+            await Task.Delay(800);
 
             Assert.Equal(10, counter);
         }

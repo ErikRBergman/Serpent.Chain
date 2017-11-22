@@ -66,7 +66,6 @@
             Assert.Equal(5, attemptsCount);
         }
 
-
         [Fact]
         public async Task TestRetryHandler()
         {
@@ -98,7 +97,6 @@
             await func(0);
 
             Assert.Equal(1, handler.SuccessInvokedCount);
-
         }
 
         internal class RetryLogger<TMessageType> : IMessageHandlerRetry<TMessageType>

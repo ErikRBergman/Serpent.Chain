@@ -7,7 +7,9 @@
 
     internal class NoDuplicatesWireUp : BaseWireUp<NoDuplicatesAttribute, NoDuplicatesConfiguration>
     {
+#pragma warning disable CC0021 // Use nameof
         internal const string WireUpExtensionName = "NoDuplicatesWireUp";
+#pragma warning restore CC0021 // Use nameof
 
         protected override NoDuplicatesConfiguration CreateAndParseConfigurationFromDefaultValue(string text)
         {

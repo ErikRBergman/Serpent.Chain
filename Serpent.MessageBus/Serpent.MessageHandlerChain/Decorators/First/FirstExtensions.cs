@@ -49,6 +49,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Func<TMessageType, Task<bool>> asyncPredicate)
         {
+            if (asyncPredicate == null)
+            {
+                throw new ArgumentNullException(nameof(asyncPredicate));
+            }
+
             return messageHandlerChainBuilder.Decorate((currentHandler, subscriptionServices) => new FirstAsyncDecorator<TMessageType>(currentHandler, (message, token) => asyncPredicate(message), subscriptionServices).HandleMessageAsync);
         }
 

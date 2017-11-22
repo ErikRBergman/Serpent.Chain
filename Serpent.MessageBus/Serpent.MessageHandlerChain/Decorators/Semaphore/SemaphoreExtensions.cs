@@ -28,6 +28,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Action<SemaphoreDecoratorBuilder<TMessageType>> config)
         {
+            if (config == null)
+            {
+                throw new ArgumentNullException(nameof(config));
+            }
+
             var builder = new SemaphoreDecoratorBuilder<TMessageType>();
             config(builder);
             return messageHandlerChainBuilder.AddDecorator(currentHandler => builder.Build(currentHandler));

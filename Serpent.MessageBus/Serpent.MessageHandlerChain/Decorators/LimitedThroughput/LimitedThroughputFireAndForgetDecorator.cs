@@ -6,7 +6,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    internal class LimitedThroughputFireAndForgetDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
+    internal class LimitedThroughputFireAndForgetDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>, IDisposable
     {
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
@@ -29,6 +29,13 @@
             Task.Run(this.MessageHandlerWorkerAsync);
         }
 
+        /// <inheritdoc cref="IDisposable.Dispose" />
+        public void Dispose()
+        {
+            this.cancellationTokenSource.Dispose();
+            this.semaphore.Dispose();
+        }
+
         public override Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
             this.messages.Enqueue(message);
@@ -45,11 +52,11 @@
             var periodMessageCount = 0;
             var periodTimeSpan = this.periodSpan;
 
-            while (token.IsCancellationRequested == false)
+            while (!token.IsCancellationRequested)
             {
                 await this.semaphore.WaitAsync(token).ConfigureAwait(false);
 
-                var diff = (periodStart + periodTimeSpan) - DateTime.UtcNow;
+                var diff = periodStart + periodTimeSpan - DateTime.UtcNow;
                 if (diff < TimeSpan.Zero)
                 {
                     periodStart = DateTime.UtcNow;
@@ -74,13 +81,17 @@
                     try
                     {
 #pragma warning disable 4014
-                        Task.Run(() => this.handlerFunc(message,  token));
+                        Task.Run(() => this.handlerFunc(message, token));
 #pragma warning restore 4014
                     }
+
+#pragma warning disable CC0004 // Catch block cannot be empty
                     catch (Exception)
                     {
                         // don't ruin the subscription when the user has not caught an exception
                     }
+
+#pragma warning restore CC0004 // Catch block cannot be empty
                 }
             }
         }

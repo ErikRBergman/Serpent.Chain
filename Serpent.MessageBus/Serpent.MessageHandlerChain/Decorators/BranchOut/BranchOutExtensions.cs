@@ -27,7 +27,9 @@ namespace Serpent.MessageHandlerChain
                     {
                         var handler = new BranchHandler<TMessageType>(branches);
                         services.BuildNotification.AddNotification(handler.MessageHandlerChainBuilt);
+#pragma warning disable CC0031 // Check for null before calling a delegate
                         return (message, token) => Task.WhenAll(handler.HandleMessageAsync(message, token), innerHandler(message, token));
+#pragma warning restore CC0031 // Check for null before calling a delegate
                     });
         }
     }

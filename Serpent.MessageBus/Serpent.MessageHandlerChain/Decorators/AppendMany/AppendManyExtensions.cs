@@ -103,6 +103,7 @@ namespace Serpent.MessageHandlerChain
                     {
                         return (message, token) =>
                             {
+#pragma warning disable CC0031 // Check for null before calling a delegate
                                 var originalMessageTask = innerMessageHandler(message, token);
                                 var newMessages = messageSelector(message);
                                 if (newMessages == null)
@@ -111,6 +112,7 @@ namespace Serpent.MessageHandlerChain
                                 }
 
                                 var newMessagesTask = Task.WhenAll(newMessages.Select(msg => innerMessageHandler(msg, token)));
+#pragma warning restore CC0031 // Check for null before calling a delegate
                                 return Task.WhenAll(originalMessageTask, newMessagesTask);
                             };
                     });

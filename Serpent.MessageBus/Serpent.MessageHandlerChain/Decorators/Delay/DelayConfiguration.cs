@@ -7,6 +7,7 @@
     /// <summary>
     /// The delay decorator configuration
     /// </summary>
+#pragma warning disable CC0021 // Use nameof
     [WireUpConfigurationName("Delay")]
     public sealed class DelayConfiguration
     {

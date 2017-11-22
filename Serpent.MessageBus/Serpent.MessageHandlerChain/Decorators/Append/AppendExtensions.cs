@@ -34,7 +34,9 @@ namespace Serpent.MessageHandlerChain
                     {
                         return async (message, token) =>
                             {
+#pragma warning disable CC0031 // Check for null before calling a delegate
                                 var chainedMessageTask = innerMessageHandler(message, token);
+#pragma warning restore CC0031 // Check for null before calling a delegate
                                 await Task.WhenAll(chainedMessageTask, InnerMessageHandlerAsync(innerMessageHandler, messageSelector, message, token)).ConfigureAwait(false);
                             };
                     });
@@ -51,6 +53,11 @@ namespace Serpent.MessageHandlerChain
             this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder,
             Action<IAppendDecoratorBuilder<TMessageType>> configure)
         {
+            if (configure == null)
+            {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
             var builder = new AppendDecoratorBuilder<TMessageType>();
             configure(builder);
             return messageHandlerChainBuilder.AddDecorator(builder.BuildDecorator());
@@ -77,8 +84,10 @@ namespace Serpent.MessageHandlerChain
                     {
                         return (message, token) =>
                             {
+#pragma warning disable CC0031 // Check for null before calling a delegate
                                 var originalMessageTask = innerMessageHandler(message, token);
                                 var newMessageTask = innerMessageHandler(messageSelector(message), token);
+#pragma warning restore CC0031 // Check for null before calling a delegate
                                 return Task.WhenAll(originalMessageTask, newMessageTask);
                             };
                     });
@@ -90,8 +99,10 @@ namespace Serpent.MessageHandlerChain
             TMessageType originalMessage,
             CancellationToken token)
         {
+#pragma warning disable CC0031 // Check for null before calling a delegate
             var newMessage = await messageSelector(originalMessage).ConfigureAwait(false);
             await messageHandler(newMessage, token).ConfigureAwait(false);
+#pragma warning restore CC0031 // Check for null before calling a delegate
         }
     }
 }

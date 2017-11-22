@@ -61,16 +61,18 @@ namespace Serpent.MessageHandlerChain.Tests.Decorators.Action
                             .OnSuccess(_ => ranSuccessfully = ++counter))
                     .Handler(_ => throw new Exception("Fail!")));
 
-            var tokenSource = new CancellationTokenSource();
-            tokenSource.Cancel();
+            using (var tokenSource = new CancellationTokenSource())
+            {
+                tokenSource.Cancel();
 
-            func(0, tokenSource.Token);
+                func(0, tokenSource.Token);
 
-            Assert.Equal(1, ranBefore);
-            Assert.Equal(2, ranCancelled);
-            Assert.Equal(0, threwException);
-            Assert.Equal(0, ranSuccessfully);
-            Assert.Equal(3, ranFinally);
+                Assert.Equal(1, ranBefore);
+                Assert.Equal(2, ranCancelled);
+                Assert.Equal(0, threwException);
+                Assert.Equal(0, ranSuccessfully);
+                Assert.Equal(3, ranFinally);
+            }
         }
 
         [Fact]

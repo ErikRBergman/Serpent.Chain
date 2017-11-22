@@ -9,10 +9,10 @@
     using Serpent.MessageHandlerChain.Models;
 
     /// <summary>
-    /// The limited throughput message handler chain decorator
+    ///     The limited throughput message handler chain decorator
     /// </summary>
     /// <typeparam name="TMessageType">The message type</typeparam>
-    internal sealed class LimitedThroughputDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>
+    internal sealed class LimitedThroughputDecorator<TMessageType> : MessageHandlerChainDecorator<TMessageType>, IDisposable
     {
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
@@ -27,7 +27,7 @@
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(0);
 
         /// <summary>
-        /// Constructor
+        ///     Constructor
         /// </summary>
         /// <param name="handlerFunc">The handler func (or inner decorator)</param>
         /// <param name="maxMessagesPerPeriod">The maximum number of messages to handle over the period</param>
@@ -41,8 +41,15 @@
             Task.Run(this.MessageHandlerWorkerAsync);
         }
 
+        /// <inheritdoc cref="IDisposable.Dispose" />
+        public void Dispose()
+        {
+            this.cancellationTokenSource.Dispose();
+            this.semaphore.Dispose();
+        }
+
         /// <summary>
-        /// The message handler
+        ///     The message handler
         /// </summary>
         /// <param name="message">The incoming message</param>
         /// <param name="token">the cancellation token</param>
@@ -78,7 +85,7 @@
 
             var periodEnd = DateTime.UtcNow + periodTimeSpan;
 
-            while (token.IsCancellationRequested == false)
+            while (!token.IsCancellationRequested)
             {
                 await this.semaphore.WaitAsync(token).ConfigureAwait(false);
 

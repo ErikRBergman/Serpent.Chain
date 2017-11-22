@@ -7,7 +7,9 @@
 
     internal class DistinctWireUp : BaseWireUp<DistinctAttribute, DistinctConfiguration>
     {
+#pragma warning disable CC0021 // Use nameof
         internal const string WireUpExtensionName = "DistinctWireUp";
+#pragma warning restore CC0021 // Use nameof
 
         private static readonly MethodInfo DistinctMethodInfo = typeof(DistinctExtensions).GetMethods()
             .FirstOrDefault(

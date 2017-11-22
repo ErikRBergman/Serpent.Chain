@@ -101,7 +101,9 @@ namespace Serpent.MessageHandlerChain
 
             var func = builder.BuildFunc(new MessageHandlerChainBuilderSetupServices(notifier));
 
+#pragma warning disable CC0022 // Should dispose object
             notifier.Notify(new MessageHandlerChain<T>(func));
+#pragma warning restore CC0022 // Should dispose object
 
             return msg => func(msg, CancellationToken.None);
         }
