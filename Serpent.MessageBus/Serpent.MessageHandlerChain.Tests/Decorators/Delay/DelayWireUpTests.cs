@@ -55,7 +55,7 @@ namespace Serpent.MessageHandlerChain.Tests.Decorators.Delay
             await task;
             sw.Stop();
 
-            Assert.True(sw.ElapsedMilliseconds >= 500, "The elapsed time was not enough. Time measured: " + sw.ElapsedMilliseconds);
+            Assert.True(sw.ElapsedMilliseconds >= 450, "The elapsed time was not enough. Time measured: " + sw.ElapsedMilliseconds);
 
             Assert.Equal(1, count);
         }
