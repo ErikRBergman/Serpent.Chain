@@ -6,6 +6,6 @@ mono: none
 dotnet: 2.0.0
 dist: trusty
 script:
- - dotnet restore Serpent.MessageBus/Serpent.MessageBus.sln
+ - dotnet restore Serpent.Chain/Serpent.Chain.sln
  - cd /home/travis/build/ErikRBergman/Serpent.Chain/Serpent.Chain/Serpent.Chain.Tests
  - dotnet xunit
