@@ -33,7 +33,7 @@ namespace Serpent.Chain.Decorators.NoDuplicates
         {
             if (this.keySelector == null)
             {
-                throw new KeySelectorMissingException("KeySelector not set and it can not be inferred from equality comparer");
+                throw KeySelectorMissingException.CreateDefault();
             }
 
             return innerHandler => new NoDuplicatesDecorator<TMessageType, TKeyType>(innerHandler, this.keySelector, this.equalityComparer).HandleMessageAsync;

@@ -12,7 +12,7 @@
 
         private readonly KeySemaphore<TKeyType> keySemaphore;
 
-        public SemaphoreWithKeyDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, SemaphoreWithKeyDecoratorBuilder<TMessageType, TKeyType> builder)
+        internal SemaphoreWithKeyDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, SemaphoreWithKeyDecoratorBuilder<TMessageType, TKeyType> builder)
         {
             this.handlerFunc = handlerFunc;
             this.keySelector = builder.KeySelectorValue;

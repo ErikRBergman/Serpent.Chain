@@ -6,6 +6,13 @@
 
 
 ## Introduction
+Serpent chain started as a part of Serpent.MessageBus as a way to customize the behavior of the subscriptions. 
+Discussing it with various people in the field, I found out, a few wanted the behaviour of many of the decorators without having a message bus. 
+
+Serpent chain is a way to add various common cross cutting concerns (decorators) to a service. Serpent.Chain contains a set of decorators that you use rather often.
+
+For example, you've created an API that reads projects from your database. If 
+
 WORK IN PROGRESS
 
 .....
@@ -51,21 +58,20 @@ Note! The message handler chain and it's decorators can also be used stand alone
 Using the decorators when configuring a subscription
 ```csharp
 
-    var subscription = bus
-        .Subscribe()
-            .NoDuplicates(message => message.Id)    // Do not allow messages with an Id matching a message already being handled
-            .Delay(TimeSpan.FromSeconds(5))         // Delay the message 5 seconds
-            .Retry(3, TimeSpan.FromSeconds(60))     // If the two attempts in the next line fail, try again 2 more times (3 attempts)
-            .Retry(2, TimeSpan.FromSeconds(5))      // If the handler fails, retry once (two attempts in total if the first fails)
-                .Handler(async message =>
-                    {
-                        await this.SomeMethodAsync();
-                        Console.WriteLine(message.Id);
-                        throw new Exception("Fail!");
-                    });
+    var func = Create.Func<Message>(b => b
+        .NoDuplicates(message => message.Id)    // Do not allow messages with an Id matching a message already being handled
+        .Delay(TimeSpan.FromSeconds(5))         // Delay the message 5 seconds
+        .Retry(3, TimeSpan.FromSeconds(60))     // If the two attempts in the next line fail, try again 2 more times (3 attempts)
+        .Retry(2, TimeSpan.FromSeconds(5))      // If the handler fails, retry once (two attempts in total if the first fails)
+        .Handler(async message =>
+        		{
+            		await this.SomeMethodAsync();
+                Console.WriteLine(message.Id);
+                throw new Exception("Fail!");
+			}));
 ```
-#### Message handler chain decorators reference
-To customize the way your subscription is handled (or the way the bus publishes messages), you can add one or more decorators. 
+#### Decorators reference
+To customize the way your chain works, you can add one or more decorators. 
 
 Here's a summary of the currently available decorators. If you have requirements that these decorators does not support, you can write your own decorators (see the chapter Custom MHC Decorators). 
 
@@ -109,8 +115,7 @@ public class Message
  public bool IsPolite { get; set; }
 }
 
-bus
-    .Subscribe()
+var func = Create.Func<Message>(b => b
     .SoftFireAndForget()                    // Don't let the publisher await no more
     .NoDuplicates(message => message.Id)    // Drop all messages already in the message chain based on key
     .Where(message => message.IsPolite)     // Only allow plite messages to pass through
@@ -119,7 +124,7 @@ bus
     .Exception(message => { Console.WriteLine("First 5 attempts failed. Retrying in 50 seconds"; return true; })) // true is to have the exception to continue up the chain
     .Retry(5, TimeSpan.FromSeconds(10)) // Try 5 times, with a 10 second delay between failures
     .Concurrent(16) // 16 concurrent handlers
-    .Handler(message => Console.WriteLine("I handle all messages"));
+    .Handler(message => Console.WriteLine("I handle all messages")));
 ```
 
 Some stacking combinations are not so useful, for example:
@@ -1278,7 +1283,7 @@ Use custom subscriptions before custom publishing, since it it will not affect a
 #### Customizing the bus publisher message handler chain
 You can configure the bus using the same decorators you use to configure subscriptions.
 
-Use the `.UseSubscriptionChain()` extension method on ´ConcurrentMessagesBusOptions<TMesageBus>` to decorate the dispatch message handler chain:
+Use the `.UseSubscriptionChain()` extension method on ï¿½ConcurrentMessagesBusOptions<TMesageBus>` to decorate the dispatch message handler chain:
 
 ##### Overloads
 ```csharp

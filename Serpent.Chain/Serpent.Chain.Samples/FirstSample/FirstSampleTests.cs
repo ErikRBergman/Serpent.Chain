@@ -1,6 +1,5 @@
 namespace Serpent.Chain.Samples.FirstSample
 {
-    using System;
     using System.IO;
     using System.Threading.Tasks;
 
@@ -9,37 +8,13 @@ namespace Serpent.Chain.Samples.FirstSample
     public class FirstSampleTests
     {
         [Fact]
-        public async Task FirstSampleTessffast()
+        public async Task FirstSampleTest()
         {
-            Func<string, Task> readFilesChain;
-            readFilesChain = Create.SimpleFunc<string>(
-                c => c
-                    .Retry(r => r.MaximumNumberOfAttempts(3).RetryDelay(TimeSpan.FromSeconds(10)))
-                    .Concurrent(10)
-                    .Handler(
-                        async filename =>
-                            {
-                                Console.WriteLine("Reading " + filename);
+            var firstSample = new FirstSample();
 
-                                using (var fileStream = File.OpenRead(filename))
-                                {
-                                    using (var streamReader = new StreamReader(fileStream))
-                                    {
-                                        var contents = await streamReader.ReadToEndAsync();
+            var files = Directory.GetFiles(@"c:\temp", "*.json", SearchOption.AllDirectories);
 
-                                        if (contents.IndexOf("test", StringComparison.OrdinalIgnoreCase) != -1)
-                                        {
-                                            Console.WriteLine(filename + " contains the phrase 'test'");
-                                        }
-                                    }
-                                }
-                            }));
-
-            // Get all directories
-            var files = Directory.GetDirectories(@"c:\temp", "*.json", SearchOption.AllDirectories);
-
-
-
+            await firstSample.ReadFilesAndCheckForTest(files);
         }
     }
 }

@@ -6,6 +6,7 @@
     using System.Threading.Tasks;
 
     using Serpent.Chain;
+    using Serpent.Chain.Exceptions;
 
     /// <summary>
     /// Provides configuration builder for the semaphore with keys
@@ -69,6 +70,11 @@
 
         internal ChainDecorator<TMessageType> Build(Func<TMessageType, CancellationToken, Task> currentHandler)
         {
+            if (this.KeySelectorValue == null)
+            {
+                throw KeySelectorMissingException.CreateDefault();
+            }
+
             return new SemaphoreWithKeyDecorator<TMessageType, TKeyType>(currentHandler, this);
         }
     }
