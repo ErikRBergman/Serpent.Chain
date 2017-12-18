@@ -20,7 +20,7 @@ namespace Serpent.Chain
         /// <returns>
         /// A task
         /// </returns>
-        Task HandleRetryAsync(FailedMessageHandlingAttempt<TMessageType> attemptInformation);
+        Task<bool> HandleRetryAsync(FailedMessageHandlingAttempt<TMessageType> attemptInformation);
 
         /// <summary>
         /// Called when the retry decorator has executed a message handler successfully (even after the first attempt)

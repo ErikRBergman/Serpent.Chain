@@ -3,10 +3,12 @@
 namespace Serpent.Chain
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
 
     using Serpent.Chain.Decorators.Retry;
+    using Serpent.Chain.Helpers;
     using Serpent.Chain.Models;
 
     /// <summary>
@@ -32,11 +34,11 @@ namespace Serpent.Chain
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="builder">The retry builder</param>
-        /// <param name="handlerFailedFunc">The method to call when the message handler fails</param>
+        /// <param name="handlerFailedFunc">The method to call when the message handler fails. Return false to cancel further retry attempts.</param>
         /// <returns>A retry builder</returns>
         public static IRetryDecoratorBuilder<TMessageType> OnFail<TMessageType>(
             this IRetryDecoratorBuilder<TMessageType> builder,
-            Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task> handlerFailedFunc)
+            Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task<bool>> handlerFailedFunc)
         {
             builder.HandlerFailedFunc = handlerFailedFunc ?? throw new ArgumentNullException(nameof(handlerFailedFunc));
             return builder;
@@ -60,7 +62,7 @@ namespace Serpent.Chain
                 attempt =>
                     {
                         handlerFailedFunc();
-                        return Task.CompletedTask;
+                        return TaskHelper.TrueTask;
                     });
         }
 
@@ -69,11 +71,33 @@ namespace Serpent.Chain
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="builder">The retry builder</param>
-        /// <param name="handlerFailedFunc">The method to call when the message handler fails</param>
+        /// <param name="handlerFailedFunc">The method to call when the message handler fails. Return false to cancel further retry attempts.</param>
+        /// <returns>A retry builder</returns>
+        public static IRetryDecoratorBuilder<TMessageType> OnFail<TMessageType>(this IRetryDecoratorBuilder<TMessageType> builder, Func<bool> handlerFailedFunc)
+        {
+            if (handlerFailedFunc == null)
+            {
+                throw new ArgumentNullException(nameof(handlerFailedFunc));
+            }
+
+            return builder.OnFail(
+                attempt =>
+                    {
+                        var result = handlerFailedFunc();
+                        return result ? TaskHelper.TrueTask : TaskHelper.FalseTask;
+                    });
+        }
+
+        /// <summary>
+        ///     Sets the method called when a message handler fails (throws an exception)
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="builder">The retry builder</param>
+        /// <param name="handlerFailedFunc">The method to call when the message handler fails. Return false to cancel further retry attempts.</param>
         /// <returns>A retry builder</returns>
         public static IRetryDecoratorBuilder<TMessageType> OnFail<TMessageType>(
             this IRetryDecoratorBuilder<TMessageType> builder,
-            Func<FailedMessageHandlingAttempt<TMessageType>, Task> handlerFailedFunc)
+            Func<FailedMessageHandlingAttempt<TMessageType>, Task<bool>> handlerFailedFunc)
         {
             if (handlerFailedFunc == null)
             {
@@ -82,14 +106,14 @@ namespace Serpent.Chain
 
             builder.HandlerFailedFunc = (message, exception, attempt, maxAttempts, delay, token) => handlerFailedFunc(
                 new FailedMessageHandlingAttempt<TMessageType>
-                    {
-                        AttemptNumber = attempt,
-                        Message = message,
-                        CancellationToken = token,
-                        Delay = delay,
-                        Exception = exception,
-                        MaximumNumberOfAttemps = maxAttempts
-                    });
+                {
+                    AttemptNumber = attempt,
+                    Message = message,
+                    CancellationToken = token,
+                    Delay = delay,
+                    Exception = exception,
+                    MaximumNumberOfAttemps = maxAttempts
+                });
 
             return builder;
         }
@@ -113,7 +137,7 @@ namespace Serpent.Chain
             builder.HandlerFailedFunc = (msg, exception, attempts, maxAttempts, delay, token) =>
                 {
                     handlerFailedAction(msg, exception, attempts, maxAttempts, delay, token);
-                    return Task.CompletedTask;
+                    return TaskHelper.TrueTask;
                 };
 
             return builder;
@@ -138,7 +162,7 @@ namespace Serpent.Chain
             builder.HandlerFailedFunc = (msg, exception, attempts, maxAttempts, delay, token) =>
                 {
                     handlerFailedAction(msg, exception, attempts, maxAttempts, delay);
-                    return Task.CompletedTask;
+                    return TaskHelper.TrueTask;
                 };
 
             return builder;
@@ -163,7 +187,7 @@ namespace Serpent.Chain
             builder.HandlerFailedFunc = (msg, exception, attempts, maxAttempts, delay, token) =>
                 {
                     handlerFailedAction(msg, exception, attempts, maxAttempts);
-                    return Task.CompletedTask;
+                    return TaskHelper.TrueTask;
                 };
 
             return builder;
@@ -174,11 +198,11 @@ namespace Serpent.Chain
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="builder">The retry builder</param>
-        /// <param name="handlerFailedFunc">The method to call when the message handler fails</param>
+        /// <param name="handlerFailedFunc">The method to call when the message handler fails. Return false to cancel further retry attempts.</param>
         /// <returns>A retry builder</returns>
         public static IRetryDecoratorBuilder<TMessageType> OnFail<TMessageType>(
             this IRetryDecoratorBuilder<TMessageType> builder,
-            Func<TMessageType, Exception, int, int, TimeSpan, Task> handlerFailedFunc)
+            Func<TMessageType, Exception, int, int, TimeSpan, Task<bool>> handlerFailedFunc)
         {
             if (handlerFailedFunc == null)
             {
@@ -194,11 +218,11 @@ namespace Serpent.Chain
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="builder">The retry builder</param>
-        /// <param name="handlerFailedFunc">The method to call when the message handler fails</param>
+        /// <param name="handlerFailedFunc">The method to call when the message handler fails. Return false to cancel further retry attempts.</param>
         /// <returns>A retry builder</returns>
         public static IRetryDecoratorBuilder<TMessageType> OnFail<TMessageType>(
             this IRetryDecoratorBuilder<TMessageType> builder,
-            Func<TMessageType, Exception, int, int, Task> handlerFailedFunc)
+            Func<TMessageType, Exception, int, int, Task<bool>> handlerFailedFunc)
         {
             if (handlerFailedFunc == null)
             {
@@ -218,7 +242,7 @@ namespace Serpent.Chain
         /// <returns>A retry builder</returns>
         public static IRetryDecoratorBuilder<TMessageType> OnSuccess<TMessageType>(
             this IRetryDecoratorBuilder<TMessageType> builder,
-            Func<TMessageType, int, int, TimeSpan, Task> handlerSucceededFunc)
+            Func<TMessageType, int, int, Task> handlerSucceededFunc)
         {
             if (handlerSucceededFunc == null)
             {
@@ -245,58 +269,13 @@ namespace Serpent.Chain
                 throw new ArgumentNullException(nameof(handlerSucceededFunc));
             }
 
-            builder.HandlerSucceededFunc = (msg, attempt, maxAttempts, delay) => handlerSucceededFunc(
+            builder.HandlerSucceededFunc = (msg, attempt, maxAttempts) => handlerSucceededFunc(
                 new MessageHandlingAttempt<TMessageType>
-                    {
-                        Message = msg,
-                        AttemptNumber = attempt,
-                        MaximumNumberOfAttemps = maxAttempts,
-                        Delay = delay
-                    });
-            return builder;
-        }
-
-        /// <summary>
-        ///     Sets the method called when a message handler succeeds
-        /// </summary>
-        /// <typeparam name="TMessageType">The message type</typeparam>
-        /// <param name="builder">The retry builder</param>
-        /// <param name="handlerSucceededFunc">The method to call when a message handler succeeds</param>
-        /// <returns>A retry builder</returns>
-        public static IRetryDecoratorBuilder<TMessageType> OnSuccess<TMessageType>(
-            this IRetryDecoratorBuilder<TMessageType> builder,
-            Func<TMessageType, int, int, Task> handlerSucceededFunc)
-        {
-            if (handlerSucceededFunc == null)
-            {
-                throw new ArgumentNullException(nameof(handlerSucceededFunc));
-            }
-
-            builder.HandlerSucceededFunc = (msg, attempt, maxAttempts, delay) => handlerSucceededFunc(msg, attempt, maxAttempts);
-            return builder;
-        }
-
-        /// <summary>
-        ///     Sets the method called when a message handler succeeds
-        /// </summary>
-        /// <typeparam name="TMessageType">The message type</typeparam>
-        /// <param name="builder">The retry builder</param>
-        /// <param name="handlerSucceededAction">The method to call when a message handler succeeds</param>
-        /// <returns>A retry builder</returns>
-        public static IRetryDecoratorBuilder<TMessageType> OnSuccess<TMessageType>(
-            this IRetryDecoratorBuilder<TMessageType> builder,
-            Action<TMessageType, int, int, TimeSpan> handlerSucceededAction)
-        {
-            if (handlerSucceededAction == null)
-            {
-                throw new ArgumentNullException(nameof(handlerSucceededAction));
-            }
-
-            builder.HandlerSucceededFunc = (msg, attempt, maxAttempts, delay) =>
                 {
-                    handlerSucceededAction(msg, attempt, maxAttempts, delay);
-                    return Task.CompletedTask;
-                };
+                    Message = msg,
+                    AttemptNumber = attempt,
+                    MaximumNumberOfAttemps = maxAttempts
+                });
             return builder;
         }
 
@@ -316,7 +295,7 @@ namespace Serpent.Chain
                 throw new ArgumentNullException(nameof(handlerSucceededAction));
             }
 
-            builder.HandlerSucceededFunc = (msg, attempt, maxAttempts, delay) =>
+            builder.HandlerSucceededFunc = (msg, attempt, maxAttempts) =>
                 {
                     handlerSucceededAction(msg, attempt, maxAttempts);
                     return Task.CompletedTask;
@@ -329,11 +308,37 @@ namespace Serpent.Chain
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="builder">The retry builder</param>
+        /// <param name="delays">The delay(s) between the attempts. The first delay is after the first attempt, the second after the second and so on. The last delay is used for all attempts after that.</param>
+        /// <returns>A retry builder</returns>
+        public static IRetryDecoratorBuilder<TMessageType> RetryDelays<TMessageType>(this IRetryDecoratorBuilder<TMessageType> builder, params TimeSpan[] delays)
+        {
+            builder.RetryDelays = delays;
+            return builder;
+        }
+
+        /// <summary>
+        ///     Sets the delay between attempts to handle messages
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="builder">The retry builder</param>
+        /// <param name="delays">The delay(s) between the attempts. The first delay is after the first attempt, the second after the second and so on. The last delay is used for all attempts after that.</param>
+        /// <returns>A retry builder</returns>
+        public static IRetryDecoratorBuilder<TMessageType> RetryDelays<TMessageType>(this IRetryDecoratorBuilder<TMessageType> builder, IEnumerable<TimeSpan> delays)
+        {
+            builder.RetryDelays = delays;
+            return builder;
+        }
+
+        /// <summary>
+        ///     Sets the delay between attempts to handle messages
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="builder">The retry builder</param>
         /// <param name="delay">The delay between attempts</param>
         /// <returns>A retry builder</returns>
         public static IRetryDecoratorBuilder<TMessageType> RetryDelay<TMessageType>(this IRetryDecoratorBuilder<TMessageType> builder, TimeSpan delay)
         {
-            builder.RetryDelay = delay;
+            builder.RetryDelays = new[] { delay };
             return builder;
         }
 

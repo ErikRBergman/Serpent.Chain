@@ -3,6 +3,8 @@
 namespace Serpent.Chain
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
 
     using Serpent.Chain.WireUp;
 
@@ -17,13 +19,13 @@ namespace Serpent.Chain
         /// <param name="maxNumberOfAttempts">
         ///     The maximum number of attempts (not retries)
         /// </param>
-        /// <param name="retryDelayInSeconds">
-        ///     The delay between attempts in seconds, if an attempt fails. Fractions can be used. For example 1, or 0.4
+        /// <param name="retryDelaysInSeconds">
+        ///     The delays between attempts in seconds, if an attempt fails. Fractions can be used. For example 1, or 0.4. First delay is for the first attempt, and so on. The last is for all other attempts.
         /// </param>
-        public RetryAttribute(int maxNumberOfAttempts, double retryDelayInSeconds)
+        public RetryAttribute(int maxNumberOfAttempts, params double[] retryDelaysInSeconds)
         {
             this.MaxNumberOfAttempts = maxNumberOfAttempts;
-            this.RetryDelay = TimeSpan.FromSeconds(retryDelayInSeconds);
+            this.RetryDelays = retryDelaysInSeconds.Select(TimeSpan.FromSeconds);
         }
 
         /// <summary>
@@ -32,13 +34,13 @@ namespace Serpent.Chain
         /// <param name="maxNumberOfAttempts">
         ///     The maximum number of attempts (not retries)
         /// </param>
-        /// <param name="retryDelayInText">
-        ///     The delay between attempts, if an attempt fails
+        /// <param name="retryDelaysInText">
+        ///     The delay between attempts, if an attempt fails. First delay is for the first attempt, and so on. The last is for all other attempts.
         /// </param>
-        public RetryAttribute(int maxNumberOfAttempts, string retryDelayInText)
+        public RetryAttribute(int maxNumberOfAttempts, params string[] retryDelaysInText)
         {
             this.MaxNumberOfAttempts = maxNumberOfAttempts;
-            this.RetryDelay = TimeSpan.Parse(retryDelayInText);
+            this.RetryDelays = retryDelaysInText.Select(TimeSpan.Parse);
         }
 
         /// <summary>
@@ -49,7 +51,7 @@ namespace Serpent.Chain
         /// <summary>
         /// The delay between retries
         /// </summary>
-        public TimeSpan RetryDelay { get; }
+        public IEnumerable<TimeSpan> RetryDelays { get; }
 
         /// <summary>
         /// Set this property to true to use IMessageHandlerRetry on the message handler to handle retries

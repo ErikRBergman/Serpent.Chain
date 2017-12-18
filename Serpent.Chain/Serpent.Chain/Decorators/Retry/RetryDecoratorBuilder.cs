@@ -1,6 +1,7 @@
 ﻿namespace Serpent.Chain.Decorators.Retry
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -8,10 +9,10 @@
     {
         public int MaximumNumberOfAttempts { get; set; }
 
-        public TimeSpan RetryDelay { get; set; }
+        public IEnumerable<TimeSpan> RetryDelays { get; set; }
 
-        public Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task> HandlerFailedFunc { get; set; }
+        public Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task<bool>> HandlerFailedFunc { get; set; }
 
-        public Func<TMessageType, int, int, TimeSpan, Task> HandlerSucceededFunc { get; set; }
+        public Func<TMessageType, int, int, Task> HandlerSucceededFunc { get; set; }
     }
 }

@@ -7,6 +7,7 @@ namespace Serpent.Chain.Tests.Decorators.Retry
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.Chain.Helpers;
     using Serpent.Chain.Interfaces;
     using Serpent.Chain.Models;
 
@@ -68,10 +69,10 @@ namespace Serpent.Chain.Tests.Decorators.Retry
                 throw new NotImplementedException();
             }
 
-            public Task HandleRetryAsync(FailedMessageHandlingAttempt<Message> attemptInformation)
+            public Task<bool> HandleRetryAsync(FailedMessageHandlingAttempt<Message> attemptInformation)
             {
                 this.Attempts.Add(attemptInformation.AttemptNumber);
-                return Task.CompletedTask;
+                return TaskHelper.TrueTask;
             }
 
             public Task MessageHandledSuccessfullyAsync(MessageHandlingAttempt<Message> attemptInformation)

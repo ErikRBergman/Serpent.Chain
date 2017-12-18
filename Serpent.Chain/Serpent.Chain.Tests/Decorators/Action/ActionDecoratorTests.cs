@@ -10,6 +10,7 @@ namespace Serpent.Chain.Tests.Decorators.Action
 
     using Xunit;
 
+    // ReSharper disable once TestFileNameWarning - The action decorator does not have a class 
     public class ActionDecoratorTests
     {
         [Fact]

@@ -2,6 +2,7 @@
 namespace Serpent.Chain
 {
     using System;
+    using System.Collections.Generic;
 
     using Serpent.Chain.WireUp;
 
@@ -24,6 +25,6 @@ namespace Serpent.Chain
         /// <summary>
         /// The delay between failed attempts
         /// </summary>
-        public TimeSpan RetryDelay { get; set; }
+        public IEnumerable<TimeSpan> RetryDelays { get; set; }
     }
 }

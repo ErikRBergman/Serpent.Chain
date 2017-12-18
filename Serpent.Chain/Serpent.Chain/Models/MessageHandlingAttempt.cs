@@ -1,7 +1,5 @@
 ﻿namespace Serpent.Chain.Models
 {
-    using System;
-
     /// <summary>
     /// Represents an attempt to handle a message
     /// </summary>
@@ -22,10 +20,5 @@
         /// Gets the maximum number of attempts
         /// </summary>
         public int MaximumNumberOfAttemps { get; set; }
-
-        /// <summary>
-        /// Gets the delay between attempts
-        /// </summary>
-        public TimeSpan Delay { get; set; }
     }
 }

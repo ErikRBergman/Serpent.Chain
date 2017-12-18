@@ -2,6 +2,7 @@
 namespace Serpent.Chain.Decorators.Retry
 {
     using System;
+    using System.Collections.Generic;
 
     using Serpent.Chain.WireUp;
 
@@ -14,29 +15,36 @@ namespace Serpent.Chain.Decorators.Retry
         {
             if (string.IsNullOrWhiteSpace(text))
             {
-                throw new Exception("Retry: Could not convert the value to \"{numberOfAttempts};{retryDelay}\": " + text);
+                throw new Exception("Retry: Could not convert the value to \"numberOfAttempts;retryDelay{;retryDelay;retryDelay...}\": " + text);
             }
 
             var split = text.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-            if (split.Length != 2)
+            if (split.Length < 2)
             {
-                throw new Exception("Retry: Could not convert the value to \"{numberOfAttempts};{retryDelay}\": " + text);
+                throw new Exception("Retry: Could not convert the value to \"numberOfAttempts;retryDelay{;retryDelay;retryDelay...}\": " + text);
             }
 
             if (int.TryParse(split[0], out var attempts) == false)
             {
-                throw new Exception("Retry: Could not convert the value to \"{numberOfAttempts};{retryDelay}\": " + text);
+                throw new Exception("Retry: Could not convert the parameter 1 (" + split[0] + ") to \"numberOfAttempts;retryDelay{;retryDelay;retryDelay...}\": " + text);
             }
 
-            if (TimeSpan.TryParse(split[1], out var delay) == false)
+            var delays = new List<TimeSpan>(split.Length - 1);
+
+            for (int i = 1; i < split.Length; i++)
             {
-                throw new Exception("Retry: Could not convert the value to \"{numberOfAttempts};{retryDelay}\": " + text);
+                if (TimeSpan.TryParse(split[i], out var delay) == false)
+                {
+                    throw new Exception("Retry: Could not convert parameter number " + (i + 1) + " (" + split[i] + ") the value to \"numberOfAttempts;retryDelay{;retryDelay;retryDelay...}\": " + text);
+                }
+
+                delays.Add(delay);
             }
 
             return new RetryConfiguration
             {
                 MaxNumberOfAttempts = attempts,
-                RetryDelay = delay,
+                RetryDelays = delays,
                 UseIMessageHandlerRetry = true
             };
         }
@@ -56,12 +64,12 @@ namespace Serpent.Chain.Decorators.Retry
                 chainBuilder.Retry(
                     b => b
                         .MaximumNumberOfAttempts(retryAttribute.MaxNumberOfAttempts)
-                        .RetryDelay(retryAttribute.RetryDelay)
+                        .RetryDelays(retryAttribute.RetryDelays)
                         .RetryHandler(retryHandler));
             }
             else
             {
-                chainBuilder.Retry(retryAttribute.MaxNumberOfAttempts, retryAttribute.RetryDelay);
+                chainBuilder.Retry(r => r.MaximumNumberOfAttempts(retryAttribute.MaxNumberOfAttempts).RetryDelays(retryAttribute.RetryDelays));
             }
         }
 
@@ -72,12 +80,15 @@ namespace Serpent.Chain.Decorators.Retry
                 chainBuilder.Retry(
                     b => b
                         .MaximumNumberOfAttempts(configuration.MaxNumberOfAttempts)
-                        .RetryDelay(configuration.RetryDelay)
+                        .RetryDelays(configuration.RetryDelays)
                         .RetryHandler(retryHandler));
             }
             else
             {
-                chainBuilder.Retry(configuration.MaxNumberOfAttempts, configuration.RetryDelay);
+                chainBuilder.Retry(
+                    b => b
+                        .MaximumNumberOfAttempts(configuration.MaxNumberOfAttempts)
+                        .RetryDelays(configuration.RetryDelays));
             }
         }
     }

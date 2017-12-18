@@ -8,6 +8,7 @@
     using System.Threading.Tasks;
 
     using Serpent.Chain.Exceptions;
+    using Serpent.Chain.Helpers;
     using Serpent.Chain.Models;
 
     using Xunit;
@@ -30,7 +31,7 @@
                                     });
 
             Assert.Equal(5, exception.NumberOfAttempts);
-            Assert.Equal(TimeSpan.FromMilliseconds(1), exception.Delay);
+            Assert.Equal(TimeSpan.FromMilliseconds(1), exception.Delays.First());
 
             Assert.Equal(5, exception.Exceptions.Count);
 
@@ -39,6 +40,70 @@
             Assert.Contains("3", exception.Exceptions.Select(e => e.Message));
             Assert.Contains("4", exception.Exceptions.Select(e => e.Message));
             Assert.Contains("5", exception.Exceptions.Select(e => e.Message));
+        }
+
+        [Fact]
+        public async Task RetryExceptionAbortAfter2Tests()
+        {
+            var exception = await Assert.ThrowsAsync<RetryFailedException>(
+                                async () =>
+                                    {
+                                        var count = 1;
+
+                                        var func = Create.SimpleFunc<int>(
+                                            b => b.Retry(r => r.MaximumNumberOfAttempts(5).RetryDelay(TimeSpan.FromMilliseconds(1)).OnFail(() =>
+                                                    {
+                                                        count++;
+                                                        return count != 3;
+                                                    }))
+                                                .Handler(message => throw new Exception(count.ToString())));
+
+                                        await func(0);
+                                    });
+
+            Assert.Equal(2, exception.NumberOfAttempts);
+            Assert.Equal(TimeSpan.FromMilliseconds(1), exception.Delays.First());
+            Assert.Equal(2, exception.Exceptions.Count);
+
+            Assert.Contains("1", exception.Exceptions.Select(e => e.Message));
+            Assert.Contains("2", exception.Exceptions.Select(e => e.Message));
+        }
+
+
+        [Fact]
+        public async Task RetryExceptionMultipleTimeouts()
+        {
+            var retryDelays = new[] { TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(300) };
+
+            int count = 0;
+
+            var watch = Stopwatch.StartNew();
+
+            var exception = await Assert.ThrowsAsync<RetryFailedException>(
+                                async () =>
+                                    {
+                                        var func = Create.SimpleFunc<int>(
+                                            b => b.Retry(r => r.MaximumNumberOfAttempts(6).RetryDelays(retryDelays).OnFail(attempt =>
+                                                    {
+                                                        Assert.Equal(retryDelays[count], attempt.Delay);
+                                                        count = Math.Min(count + 1, retryDelays.Length - 1);
+                                                        return TaskHelper.TrueTask;
+                                                    }))
+                                                .Handler(message => throw new Exception()));
+
+                                        await func(0);
+                                    });
+
+            watch.Stop();
+
+            // It shoud be at least 1200 but the Travis CI build server (or .NET Core) does not guarantee the delay is at least
+            Assert.True(watch.ElapsedMilliseconds > 1100, watch.Elapsed.ToString());
+
+            // It shoud be at most 1300 but the Travis CI build server (or .NET Core) does not guarantee the delays
+            Assert.True(watch.ElapsedMilliseconds < 1700);
+
+            Assert.Equal(6, exception.NumberOfAttempts);
+
         }
 
         [Fact]
@@ -109,10 +174,10 @@
 
             public int SuccessInvokedCount => this.successInvokedCount;
 
-            public Task HandleRetryAsync(FailedMessageHandlingAttempt<TMessageType> attemptInformation)
+            public Task<bool> HandleRetryAsync(FailedMessageHandlingAttempt<TMessageType> attemptInformation)
             {
                 Interlocked.Increment(ref this.retryInvokedCount);
-                return Task.CompletedTask;
+                return TaskHelper.TrueTask;
             }
 
             public Task MessageHandledSuccessfullyAsync(MessageHandlingAttempt<TMessageType> attemptInformation)

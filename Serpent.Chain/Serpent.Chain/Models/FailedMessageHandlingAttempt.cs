@@ -25,7 +25,7 @@
         public int MaximumNumberOfAttemps { get; set; }
 
         /// <summary>
-        /// Gets the delay between attempts
+        /// Gets the delay before the next attempt
         /// </summary>
         public TimeSpan Delay { get; set; }
 

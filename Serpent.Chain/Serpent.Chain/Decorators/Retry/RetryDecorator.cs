@@ -14,11 +14,13 @@
 
         private readonly int maxNumberOfAttempts;
 
-        private readonly TimeSpan retryDelay;
+        private readonly TimeSpan[] retryDelays;
 
-        private readonly Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task> exceptionFunc;
+        private readonly Func<TMessageType, Exception, int, int, TimeSpan, CancellationToken, Task<bool>> exceptionFunc;
 
-        private readonly Func<TMessageType, int, int, TimeSpan, Task> successFunc;
+        private readonly Func<TMessageType, int, int, Task> successFunc;
+
+        private readonly int lastRetryDelay;
 
         public RetryDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, IRetryDecoratorBuilder<TMessageType> retryDecoratorBuilder)
         {
@@ -29,16 +31,26 @@
                 throw new ArgumentException("Max number of attempts must be at least 1");
             }
 
-            this.retryDelay = retryDecoratorBuilder.RetryDelay;
+            this.retryDelays = retryDecoratorBuilder.RetryDelays.ToArray();
+
+            if (this.retryDelays.Length == 0)
+            {
+                throw new ArgumentException("At least one retry delay must be specified");
+            }
+
             this.exceptionFunc = retryDecoratorBuilder.HandlerFailedFunc;
             this.successFunc = retryDecoratorBuilder.HandlerSucceededFunc;
+
+            this.lastRetryDelay = this.retryDelays.Length - 1;
         }
 
         public override async Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
             List<Exception> exceptions = null;
 
-            for (int i = 0; i < this.maxNumberOfAttempts; i++)
+            var attempt = 0;
+
+            for (; attempt < this.maxNumberOfAttempts; attempt++)
             {
                 Exception lastException;
                 try
@@ -47,7 +59,7 @@
 
                     if (this.successFunc != null)
                     {
-                        await this.successFunc(message, i + 1, this.maxNumberOfAttempts, this.retryDelay).ConfigureAwait(false);
+                        await this.successFunc(message, attempt + 1, this.maxNumberOfAttempts).ConfigureAwait(false);
                     }
 
                     return; // success
@@ -63,19 +75,23 @@
                     lastException = exception;
                 }
 
-                if (this.exceptionFunc != null)
+                var retryDelay = this.retryDelays[Math.Min(attempt, this.lastRetryDelay)];
+
+                if (this.exceptionFunc != null && await this.exceptionFunc(message, lastException, attempt + 1, this.maxNumberOfAttempts, retryDelay, token).ConfigureAwait(false) == false)
                 {
-                    await this.exceptionFunc.Invoke(message, lastException, i + 1, this.maxNumberOfAttempts, this.retryDelay, token).ConfigureAwait(false);
+                    // ensure the attempt count is correct for the retry failed exception
+                    attempt++;
+                    break;
                 }
 
-                if (i != this.maxNumberOfAttempts - 1)
+                if (attempt != this.maxNumberOfAttempts - 1)
                 {
                     // await and then retry
-                    await Task.Delay(this.retryDelay, token).ConfigureAwait(false);
+                    await Task.Delay(retryDelay, token).ConfigureAwait(false);
                 }
             }
 
-            throw new RetryFailedException("Message handler failed after " + this.maxNumberOfAttempts + " attempts. Errors: " + (exceptions != null ? string.Join(",", exceptions.Select((e, i) => (i + 1).ToString() + "." + e.Message)) : string.Empty), this.maxNumberOfAttempts, this.retryDelay, exceptions);
+            throw new RetryFailedException("Message handler failed after " + attempt + " attempts. Errors: " + (exceptions != null ? string.Join(",", exceptions.Select((e, i) => (i + 1).ToString() + "." + e.Message)) : string.Empty), attempt, this.retryDelays, exceptions);
         }
     }
 }

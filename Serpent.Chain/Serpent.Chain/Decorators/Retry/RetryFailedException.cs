@@ -14,13 +14,13 @@ namespace Serpent.Chain.Exceptions
         /// </summary>
         /// <param name="message">The exception message</param>
         /// <param name="numberOfAttempts">The number of attempts done</param>
-        /// <param name="delay">The delay between the attempts</param>
+        /// <param name="delays">The delay(s) between the attempts. The first delay is after the first attempt, the second after the second and so on. The last delay is used for all other.</param>
         /// <param name="exceptions">All thrown exceptions</param>
-        public RetryFailedException(string message, int numberOfAttempts, TimeSpan delay, IReadOnlyCollection<Exception> exceptions)
+        public RetryFailedException(string message, int numberOfAttempts, IReadOnlyCollection<TimeSpan> delays, IReadOnlyCollection<Exception> exceptions)
             : base(message)
         {
             this.NumberOfAttempts = numberOfAttempts;
-            this.Delay = delay;
+            this.Delays = delays;
             this.Exceptions = exceptions;
         }
 
@@ -32,7 +32,7 @@ namespace Serpent.Chain.Exceptions
         /// <summary>
         /// The delay between attempts
         /// </summary>
-        public TimeSpan Delay { get; }
+        public IReadOnlyCollection<TimeSpan> Delays { get; }
 
         /// <summary>
         /// The exceptions

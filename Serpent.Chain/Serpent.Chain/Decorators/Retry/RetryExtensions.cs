@@ -25,7 +25,7 @@ namespace Serpent.Chain
             int maxNumberOfAttempts,
             TimeSpan retryDelay)
         {
-            var builder = new RetryDecoratorBuilder<TMessageType>().MaximumNumberOfAttempts(maxNumberOfAttempts).RetryDelay(retryDelay);
+            var builder = new RetryDecoratorBuilder<TMessageType>().MaximumNumberOfAttempts(maxNumberOfAttempts).RetryDelays(retryDelay);
             return chainBuilder.AddDecorator(currentHandler => new RetryDecorator<TMessageType>(currentHandler, builder).HandleMessageAsync);
         }
 
