@@ -139,7 +139,7 @@
                     .Retry(
                         r => r.MaximumNumberOfAttempts(5)
                             .RetryDelay(TimeSpan.FromMilliseconds(100))
-                            .OnFailSync(
+                            .Where(
                                 attempt =>
                                     {
                                         Debug.WriteLine(DateTime.Now + $" attempt {attempt.AttemptNumber} / {attempt.MaximumNumberOfAttemps}");
