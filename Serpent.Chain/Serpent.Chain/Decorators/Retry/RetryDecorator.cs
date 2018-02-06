@@ -7,6 +7,7 @@
     using System.Threading.Tasks;
 
     using Serpent.Chain.Exceptions;
+    using Serpent.Chain.Models;
 
     internal class RetryDecorator<TMessageType> : ChainDecorator<TMessageType>
     {
@@ -21,6 +22,8 @@
         private readonly Func<TMessageType, int, int, Task> successFunc;
 
         private readonly int lastRetryDelay;
+
+        private Func<FailedMessageHandlingAttempt<TMessageType>, bool> wherePredicate;
 
         public RetryDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, IRetryDecoratorBuilder<TMessageType> retryDecoratorBuilder)
         {
@@ -40,6 +43,7 @@
 
             this.exceptionFunc = retryDecoratorBuilder.HandlerFailedFunc;
             this.successFunc = retryDecoratorBuilder.HandlerSucceededFunc;
+            this.wherePredicate = retryDecoratorBuilder.WherePredicate;
 
             this.lastRetryDelay = this.retryDelays.Length - 1;
         }
@@ -76,6 +80,21 @@
                 }
 
                 var retryDelay = this.retryDelays[Math.Min(attempt, this.lastRetryDelay)];
+
+                if (this.wherePredicate != null
+                    && this.wherePredicate(
+                        new FailedMessageHandlingAttempt<TMessageType>
+                        {
+                            AttemptNumber = attempt + 1,
+                            Message = message,
+                            CancellationToken = token,
+                            Delay = retryDelay,
+                            Exception = lastException,
+                            MaximumNumberOfAttemps = this.maxNumberOfAttempts
+                        }) == false)
+                {
+                    return;
+                }
 
                 if (this.exceptionFunc != null && await this.exceptionFunc(message, lastException, attempt + 1, this.maxNumberOfAttempts, retryDelay, token).ConfigureAwait(false) == false)
                 {

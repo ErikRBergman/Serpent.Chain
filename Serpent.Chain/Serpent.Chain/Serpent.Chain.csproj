@@ -3,12 +3,12 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.0.13</Version>
+    <Version>0.0.0.14</Version>
     <Authors>Erik Bergman</Authors>
     <Company />
     <Description>Message handler Chain</Description>
-    <AssemblyVersion>0.0.0.13</AssemblyVersion>
-    <FileVersion>0.0.0.13</FileVersion>
+    <AssemblyVersion>0.0.0.14</AssemblyVersion>
+    <FileVersion>0.0.0.14</FileVersion>
     <PackageReleaseNotes>Added a .Where function to the retry decorator builder</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/ErikRBergman/Serpent.Chain</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ErikRBergman/Serpent.Chain</RepositoryUrl>

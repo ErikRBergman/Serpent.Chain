@@ -5,6 +5,8 @@
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.Chain.Models;
+
     /// <summary>
     /// Provides a way to configure the retry message handler chain decorator
     /// </summary>
@@ -30,5 +32,7 @@
         /// The method invoked after an attempt to handle a message fails (throws an exception)
         /// </summary>
         Func<TMessageType, int, int, Task> HandlerSucceededFunc { get; set; }
+
+        Func<FailedMessageHandlingAttempt<TMessageType>, bool> WherePredicate { get; set; }
     }
 }

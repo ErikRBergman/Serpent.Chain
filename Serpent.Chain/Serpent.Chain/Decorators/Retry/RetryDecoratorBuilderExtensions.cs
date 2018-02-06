@@ -124,21 +124,7 @@ namespace Serpent.Chain
             this IRetryDecoratorBuilder<TMessageType> builder,
             Func<FailedMessageHandlingAttempt<TMessageType>, bool> predicate)
         {
-            if (predicate == null)
-            {
-                throw new ArgumentNullException(nameof(predicate));
-            }
-
-            builder.HandlerFailedFunc = (message, exception, attempt, maxAttempts, delay, token) => TaskHelper.FromResult(predicate(
-                new FailedMessageHandlingAttempt<TMessageType>
-                    {
-                        AttemptNumber = attempt,
-                        Message = message,
-                        CancellationToken = token,
-                        Delay = delay,
-                        Exception = exception,
-                        MaximumNumberOfAttemps = maxAttempts
-                    }));
+            builder.WherePredicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
 
             return builder;
         }
