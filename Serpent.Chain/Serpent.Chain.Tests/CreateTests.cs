@@ -1,6 +1,7 @@
 ﻿namespace Serpent.Chain.Tests
 {
     using System.Threading;
+    using System.Threading.Tasks;
 
     using Xunit;
 
@@ -31,6 +32,13 @@
             var func = Create.SimpleFunc<int>(b => b.First().Handler(m => { count++; }));
             func(0);
             Assert.Equal(1, count);
+        }
+
+        [Fact]
+        public async Task TestReturnValue()
+        {
+            var func = Create.SimpleRequestResponse<int, string>(b => b.HandlerWithResult(msg => msg.ToString()));
+            Assert.Equal("5", await func(5));
         }
     }
 }

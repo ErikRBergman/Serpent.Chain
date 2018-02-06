@@ -80,12 +80,7 @@ namespace Serpent.Chain
                 throw new ArgumentNullException(nameof(handlerFailedFunc));
             }
 
-            return builder.OnFail(
-                attempt =>
-                    {
-                        var result = handlerFailedFunc();
-                        return result ? TaskHelper.TrueTask : TaskHelper.FalseTask;
-                    });
+            return builder.OnFail(attempt => TaskHelper.FromResult(handlerFailedFunc()));
         }
 
         /// <summary>
@@ -114,6 +109,36 @@ namespace Serpent.Chain
                     Exception = exception,
                     MaximumNumberOfAttemps = maxAttempts
                 });
+
+            return builder;
+        }
+
+        /// <summary>
+        ///     Sets the method called when a message handler fails (throws an exception)
+        /// </summary>
+        /// <typeparam name="TMessageType">The message type</typeparam>
+        /// <param name="builder">The retry builder</param>
+        /// <param name="handlerFailedFunc">The method to call when the message handler fails. Return false to cancel further retry attempts.</param>
+        /// <returns>A retry builder</returns>
+        public static IRetryDecoratorBuilder<TMessageType> OnFailSync<TMessageType>(
+            this IRetryDecoratorBuilder<TMessageType> builder,
+            Func<FailedMessageHandlingAttempt<TMessageType>, bool> handlerFailedFunc)
+        {
+            if (handlerFailedFunc == null)
+            {
+                throw new ArgumentNullException(nameof(handlerFailedFunc));
+            }
+
+            builder.HandlerFailedFunc = (message, exception, attempt, maxAttempts, delay, token) => TaskHelper.FromResult(handlerFailedFunc(
+                new FailedMessageHandlingAttempt<TMessageType>
+                    {
+                        AttemptNumber = attempt,
+                        Message = message,
+                        CancellationToken = token,
+                        Delay = delay,
+                        Exception = exception,
+                        MaximumNumberOfAttemps = maxAttempts
+                    }));
 
             return builder;
         }

@@ -6,19 +6,61 @@
 
 
 ## Introduction
-Serpent chain started as a part of Serpent.MessageBus as a way to customize the behavior of the subscriptions. 
-Discussing it with various people in the field, I found out, a few wanted the behaviour of many of the decorators without having a message bus. 
+Serpent.Chain started as a part of Serpent.MessageBus as a way to customize the behavior of the message bus subscriptions. 
+I found out, people were not that interested in message bus functionality, but rather just wanted to use it's decorators.
 
-Serpent chain is a way to add various common cross cutting concerns (decorators) to a service. Serpent.Chain contains a set of decorators that you use rather often.
+Serpent.Chain is a package that allows you to add various common cross cutting concerns (decorators) to your code with little effort. Serpent.Chain contains a set of decorators that you (I) use rather often in stand alone ASP.NET Core Windows Services, Azure Service Fabric services and ASP.NET Core web applications/api's.
 
-For example, you've created an API that reads projects from your database. If 
+The project use mostly fluent coding style allow you to pack as much as possible in a single line, and get better readability.
 
-WORK IN PROGRESS
+For example, you can easily parallelize, retry after a period of time, limit throughput, limit access to a service based on a key and much more.
+
+### Code example
+Let's say you have some online service and you want to send notifications to your customers. We'll use `SmtpClient` for this example but it could just as well be push notifications through Azure Notification hubs or anything else.
+
+```csharp
+public interface INotificationService
+{
+	Task SendNotificationAsync(NotificationData notification);
+}
+```
+The "normal" implementation:
+```csharp
+public class NotificationService : INotificationService
+{
+    private readonly SmtpClient smtpClient = new SmtpClient();
+
+    public Task SendNotificationAsync(NotificationData notification)
+    {
+        return this.smtpClient.SendMailAsync(new MailMessage("noreply@serpent.chain", notification.RecipientEmailAddress, notification.Subject, notification.Body));
+    }
+}
+```
+The client:
+```csharp
+INotificationService notificationService = new NotificationService();
+
+var recipients = new[] { "a@test.com", "b@test.com", "c@test.com" };
+
+foreach (var recipient in recipients)
+{
+    await notificationService.SendNotificationAsync(
+        new NotificationData
+            {
+                RecipientEmailAddress = recipient,
+                Subject = "Your stay at the Rizzo Hotel",
+                Body = "Welcome ..."
+            });
+```
+If you've implemented something like this before, you know that sending a lot of e-mail messages sequentially will be too slow, but at the same time you do not want to put too much load on the mail server.
+Often, you would write code to queue the messages and have worker tasks send the notifications out. 
+
+
 
 .....
 
 
-Feel free to fork the project, make changes and send pull requests, report errors, suggestions, ideas, ask questions etc.
+Feel free to fork the project, send pull requests, report errors/bugs, suggestions, ideas, ask questions etc.
 
 ## How to install
 If you use Visual Studio, open the NuGet client for your project and find `Serpent.Chain`.

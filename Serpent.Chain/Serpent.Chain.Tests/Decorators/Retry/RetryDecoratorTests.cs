@@ -69,7 +69,6 @@
             Assert.Contains("2", exception.Exceptions.Select(e => e.Message));
         }
 
-
         [Fact]
         public async Task RetryExceptionMultipleTimeouts()
         {
@@ -103,7 +102,6 @@
             Assert.True(watch.ElapsedMilliseconds < 1700);
 
             Assert.Equal(6, exception.NumberOfAttempts);
-
         }
 
         [Fact]
@@ -121,6 +119,32 @@
                                     {
                                         Debug.WriteLine(DateTime.Now + $" attempt {attempt} / {maxNumberOfAttempts}");
                                         attemptsCount++;
+                                    }))
+                    .Handler(message => throw new Exception(DateTime.Now.ToString(CultureInfo.CurrentCulture))));
+
+            await func(0);
+
+            await Task.Delay(900);
+
+            Assert.Equal(5, attemptsCount);
+        }
+
+        [Fact]
+        public async Task RetrySyncOnFailTests()
+        {
+            var attemptsCount = 0;
+
+            var func = Create.SimpleFunc<int>(
+                b => b.FireAndForget()
+                    .Retry(
+                        r => r.MaximumNumberOfAttempts(5)
+                            .RetryDelay(TimeSpan.FromMilliseconds(100))
+                            .OnFailSync(
+                                attempt =>
+                                    {
+                                        Debug.WriteLine(DateTime.Now + $" attempt {attempt.AttemptNumber} / {attempt.MaximumNumberOfAttemps}");
+                                        attemptsCount++;
+                                        return true;
                                     }))
                     .Handler(message => throw new Exception(DateTime.Now.ToString(CultureInfo.CurrentCulture))));
 

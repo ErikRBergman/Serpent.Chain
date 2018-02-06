@@ -7,7 +7,7 @@ namespace Serpent.Chain.Tests.Decorators.Append
 
     using Xunit;
 
-    public class AppendDecoratorTests2
+    public class MoreAppendDecoratorTests
     {
         [Fact]
         public async Task AppendDecoratorTest_NoPredicate()
