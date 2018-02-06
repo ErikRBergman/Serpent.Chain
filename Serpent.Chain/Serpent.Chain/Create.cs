@@ -5,6 +5,7 @@ namespace Serpent.Chain
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Serpent.Chain.Decorators.ReturnValue;
     using Serpent.Chain.Notification;
 
     /// <summary>
@@ -74,6 +75,30 @@ namespace Serpent.Chain
 #pragma warning restore CC0022 // Should dispose object
 
             return func;
+        }
+
+        public static Func<TRequest, CancellationToken, Task<TResponse>> RequestResponse<TRequest, TResponse>(Action<IChainBuilder<RequestResponse<TRequest, TResponse>>> config)
+        {
+            var func = Create.Func(config);
+
+            return (request, token) =>
+                {
+                    var completionSource = new TaskCompletionSource<TResponse>();
+                    func(new RequestResponse<TRequest, TResponse>(request, completionSource), token);
+                    return completionSource.Task;
+                };
+        }
+
+        public static Func<TRequest, Task<TResponse>> SimpleRequestResponse<TRequest, TResponse>(Action<IChainBuilder<RequestResponse<TRequest, TResponse>>> config)
+        {
+            var func = SimpleFunc(config);
+
+            return request =>
+                {
+                    var completionSource = new TaskCompletionSource<TResponse>();
+                    func(new RequestResponse<TRequest, TResponse>(request, completionSource));
+                    return completionSource.Task;
+                };
         }
 
         /// <summary>
