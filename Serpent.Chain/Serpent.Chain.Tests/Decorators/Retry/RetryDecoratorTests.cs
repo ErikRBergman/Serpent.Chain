@@ -147,13 +147,15 @@
                                     }))
                     .Handler(message => throw new Exception(DateTime.Now.ToString(CultureInfo.CurrentCulture))));
 
-            await func(0);
+            await Assert.ThrowsAsync<RetryFailedException>(() => func(0));
 
             Assert.True(wasTriggered);
 
             // Now return false
             wasTriggered = false;
 
+            var attemptsCount = 0;
+            
             func = Create.SimpleFunc<int>(
                 b => b
                     .Retry(
@@ -163,6 +165,7 @@
                                 attempt =>
                                     {
                                         wasTriggered = true;
+                                        attemptsCount++;
                                         return true;
                                     }))
                     .Handler(message => throw new Exception(DateTime.Now.ToString(CultureInfo.CurrentCulture))));
@@ -170,6 +173,7 @@
             await Assert.ThrowsAsync<RetryFailedException>(() => func(0));
 
             Assert.True(wasTriggered);
+            Assert.Equal(5, attemptsCount);
 
         }
 

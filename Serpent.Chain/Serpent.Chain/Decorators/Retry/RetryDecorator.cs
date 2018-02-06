@@ -93,7 +93,9 @@
                             MaximumNumberOfAttemps = this.maxNumberOfAttempts
                         }) == false)
                 {
-                    return;
+                    // ensure the attempt count is correct for the retry failed exception
+                    attempt++;
+                    break;
                 }
 
                 if (this.exceptionFunc != null && await this.exceptionFunc(message, lastException, attempt + 1, this.maxNumberOfAttempts, retryDelay, token).ConfigureAwait(false) == false)
