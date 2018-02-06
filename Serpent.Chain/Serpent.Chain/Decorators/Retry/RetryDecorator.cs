@@ -23,7 +23,7 @@
 
         private readonly int lastRetryDelay;
 
-        private Func<FailedMessageHandlingAttempt<TMessageType>, bool> wherePredicate;
+        private IReadOnlyCollection<Func<FailedMessageHandlingAttempt<TMessageType>, bool>> wherePredicates;
 
         public RetryDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, IRetryDecoratorBuilder<TMessageType> retryDecoratorBuilder)
         {
@@ -43,7 +43,7 @@
 
             this.exceptionFunc = retryDecoratorBuilder.HandlerFailedFunc;
             this.successFunc = retryDecoratorBuilder.HandlerSucceededFunc;
-            this.wherePredicate = retryDecoratorBuilder.WherePredicate;
+            this.wherePredicates = retryDecoratorBuilder.WherePredicates;
 
             this.lastRetryDelay = this.retryDelays.Length - 1;
         }
@@ -81,24 +81,32 @@
 
                 var retryDelay = this.retryDelays[Math.Min(attempt, this.lastRetryDelay)];
 
-                if (this.wherePredicate != null
-                    && this.wherePredicate(
-                        new FailedMessageHandlingAttempt<TMessageType>
-                        {
-                            AttemptNumber = attempt + 1,
-                            Message = message,
-                            CancellationToken = token,
-                            Delay = retryDelay,
-                            Exception = lastException,
-                            MaximumNumberOfAttemps = this.maxNumberOfAttempts
-                        }) == false)
+                var breakRetryLoop = false;
+
+                if (this.wherePredicates != null)
                 {
-                    // ensure the attempt count is correct for the retry failed exception
-                    attempt++;
-                    break;
+                    var failedAttempt = new FailedMessageHandlingAttempt<TMessageType>
+                    {
+                        AttemptNumber = attempt + 1,
+                        Message = message,
+                        CancellationToken = token,
+                        Delay = retryDelay,
+                        Exception = lastException,
+                        MaximumNumberOfAttemps = this.maxNumberOfAttempts
+                    };
+
+                    if (this.wherePredicates.Any(p => p(failedAttempt) == false))
+                    {
+                        breakRetryLoop = true;
+                    }
                 }
 
                 if (this.exceptionFunc != null && await this.exceptionFunc(message, lastException, attempt + 1, this.maxNumberOfAttempts, retryDelay, token).ConfigureAwait(false) == false)
+                {
+                    breakRetryLoop = true;
+                }
+
+                if (breakRetryLoop)
                 {
                     // ensure the attempt count is correct for the retry failed exception
                     attempt++;

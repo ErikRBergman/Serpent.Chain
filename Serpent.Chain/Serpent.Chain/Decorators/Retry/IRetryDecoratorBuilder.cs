@@ -33,6 +33,13 @@
         /// </summary>
         Func<TMessageType, int, int, Task> HandlerSucceededFunc { get; set; }
 
-        Func<FailedMessageHandlingAttempt<TMessageType>, bool> WherePredicate { get; set; }
+        IReadOnlyCollection<Func<FailedMessageHandlingAttempt<TMessageType>, bool>> WherePredicates { get; }
+
+        /// <summary>
+        ///     Retries only when the predicate function returns true
+        /// </summary>
+        /// <param name="predicate">The predicate .</param>
+        /// <returns>A retry builder</returns>
+        IRetryDecoratorBuilder<TMessageType> Where(Func<FailedMessageHandlingAttempt<TMessageType>, bool> predicate);
     }
 }

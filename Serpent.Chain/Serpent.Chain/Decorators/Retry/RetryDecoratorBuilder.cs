@@ -9,6 +9,8 @@
 
     internal class RetryDecoratorBuilder<TMessageType> : IRetryDecoratorBuilder<TMessageType>
     {
+        private readonly List<Func<FailedMessageHandlingAttempt<TMessageType>, bool>> wherePredicates = new List<Func<FailedMessageHandlingAttempt<TMessageType>, bool>>();
+
         public int MaximumNumberOfAttempts { get; set; }
 
         public IEnumerable<TimeSpan> RetryDelays { get; set; }
@@ -17,6 +19,12 @@
 
         public Func<TMessageType, int, int, Task> HandlerSucceededFunc { get; set; }
 
-        public Func<FailedMessageHandlingAttempt<TMessageType>, bool> WherePredicate { get; set; }
+        public IReadOnlyCollection<Func<FailedMessageHandlingAttempt<TMessageType>, bool>> WherePredicates => this.wherePredicates;
+
+        public IRetryDecoratorBuilder<TMessageType> Where(Func<FailedMessageHandlingAttempt<TMessageType>, bool> predicate)
+        {
+            this.wherePredicates.Add(predicate);
+            return this;
+        }
     }
 }

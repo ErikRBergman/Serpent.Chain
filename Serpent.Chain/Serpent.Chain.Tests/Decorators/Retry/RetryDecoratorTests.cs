@@ -132,8 +132,9 @@
         [Fact]
         public async Task RetryWhereTests()
         {
-            bool wasTriggered = false;
+            var attemptsCount = 0;
 
+            // Don't retry
             var func = Create.SimpleFunc<int>(
                 b => b
                     .Retry(
@@ -142,20 +143,18 @@
                             .Where(
                                 attempt =>
                                     {
-                                        wasTriggered = true;
+                                        attemptsCount++;
                                         return false;
                                     }))
                     .Handler(message => throw new Exception(DateTime.Now.ToString(CultureInfo.CurrentCulture))));
 
             await Assert.ThrowsAsync<RetryFailedException>(() => func(0));
 
-            Assert.True(wasTriggered);
+            Assert.Equal(1, attemptsCount); // one invokation
 
-            // Now return false
-            wasTriggered = false;
+            // Retry 
+            attemptsCount = 0;
 
-            var attemptsCount = 0;
-            
             func = Create.SimpleFunc<int>(
                 b => b
                     .Retry(
@@ -164,7 +163,6 @@
                             .Where(
                                 attempt =>
                                     {
-                                        wasTriggered = true;
                                         attemptsCount++;
                                         return true;
                                     }))
@@ -172,9 +170,33 @@
 
             await Assert.ThrowsAsync<RetryFailedException>(() => func(0));
 
-            Assert.True(wasTriggered);
-            Assert.Equal(5, attemptsCount);
+            Assert.Equal(5, attemptsCount); // 5 attempts
 
+            // Now stack the .Where clauses
+            attemptsCount = 0;
+
+            func = Create.SimpleFunc<int>(
+                b => b
+                    .Retry(
+                        r => r.MaximumNumberOfAttempts(5)
+                            .RetryDelay(TimeSpan.FromMilliseconds(100))
+                            .Where(
+                                attempt =>
+                                    {
+                                        attemptsCount++;
+                                        return true;
+                                    })
+                        .Where(
+                            attempt =>
+                                {
+                                    attemptsCount++;
+                                    return true;
+                                }))
+                                    .Handler(message => throw new Exception(DateTime.Now.ToString(CultureInfo.CurrentCulture))));
+
+            await Assert.ThrowsAsync<RetryFailedException>(() => func(0));
+
+            Assert.Equal(10, attemptsCount);
         }
 
         [Fact]
