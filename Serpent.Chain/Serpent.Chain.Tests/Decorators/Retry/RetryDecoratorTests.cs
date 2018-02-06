@@ -130,29 +130,47 @@
         }
 
         [Fact]
-        public async Task RetrySyncOnFailTests()
+        public async Task RetryWhereTests()
         {
-            var attemptsCount = 0;
+            bool wasTriggered = false;
 
             var func = Create.SimpleFunc<int>(
-                b => b.FireAndForget()
+                b => b
                     .Retry(
                         r => r.MaximumNumberOfAttempts(5)
                             .RetryDelay(TimeSpan.FromMilliseconds(100))
                             .Where(
                                 attempt =>
                                     {
-                                        Debug.WriteLine(DateTime.Now + $" attempt {attempt.AttemptNumber} / {attempt.MaximumNumberOfAttemps}");
-                                        attemptsCount++;
-                                        return true;
+                                        wasTriggered = true;
+                                        return false;
                                     }))
                     .Handler(message => throw new Exception(DateTime.Now.ToString(CultureInfo.CurrentCulture))));
 
             await func(0);
 
-            await Task.Delay(900);
+            Assert.True(wasTriggered);
 
-            Assert.Equal(5, attemptsCount);
+            // Now return false
+            wasTriggered = false;
+
+            func = Create.SimpleFunc<int>(
+                b => b
+                    .Retry(
+                        r => r.MaximumNumberOfAttempts(5)
+                            .RetryDelay(TimeSpan.FromMilliseconds(100))
+                            .Where(
+                                attempt =>
+                                    {
+                                        wasTriggered = true;
+                                        return true;
+                                    }))
+                    .Handler(message => throw new Exception(DateTime.Now.ToString(CultureInfo.CurrentCulture))));
+
+            await Assert.ThrowsAsync<RetryFailedException>(() => func(0));
+
+            Assert.True(wasTriggered);
+
         }
 
         [Fact]
