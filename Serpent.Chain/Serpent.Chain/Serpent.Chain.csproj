@@ -3,21 +3,18 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.0.10</Version>
+    <Version>0.0.0.13</Version>
     <Authors>Erik Bergman</Authors>
     <Company />
     <Description>Message handler Chain</Description>
-    <AssemblyVersion>0.0.0.10</AssemblyVersion>
-    <FileVersion>0.0.0.10</FileVersion>
-    <PackageReleaseNotes>Added multiple delays for retry and an opportunity for the user of retry to prevent retries by returning false from the onFail handler.</PackageReleaseNotes>
+    <AssemblyVersion>0.0.0.13</AssemblyVersion>
+    <FileVersion>0.0.0.13</FileVersion>
+    <PackageReleaseNotes>Added a .Where function to the retry decorator builder</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/ErikRBergman/Serpent.Chain</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ErikRBergman/Serpent.Chain</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>async message handler tpl weak reference concurrency retry semaphore</PackageTags>
 	<IncludeSymbols>true</IncludeSymbols>
   </PropertyGroup>
-
-  <ItemGroup>
-  </ItemGroup>
 
 </Project>

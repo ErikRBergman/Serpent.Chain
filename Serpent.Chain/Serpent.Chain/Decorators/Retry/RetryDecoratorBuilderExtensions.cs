@@ -114,22 +114,22 @@ namespace Serpent.Chain
         }
 
         /// <summary>
-        ///     Sets the method called when a message handler fails (throws an exception)
+        ///     Retries only when the predicate function returns true
         /// </summary>
         /// <typeparam name="TMessageType">The message type</typeparam>
         /// <param name="builder">The retry builder</param>
-        /// <param name="handlerFailedFunc">The method to call when the message handler fails. Return false to cancel further retry attempts.</param>
+        /// <param name="predicate">The predicate .</param>
         /// <returns>A retry builder</returns>
-        public static IRetryDecoratorBuilder<TMessageType> OnFailSync<TMessageType>(
+        public static IRetryDecoratorBuilder<TMessageType> Where<TMessageType>(
             this IRetryDecoratorBuilder<TMessageType> builder,
-            Func<FailedMessageHandlingAttempt<TMessageType>, bool> handlerFailedFunc)
+            Func<FailedMessageHandlingAttempt<TMessageType>, bool> predicate)
         {
-            if (handlerFailedFunc == null)
+            if (predicate == null)
             {
-                throw new ArgumentNullException(nameof(handlerFailedFunc));
+                throw new ArgumentNullException(nameof(predicate));
             }
 
-            builder.HandlerFailedFunc = (message, exception, attempt, maxAttempts, delay, token) => TaskHelper.FromResult(handlerFailedFunc(
+            builder.HandlerFailedFunc = (message, exception, attempt, maxAttempts, delay, token) => TaskHelper.FromResult(predicate(
                 new FailedMessageHandlingAttempt<TMessageType>
                     {
                         AttemptNumber = attempt,
