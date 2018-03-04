@@ -9,22 +9,25 @@ namespace Serpent.Chain.Decorators.WeakReference
 
     internal class WeakReferenceDecorator<TMessageType> : ChainDecorator<TMessageType>, IWeakReferenceGarbageCollection
     {
-        private readonly WeakReference<Func<TMessageType, CancellationToken, Task>> handlerFunc;
+        private readonly WeakReference<IMessageHandler<TMessageType>> weakReferenceMessageHandler;
 
         private IChain chain;
 
-        public WeakReferenceDecorator(Func<TMessageType, CancellationToken, Task> handlerFunc, IChainBuilderNotifier builderNotifier, IWeakReferenceGarbageCollector weakReferenceGarbageCollector)
+        public WeakReferenceDecorator(
+            IMessageHandler<TMessageType> handler,
+            IChainBuilderNotifier builderNotifier,
+            IWeakReferenceGarbageCollector weakReferenceGarbageCollector)
         {
-            this.handlerFunc = new WeakReference<Func<TMessageType, CancellationToken, Task>>(handlerFunc);
+            this.weakReferenceMessageHandler = new WeakReference<IMessageHandler<TMessageType>>(handler);
             builderNotifier.AddNotification(chain => this.chain = chain);
             weakReferenceGarbageCollector?.Add(this);
         }
 
         public override Task HandleMessageAsync(TMessageType message, CancellationToken token)
         {
-            if (this.handlerFunc.TryGetTarget(out var target))
+            if (this.weakReferenceMessageHandler.TryGetTarget(out var messageHandler))
             {
-                return target(message, token);
+                return messageHandler.HandleMessageAsync(message, token);
             }
 
             this.chain?.Dispose();
@@ -36,7 +39,7 @@ namespace Serpent.Chain.Decorators.WeakReference
         /// <inheritdoc />
         public bool DisposeIfReclamiedByGarbageCollection()
         {
-            if (this.handlerFunc.TryGetTarget(out var _))
+            if (this.weakReferenceMessageHandler.TryGetTarget(out _))
             {
                 return false;
             }

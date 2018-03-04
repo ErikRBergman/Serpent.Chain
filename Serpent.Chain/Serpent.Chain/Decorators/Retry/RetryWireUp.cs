@@ -57,7 +57,7 @@ namespace Serpent.Chain.Decorators.Retry
         /// <param name="retryAttribute">The retry attribute</param>
         /// <param name="chainBuilder">The MCH builder</param>
         /// <param name="handler">The message handler</param>
-        protected override void WireUpFromAttribute<TMessageType, THandlerType>(RetryAttribute retryAttribute, IChainBuilder<TMessageType> chainBuilder, THandlerType handler)
+        protected override bool WireUpFromAttribute<TMessageType, THandlerType>(RetryAttribute retryAttribute, IChainBuilder<TMessageType> chainBuilder, THandlerType handler)
         {
             if (retryAttribute.UseIMessageHandlerRetry && handler is IMessageHandlerRetry<TMessageType> retryHandler)
             {
@@ -71,9 +71,11 @@ namespace Serpent.Chain.Decorators.Retry
             {
                 chainBuilder.Retry(r => r.MaximumNumberOfAttempts(retryAttribute.MaxNumberOfAttempts).RetryDelays(retryAttribute.RetryDelays));
             }
+
+            return true;
         }
 
-        protected override void WireUpFromConfiguration<TMessageType, THandlerType>(RetryConfiguration configuration, IChainBuilder<TMessageType> chainBuilder, THandlerType handler)
+        protected override bool WireUpFromConfiguration<TMessageType, THandlerType>(RetryConfiguration configuration, IChainBuilder<TMessageType> chainBuilder, THandlerType handler)
         {
             if (configuration.UseIMessageHandlerRetry && handler is IMessageHandlerRetry<TMessageType> retryHandler)
             {
@@ -90,6 +92,8 @@ namespace Serpent.Chain.Decorators.Retry
                         .MaximumNumberOfAttempts(configuration.MaxNumberOfAttempts)
                         .RetryDelays(configuration.RetryDelays));
             }
+
+            return true;
         }
     }
 }

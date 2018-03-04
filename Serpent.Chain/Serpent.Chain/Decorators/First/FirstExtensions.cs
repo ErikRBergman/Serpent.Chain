@@ -24,7 +24,7 @@ namespace Serpent.Chain
             this IChainBuilder<TMessageType> chainBuilder,
             Func<TMessageType, bool> predicate)
         {
-            return chainBuilder.Decorate((currentHandler, subscriptionServices) => new FirstDecorator<TMessageType>(currentHandler, predicate, subscriptionServices).HandleMessageAsync);
+            return chainBuilder.Decorate((nextHandler, subscriptionServices) => new FirstDecorator<TMessageType>(nextHandler, predicate, subscriptionServices).HandleMessageAsync);
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace Serpent.Chain
         /// <returns>The message handler chain builder</returns>
         public static IChainBuilder<TMessageType> First<TMessageType>(this IChainBuilder<TMessageType> chainBuilder)
         {
-            return chainBuilder.Decorate((currentHandler, subscriptionServices) => new FirstDecorator<TMessageType>(currentHandler, msg => true, subscriptionServices).HandleMessageAsync);
+            return chainBuilder.Decorate((nextHandler, subscriptionServices) => new FirstDecorator<TMessageType>(nextHandler, msg => true, subscriptionServices).HandleMessageAsync);
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Serpent.Chain
                 throw new ArgumentNullException(nameof(asyncPredicate));
             }
 
-            return chainBuilder.Decorate((currentHandler, subscriptionServices) => new FirstAsyncDecorator<TMessageType>(currentHandler, (message, token) => asyncPredicate(message), subscriptionServices).HandleMessageAsync);
+            return chainBuilder.Decorate((nextHandler, subscriptionServices) => new FirstAsyncDecorator<TMessageType>(nextHandler, (message, token) => asyncPredicate(message), subscriptionServices).HandleMessageAsync);
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace Serpent.Chain
             this IChainBuilder<TMessageType> chainBuilder,
             Func<TMessageType, CancellationToken, Task<bool>> asyncPredicate)
         {
-            return chainBuilder.Decorate((currentHandler, subscriptionServices) => new FirstAsyncDecorator<TMessageType>(currentHandler, asyncPredicate, subscriptionServices).HandleMessageAsync);
+            return chainBuilder.Decorate((nextHandler, subscriptionServices) => new FirstAsyncDecorator<TMessageType>(nextHandler, asyncPredicate, subscriptionServices).HandleMessageAsync);
         }
     }
 }

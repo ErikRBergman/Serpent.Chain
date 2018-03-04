@@ -21,7 +21,7 @@ namespace Serpent.Chain
             this IChainBuilder<TMessageType> chainBuilder,
             Func<TMessageType, bool> predicate)
         {
-            return chainBuilder.AddDecorator(currentHandler => new SkipWhileDecorator<TMessageType>(currentHandler, predicate));
+            return chainBuilder.AddDecorator(nextHandler => new SkipWhileDecorator<TMessageType>(nextHandler, predicate));
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace Serpent.Chain
             this IChainBuilder<TMessageType> chainBuilder,
             Func<TMessageType, Task<bool>> predicate)
         {
-            return chainBuilder.AddDecorator(currentHandler => new SkipWhileAsyncDecorator<TMessageType>(currentHandler, predicate));
+            return chainBuilder.AddDecorator(nextHandler => new SkipWhileAsyncDecorator<TMessageType>(nextHandler, predicate));
         }
     }
 }

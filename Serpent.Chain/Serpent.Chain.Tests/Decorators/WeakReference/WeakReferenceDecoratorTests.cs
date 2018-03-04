@@ -18,8 +18,7 @@ namespace Serpent.Chain.Tests.Decorators.WeakReference
         {
             var isDisposed = false;
 
-            var handler = new WeakReferenceAttributeHandler();
-            var chain = Create.CreateChain<int>(b => b.WireUp(handler), () => isDisposed = true);
+            var chain = Create.CreateChain<int>(b => b.WireUp(new WeakReferenceAttributeHandler()), () => isDisposed = true);
             await chain.ChainFunc(0, CancellationToken.None);
 
             Assert.False(isDisposed);
@@ -51,6 +50,23 @@ namespace Serpent.Chain.Tests.Decorators.WeakReference
             Assert.True(isDisposed);
         }
 
+        [Fact]
+        public async Task WeakReferenceDecoratorTest()
+        {
+            var isDisposed = false;
+
+            var chain = Create.CreateChain<int>(b => b.WeakReference(new WeakReferenceHandler()), () => isDisposed = true);
+            await chain.ChainFunc(0, CancellationToken.None);
+
+            Assert.False(isDisposed);
+            GC.Collect(2, GCCollectionMode.Forced);
+            Assert.False(isDisposed);
+
+            await chain.ChainFunc(0, CancellationToken.None);
+
+            Assert.True(isDisposed);
+        }
+
         [WeakReference]
         private class WeakReferenceAttributeHandler : IMessageHandler<int>
         {
@@ -62,6 +78,13 @@ namespace Serpent.Chain.Tests.Decorators.WeakReference
 
         private class WeakReferenceHandler : IMessageHandler<int>
         {
+            private readonly Random random = new Random();
+
+            public int GetRandomValue()
+            {
+                return this.random.Next(1, 20);
+            }
+
             public Task HandleMessageAsync(int message, CancellationToken cancellationToken)
             {
                 return Task.CompletedTask;

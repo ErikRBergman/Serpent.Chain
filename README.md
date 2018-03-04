@@ -62,25 +62,6 @@ Often, you would write code to queue the messages and have worker tasks send the
 
 Feel free to fork the project, send pull requests, report errors/bugs, suggestions, ideas, ask questions etc.
 
-## How to install
-If you use Visual Studio, open the NuGet client for your project and find `Serpent.Chain`.
-
-or
-
-Open the `Package Manager Console` and type:
-
-`install-package Serpent.Chain`
-
-To start using the chain, add
-```csharp
-using Serpent.Chain;
-```
-
-## Example
-```csharp
-
-```
-
 ## Creating chains
 
 
@@ -119,7 +100,7 @@ Here's a summary of the currently available decorators. If you have requirements
 
 * `.Append()` - Append a message for each message. Like LINQ `.Append()`.
 * `.AppendMany()` - Append a range of messages based on an incoming message. Supports recursive unwrapping of trees and such.
-* `.Branch()` - Split the MHC into two or more parallel trees. 
+* `.Branch()` - Split the chain into two or more parallel execution trees. 
 * `.BranchOut()` - Branch the MHC tree into one or more MHC trees parallel to the normal MHC tree.
 * `.Cast()` - Cast each message to a specific type.
 * `.Concurrent()` - Parallelize and handle X concurrent messages.
@@ -1246,24 +1227,26 @@ var subscription = bus
 
 
 #### `.WeakReference()`
+
 `.WeakReference()` keeps the message handler as a weak reference which does not prevent it from being garbage collected. If the handler is garbage collected (reclaimed by the garbage collection) `.WeakReference()` disposes the subscription (unsubscribes).
 This is usually used in MVVM applications where the framework or a DI container instantiates for example a ViewModel. When all views linked to the ViewModel are garbage collected, you want and expect the ViewModel to be garbage collected as well.
 The message bus normally holds strong references to the message handlers (since it executes faster) but in this case, the ViewModels will remain active handling messages after the last View is garbage collected, which not only is a memory leak but it can lead to unexpected behavior, bugs and performance issues.
 
-Good thing, it's easy to remedy. Use `.WeakReference()` *AS THE FINAL DECORATOR BEFORE THE HANDLER*. 
-If you don't, the decorators between WeakReference and your Handler may be reclaimed by GC and thereby terminating the subscription prematurely.
+Good thing, it's easy to remedy. Use `.WeakReference()` instead of `.Handle()` or `.Handler()`. WeakReference only works with types implementing the interface `IMessageHandler<T>`.
 
-`WeakReference()` disposes the subscription (unsubscribes) when a message is published and the handler is garbage collected. But if we have a condition that prevents `.WeakReference()` from getting the message. 
+`WeakReference()` shuts down (unsubscribes) when a message is published and the handler is garbage collected.
+
 In the example below due to the `.Where()` decorator, if the user is deleted, it's likely never unsubscribed. To remedy this problem, `.WeakReference()` have a Garbage Collector of it's own that by default, once a minute, checks and unsubscribes all subscriptions to handlers that are reclaimed by GC.
  
 ##### Overloads
 ```csharp
-.WeakReference()
-.WeakReference(IWeakReferenceGarbageCollector weakReferenceGarbageCollector)
+.WeakReference(IMessageHandler<TMessageType> messageHandler)
+.WeakReference(IMessageHandler<TMessageType> messageHandler, IWeakReferenceGarbageCollector weakReferenceGarbageCollector)
 ```
 * `weakReferenceGarbageCollector` let's you choose a custom garbage collector.
 
-##### Example
+##### .WeakReference example
+
 In the example, we pretend there is a class called BaseViewModel in your MVVM framework, containing a `Model` property of the same generic type as BaseViewModel and that it's populated with a user.
 ```csharp
 public struct UserUpdatedEvent
@@ -1271,23 +1254,21 @@ public struct UserUpdatedEvent
     public User User {get; set;}
 }
 
-public class UserViewModel : BaseViewModel<User>
+public class UserViewModel : BaseViewModel<User>, IMessageHandler<UserUpdatedEvent>
 {
     private readonly IMessageBusSubscription userUpdatedSubscription;
 
     public UserViewModel(IMessageBusSubscriptions<UserUpdatedEvent> userUpdatedEvent)
     {
-        // Subscribe to updates to the user
+        // Subscribe to user updates
         this.userUpdatedSubscription = userUpdatedEvent
             .Subscribe()
             .Where(message => message?.User?.Id == this.Model?.Id)
             .DispatchOnCurrentContext()
-            // Just before .Handler to ensure the other decorators are not reclaimed buy GC
-            .WeakReference()
-            .Handler(this.UserUpdatedEventHandler)
+            .WeakReference(this)
     }
 
-    private void UserUpdatedEventHandler(UserUpdatedEvent message)
+    private void HandleMessageAsync(UserUpdatedEvent message, CancellationToken token)
     {
         this.RefreshUI();
     }
@@ -1445,7 +1426,7 @@ public static class DelayExtensions
     /// <returns>The builder</returns>
     public static IMessageHandlerChainBuilder<TMessageType> Delay<TMessageType>(this IMessageHandlerChainBuilder<TMessageType> messageHandlerChainBuilder, TimeSpan timeToWait)
     {
-        return messageHandlerChainBuilder.Add(currentHandler => new DelayDecorator<TMessageType>(currentHandler, timeToWait).HandleMessageAsync);
+        return messageHandlerChainBuilder.Add(nextHandler => new DelayDecorator<TMessageType>(nextHandler, timeToWait).HandleMessageAsync);
     }
 }
 ```

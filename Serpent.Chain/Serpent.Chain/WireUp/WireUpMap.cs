@@ -75,6 +75,7 @@
         {
             var type = typeof(TWireUpType);
             var attributes = type.GetCustomAttributes(true);
+            var addHandler = true;
 
             foreach (Attribute attribute in attributes)
             {
@@ -82,11 +83,20 @@
 
                 if (this.attributeWireUpItems.TryGetValue(attributeType, out var mapItem))
                 {
-                    mapItem.WireUpFromAttribute(attribute, builder, handler);
+                    var addHandlerResult = mapItem.WireUpFromAttribute(attribute, builder, handler);
+
+                    if (addHandlerResult == false)
+                    {
+                        addHandler = false;
+                    }
                 }
             }
 
-            builder.Handler(handler);
+            if (addHandler)
+            {
+                builder.Handler(handler);
+            }
+
             return builder;
         }
 
@@ -105,15 +115,22 @@
             IEnumerable<object> wireUpConfigurationObjects)
             where THandlerType : IMessageHandler<TMessageType>
         {
+            var addHandler = true;
+
             foreach (var configurationItem in wireUpConfigurationObjects.Where(c => c != null))
             {
                 if (this.configurationWireUpItems.TryGetValue(configurationItem.GetType(), out var mapItem))
                 {
-                    mapItem.WireUpFromConfiguration(configurationItem, builder, handler);
+                    var addHandlerResult = mapItem.WireUpFromConfiguration(configurationItem, builder, handler);
+
+                    if (addHandlerResult == false)
+                    {
+                        addHandler = false;
+                    }
                 }
             }
 
-            if (handler != null)
+            if (addHandler && handler != null)
             {
                 builder.Handler(handler);
             }

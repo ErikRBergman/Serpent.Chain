@@ -22,7 +22,7 @@ namespace Serpent.Chain
         /// <returns>The message handler chain builder</returns>
         public static IChainBuilder<TMessageType> NoDuplicates<TMessageType>(this IChainBuilder<TMessageType> chainBuilder)
         {
-            return chainBuilder.AddDecorator(currentHandler => new NoDuplicatesDecorator<TMessageType, TMessageType>(currentHandler, m => m));
+            return chainBuilder.AddDecorator(nextHandler => new NoDuplicatesDecorator<TMessageType, TMessageType>(nextHandler, m => m));
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace Serpent.Chain
             this IChainBuilder<TMessageType> chainBuilder,
             Func<TMessageType, TKeyType> keySelector)
         {
-            return chainBuilder.AddDecorator(currentHandler => new NoDuplicatesDecorator<TMessageType, TKeyType>(currentHandler, keySelector));
+            return chainBuilder.AddDecorator(nextHandler => new NoDuplicatesDecorator<TMessageType, TKeyType>(nextHandler, keySelector));
         }
 
         /// <summary>

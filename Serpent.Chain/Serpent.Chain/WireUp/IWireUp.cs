@@ -32,7 +32,8 @@
         /// <param name="attribute">The attribute</param>
         /// <param name="chainBuilder">The message handler chain builder</param>
         /// <param name="handler">The handler</param>
-        void WireUpFromAttribute<TMessageType, THandlerType>(Attribute attribute, IChainBuilder<TMessageType> chainBuilder, THandlerType handler);
+        /// <returns>true to add the message handler</returns>
+        bool WireUpFromAttribute<TMessageType, THandlerType>(Attribute attribute, IChainBuilder<TMessageType> chainBuilder, THandlerType handler);
 
         /// <summary>
         ///     WireUp a message handler chain from configuration
@@ -42,6 +43,6 @@
         /// <param name="configuration">The configuration</param>
         /// <param name="chainBuilder">The message handler chain builder</param>
         /// <param name="handler">The handler</param>
-        void WireUpFromConfiguration<TMessageType, THandlerType>(object configuration, IChainBuilder<TMessageType> chainBuilder, THandlerType handler);
+        bool WireUpFromConfiguration<TMessageType, THandlerType>(object configuration, IChainBuilder<TMessageType> chainBuilder, THandlerType handler);
     }
 }

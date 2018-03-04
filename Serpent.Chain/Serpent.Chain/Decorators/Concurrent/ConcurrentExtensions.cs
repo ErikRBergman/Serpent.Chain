@@ -18,7 +18,7 @@ namespace Serpent.Chain
         /// <returns>The message handler chain builder used to stack more decorators</returns>
         public static IChainBuilder<TMessageType> Concurrent<TMessageType>(this IChainBuilder<TMessageType> chainBuilder, int maxNumberOfConcurrentMessages)
         {
-            return chainBuilder.AddDecorator(currentHandler => new ConcurrentDecorator<TMessageType>(currentHandler, maxNumberOfConcurrentMessages));
+            return chainBuilder.AddDecorator(nextHandler => new ConcurrentDecorator<TMessageType>(nextHandler, maxNumberOfConcurrentMessages));
         }
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace Serpent.Chain
         /// <returns>The message handler chain builder used to stack more decorators</returns>
         public static IChainBuilder<TMessageType> ConcurrentFireAndForget<TMessageType>(this IChainBuilder<TMessageType> chainBuilder, int maxNumberOfConcurrentMessages)
         {
-            return chainBuilder.AddDecorator(currentHandler => new ConcurrentFireAndForgetDecorator<TMessageType>(currentHandler, maxNumberOfConcurrentMessages));
+            return chainBuilder.AddDecorator(nextHandler => new ConcurrentFireAndForgetDecorator<TMessageType>(nextHandler, maxNumberOfConcurrentMessages));
         }
     }
 }

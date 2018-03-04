@@ -89,14 +89,14 @@ namespace Serpent.Chain
             return this;
         }
 
-        internal ChainDecorator<TMessageType> Build(Func<TMessageType, CancellationToken, Task> currentHandler)
+        internal ChainDecorator<TMessageType> Build(Func<TMessageType, CancellationToken, Task> nextHandler)
         {
-            return this.buildFunc(currentHandler);
+            return this.buildFunc(nextHandler);
         }
 
-        private ChainDecorator<TMessageType> BuildInternal(Func<TMessageType, CancellationToken, Task> currentHandler)
+        private ChainDecorator<TMessageType> BuildInternal(Func<TMessageType, CancellationToken, Task> nextHandler)
         {
-            return new SemaphoreDecorator<TMessageType>(currentHandler, this.maxNumberOfConcurrentMessages);
+            return new SemaphoreDecorator<TMessageType>(nextHandler, this.maxNumberOfConcurrentMessages);
         }
     }
 }

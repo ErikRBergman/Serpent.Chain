@@ -38,12 +38,14 @@
         /// <param name="attribute">The attribute to wire up from</param>
         /// <param name="chainBuilder">The message handler chain builder</param>
         /// <param name="handler">The message handler</param>
-        public void WireUpFromAttribute<TMessageType, THandlerType>(Attribute attribute, IChainBuilder<TMessageType> chainBuilder, THandlerType handler)
+        public bool WireUpFromAttribute<TMessageType, THandlerType>(Attribute attribute, IChainBuilder<TMessageType> chainBuilder, THandlerType handler)
         {
             if (attribute is TAttributeType ourAttribute)
             {
-                this.WireUpFromAttribute(ourAttribute, chainBuilder, handler);
+                return this.WireUpFromAttribute(ourAttribute, chainBuilder, handler);
             }
+
+            return true;
         }
 
         /// <summary>
@@ -54,15 +56,17 @@
         /// <param name="configuration">The configuration</param>
         /// <param name="chainBuilder">The message handler chain builder</param>
         /// <param name="handler">The handler</param>
-        public void WireUpFromConfiguration<TMessageType, THandlerType>(
+        public bool WireUpFromConfiguration<TMessageType, THandlerType>(
             object configuration,
             IChainBuilder<TMessageType> chainBuilder,
             THandlerType handler)
         {
             if (configuration is TConfigurationType outConfiguration)
             {
-                this.WireUpFromConfiguration(outConfiguration, chainBuilder, handler);
+                return this.WireUpFromConfiguration(outConfiguration, chainBuilder, handler);
             }
+
+            return true;
         }
 
         /// <summary>
@@ -80,7 +84,7 @@
         /// <param name="attribute">The attribute</param>
         /// <param name="chainBuilder">The message handler chain builder</param>
         /// <param name="handler">The handler</param>
-        protected abstract void WireUpFromAttribute<TMessageType, THandlerType>(
+        protected abstract bool WireUpFromAttribute<TMessageType, THandlerType>(
             TAttributeType attribute,
             IChainBuilder<TMessageType> chainBuilder,
             THandlerType handler);
@@ -93,7 +97,7 @@
         /// <param name="configuration">The configuration</param>
         /// <param name="chainBuilder">The message handler chain builder</param>
         /// <param name="handler">The handler</param>
-        protected abstract void WireUpFromConfiguration<TMessageType, THandlerType>(
+        protected abstract bool WireUpFromConfiguration<TMessageType, THandlerType>(
             TConfigurationType configuration,
             IChainBuilder<TMessageType> chainBuilder,
             THandlerType handler);

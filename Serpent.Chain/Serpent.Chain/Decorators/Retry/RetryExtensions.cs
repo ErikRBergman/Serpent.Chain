@@ -26,7 +26,7 @@ namespace Serpent.Chain
             TimeSpan retryDelay)
         {
             var builder = new RetryDecoratorBuilder<TMessageType>().MaximumNumberOfAttempts(maxNumberOfAttempts).RetryDelays(retryDelay);
-            return chainBuilder.AddDecorator(currentHandler => new RetryDecorator<TMessageType>(currentHandler, builder).HandleMessageAsync);
+            return chainBuilder.AddDecorator(nextHandler => new RetryDecorator<TMessageType>(nextHandler, builder).HandleMessageAsync);
         }
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace Serpent.Chain
             var builder = new RetryDecoratorBuilder<TMessageType>();
             configureRetry(builder);
 
-            return chainBuilder.AddDecorator(currentHandler => new RetryDecorator<TMessageType>(currentHandler, builder).HandleMessageAsync);
+            return chainBuilder.AddDecorator(nextHandler => new RetryDecorator<TMessageType>(nextHandler, builder).HandleMessageAsync);
         }
     }
 }

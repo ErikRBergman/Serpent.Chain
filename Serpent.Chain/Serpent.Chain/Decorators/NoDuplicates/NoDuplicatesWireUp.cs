@@ -19,7 +19,7 @@
             };
         }
 
-        protected override void WireUpFromAttribute<TMessageType, THandlerType>(
+        protected override bool WireUpFromAttribute<TMessageType, THandlerType>(
             NoDuplicatesAttribute attribute,
             IChainBuilder<TMessageType> chainBuilder,
             THandlerType handler)
@@ -27,14 +27,16 @@
             var propertyName = attribute.PropertyName;
 
             WireUp<TMessageType>(chainBuilder, propertyName);
+            return true;
         }
 
-        protected override void WireUpFromConfiguration<TMessageType, THandlerType>(
+        protected override bool WireUpFromConfiguration<TMessageType, THandlerType>(
             NoDuplicatesConfiguration configuration,
             IChainBuilder<TMessageType> chainBuilder,
             THandlerType handler)
         {
             WireUp<TMessageType>(chainBuilder, configuration.PropertyName);
+            return true;
         }
 
         private static void WireUp<TMessageType>(IChainBuilder<TMessageType> chainBuilder, string propertyName)

@@ -18,7 +18,7 @@ namespace Serpent.Chain
         /// <returns>A message handler chain builder</returns>
         public static IChainBuilder<TMessageType> Skip<TMessageType>(this IChainBuilder<TMessageType> chainBuilder, int numberOfMessages)
         {
-            return chainBuilder.AddDecorator(currentHandler => new SkipDecorator<TMessageType>(currentHandler, numberOfMessages));
+            return chainBuilder.AddDecorator(nextHandler => new SkipDecorator<TMessageType>(nextHandler, numberOfMessages));
         }
     }
 }

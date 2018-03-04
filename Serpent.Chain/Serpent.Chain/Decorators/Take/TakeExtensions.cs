@@ -19,7 +19,7 @@ namespace Serpent.Chain
             this IChainBuilder<TMessageType> chainBuilder,
             int numberOfMessages)
         {
-            return chainBuilder.AddDecorator((currentHandler, services) => new TakeDecorator<TMessageType>(currentHandler, numberOfMessages, services.BuilderNotifier));
+            return chainBuilder.AddDecorator((nextHandler, services) => new TakeDecorator<TMessageType>(nextHandler, numberOfMessages, services.BuilderNotifier));
         }
     }
 }

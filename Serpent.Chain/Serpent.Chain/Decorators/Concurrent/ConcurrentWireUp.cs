@@ -20,14 +20,16 @@ namespace Serpent.Chain.Decorators.Concurrent
             throw new Exception("Concurrent: Could not convert concurrency level to integer: " + text);
         }
 
-        protected override void WireUpFromAttribute<TMessageType, THandlerType>(ConcurrentAttribute attribute, IChainBuilder<TMessageType> chainBuilder, THandlerType handler)
+        protected override bool WireUpFromAttribute<TMessageType, THandlerType>(ConcurrentAttribute attribute, IChainBuilder<TMessageType> chainBuilder, THandlerType handler)
         {
             chainBuilder.Concurrent(attribute.MaxNumberOfConcurrentMessages);
+            return true;
         }
 
-        protected override void WireUpFromConfiguration<TMessageType, THandlerType>(ConcurrentConfiguration configuration, IChainBuilder<TMessageType> chainBuilder, THandlerType handler)
+        protected override bool WireUpFromConfiguration<TMessageType, THandlerType>(ConcurrentConfiguration configuration, IChainBuilder<TMessageType> chainBuilder, THandlerType handler)
         {
             chainBuilder.Concurrent(configuration.MaxNumberOfConcurrentMessages);
+            return true;
         }
     }
 }

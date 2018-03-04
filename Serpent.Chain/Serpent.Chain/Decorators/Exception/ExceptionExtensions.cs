@@ -34,7 +34,7 @@ namespace Serpent.Chain
                 throw new ArgumentNullException(nameof(exceptionHandlerFunc));
             }
 
-            return chainBuilder.AddDecorator(currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, (message, exception, token) => exceptionHandlerFunc(message, exception)));
+            return chainBuilder.AddDecorator(nextHandler => new ExceptionDecorator<TMessageType>(nextHandler, (message, exception, token) => exceptionHandlerFunc(message, exception)));
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace Serpent.Chain
                 throw new ArgumentNullException(nameof(exceptionHandlerFunc));
             }
 
-            return chainBuilder.AddDecorator(currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, exceptionHandlerFunc));
+            return chainBuilder.AddDecorator(nextHandler => new ExceptionDecorator<TMessageType>(nextHandler, exceptionHandlerFunc));
         }
 
         /// <summary>
@@ -76,8 +76,8 @@ namespace Serpent.Chain
             }
 
             return chainBuilder.AddDecorator(
-                currentHandler => new ExceptionDecorator<TMessageType>(
-                    currentHandler,
+                nextHandler => new ExceptionDecorator<TMessageType>(
+                    nextHandler,
                     async (message, exception, token) =>
                         {
                             await exceptionHandlerFunc(message, exception).ConfigureAwait(false);
@@ -102,8 +102,8 @@ namespace Serpent.Chain
             }
 
             return chainBuilder.AddDecorator(
-                currentHandler => new ExceptionDecorator<TMessageType>(
-                    currentHandler,
+                nextHandler => new ExceptionDecorator<TMessageType>(
+                    nextHandler,
                     async (message, exception, token) =>
                         {
                             await exceptionHandlerFunc(message, exception, token).ConfigureAwait(false);
@@ -131,7 +131,7 @@ namespace Serpent.Chain
             }
 
             return chainBuilder.AddDecorator(
-                currentHandler => new ExceptionDecorator<TMessageType>(currentHandler, (message, exception, token) => Task.FromResult(exceptionHandlerFunc(message, exception))));
+                nextHandler => new ExceptionDecorator<TMessageType>(nextHandler, (message, exception, token) => Task.FromResult(exceptionHandlerFunc(message, exception))));
         }
 
         /// <summary>
@@ -151,8 +151,8 @@ namespace Serpent.Chain
             }
 
             return chainBuilder.AddDecorator(
-                currentHandler => new ExceptionDecorator<TMessageType>(
-                    currentHandler,
+                nextHandler => new ExceptionDecorator<TMessageType>(
+                    nextHandler,
                     (message, exception, token) =>
                         {
                             exceptionHandlerAction(message, exception);

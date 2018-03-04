@@ -19,7 +19,7 @@ namespace Serpent.Chain
         /// <returns>A message handler chain builder</returns>
         public static IChainBuilder<TMessageType> DispatchOnCurrentContext<TMessageType>(this IChainBuilder<TMessageType> chainBuilder)
         {
-            return chainBuilder.AddDecorator(currentHandler => new TaskSchedulerDecorator<TMessageType>(currentHandler, TaskScheduler.FromCurrentSynchronizationContext()));
+            return chainBuilder.AddDecorator(nextHandler => new TaskSchedulerDecorator<TMessageType>(nextHandler, TaskScheduler.FromCurrentSynchronizationContext()));
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace Serpent.Chain
             this IChainBuilder<TMessageType> chainBuilder,
             TaskScheduler taskScheduler)
         {
-            return chainBuilder.AddDecorator(currentHandler => new TaskSchedulerDecorator<TMessageType>(currentHandler, taskScheduler).HandleMessageAsync);
+            return chainBuilder.AddDecorator(nextHandler => new TaskSchedulerDecorator<TMessageType>(nextHandler, taskScheduler).HandleMessageAsync);
         }
     }
 }

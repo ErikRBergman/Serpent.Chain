@@ -21,20 +21,22 @@ namespace Serpent.Chain.Decorators.Delay
             throw new CouldNotParseConfigTextToTimeSpanException("Delay: Could not parse text to timespan: " + text, text);
         }
 
-        protected override void WireUpFromAttribute<TMessageType, THandlerType>(
+        protected override bool WireUpFromAttribute<TMessageType, THandlerType>(
             DelayAttribute attribute,
             IChainBuilder<TMessageType> chainBuilder,
             THandlerType handler)
         {
             chainBuilder.Delay(attribute.Delay);
+            return true;
         }
 
-        protected override void WireUpFromConfiguration<TMessageType, THandlerType>(
+        protected override bool WireUpFromConfiguration<TMessageType, THandlerType>(
             DelayConfiguration configuration,
             IChainBuilder<TMessageType> chainBuilder,
             THandlerType handler)
         {
             chainBuilder.Delay(configuration.Delay);
+            return true;
         }
     }
 }

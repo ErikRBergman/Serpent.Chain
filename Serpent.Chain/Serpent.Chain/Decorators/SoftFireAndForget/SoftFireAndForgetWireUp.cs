@@ -9,17 +9,19 @@
             return new SoftFireAndForgetConfiguration();
         }
 
-        protected override void WireUpFromAttribute<TMessageType, THandlerType>(SoftFireAndForgetAttribute attribute, IChainBuilder<TMessageType> chainBuilder, THandlerType handler)
+        protected override bool WireUpFromAttribute<TMessageType, THandlerType>(SoftFireAndForgetAttribute attribute, IChainBuilder<TMessageType> chainBuilder, THandlerType handler)
         {
             chainBuilder.SoftFireAndForget();
+            return true;
         }
 
-        protected override void WireUpFromConfiguration<TMessageType, THandlerType>(
+        protected override bool WireUpFromConfiguration<TMessageType, THandlerType>(
             SoftFireAndForgetConfiguration configuration,
             IChainBuilder<TMessageType> chainBuilder,
             THandlerType handler)
         {
             chainBuilder.SoftFireAndForget();
+            return true;
         }
     }
 }

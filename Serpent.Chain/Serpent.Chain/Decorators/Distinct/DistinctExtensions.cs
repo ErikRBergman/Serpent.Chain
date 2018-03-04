@@ -31,7 +31,7 @@ namespace Serpent.Chain
                 throw new ArgumentNullException(nameof(keySelector));
             }
 
-            return chainBuilder.AddDecorator(currentHandler => new DistinctDecorator<TMessageType, TKeyType>(currentHandler, keySelector));
+            return chainBuilder.AddDecorator(nextHandler => new DistinctDecorator<TMessageType, TKeyType>(nextHandler, keySelector));
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace Serpent.Chain
         /// <returns>The builder</returns>
         public static IChainBuilder<TMessageType> Distinct<TMessageType>(this IChainBuilder<TMessageType> chainBuilder)
         {
-            return chainBuilder.AddDecorator(currentHandler => new DistinctDecorator<TMessageType, TMessageType>(currentHandler, m => m));
+            return chainBuilder.AddDecorator(nextHandler => new DistinctDecorator<TMessageType, TMessageType>(nextHandler, m => m));
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace Serpent.Chain
             }
 
             return chainBuilder.AddDecorator(
-                currentHandler => new DistinctAsyncDecorator<TMessageType, TKeyType>(currentHandler, (message, token) => keySelector(message)));
+                nextHandler => new DistinctAsyncDecorator<TMessageType, TKeyType>(nextHandler, (message, token) => keySelector(message)));
         }
     }
 }

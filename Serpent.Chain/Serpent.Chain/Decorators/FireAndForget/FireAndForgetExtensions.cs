@@ -17,7 +17,7 @@ namespace Serpent.Chain
         /// <returns>The message handler chain builder</returns>
         public static IChainBuilder<TMessageType> FireAndForget<TMessageType>(this IChainBuilder<TMessageType> chainBuilder)
         {
-            return chainBuilder.AddDecorator(currentHandler => new FireAndForgetDecorator<TMessageType>(currentHandler).HandleMessageAsync);
+            return chainBuilder.AddDecorator(nextHandler => new FireAndForgetDecorator<TMessageType>(nextHandler).HandleMessageAsync);
         }
     }
 }

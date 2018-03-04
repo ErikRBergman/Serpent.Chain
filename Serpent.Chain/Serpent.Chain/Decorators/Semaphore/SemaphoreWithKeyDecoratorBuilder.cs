@@ -68,14 +68,14 @@
             return this;
         }
 
-        internal ChainDecorator<TMessageType> Build(Func<TMessageType, CancellationToken, Task> currentHandler)
+        internal ChainDecorator<TMessageType> Build(Func<TMessageType, CancellationToken, Task> nextHandler)
         {
             if (this.KeySelectorValue == null)
             {
                 throw KeySelectorMissingException.CreateDefault();
             }
 
-            return new SemaphoreWithKeyDecorator<TMessageType, TKeyType>(currentHandler, this);
+            return new SemaphoreWithKeyDecorator<TMessageType, TKeyType>(nextHandler, this);
         }
     }
 }

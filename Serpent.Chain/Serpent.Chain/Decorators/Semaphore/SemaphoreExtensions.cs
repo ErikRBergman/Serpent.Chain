@@ -35,7 +35,7 @@ namespace Serpent.Chain
 
             var builder = new SemaphoreDecoratorBuilder<TMessageType>();
             config(builder);
-            return chainBuilder.AddDecorator(currentHandler => builder.Build(currentHandler));
+            return chainBuilder.AddDecorator(nextHandler => builder.Build(nextHandler));
         }
     }
 }

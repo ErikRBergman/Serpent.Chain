@@ -6,6 +6,7 @@ namespace Serpent.Chain.Tests.Decorators.WeakReference
     using System.Threading.Tasks;
 
     using Serpent.Chain.Decorators.WeakReference;
+    using Serpent.Chain.Interfaces;
 
     using Xunit;
 
@@ -18,7 +19,7 @@ namespace Serpent.Chain.Tests.Decorators.WeakReference
 
             var gc = new WeakReferenceGarbageCollector(TimeSpan.FromMilliseconds(100));
 
-            var chain = Create.CreateChain<int>(b => b.WeakReference(gc).Handler(m => { }), () => isDisposed = true);
+            var chain = Create.CreateChain<int>(b => b.WeakReference(new MessageHandler(), gc), () => isDisposed = true);
 
             Assert.False(isDisposed);
             GC.Collect(2, GCCollectionMode.Forced);
@@ -29,6 +30,14 @@ namespace Serpent.Chain.Tests.Decorators.WeakReference
             await chain.ChainFunc(0, CancellationToken.None);
 
             Assert.True(isDisposed);
+        }
+
+        private class MessageHandler : IMessageHandler<int>
+        {
+            public Task HandleMessageAsync(int message, CancellationToken cancellationToken)
+            {
+                return Task.CompletedTask;
+            }
         }
     }
 }

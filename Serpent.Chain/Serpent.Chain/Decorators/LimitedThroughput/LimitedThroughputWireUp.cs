@@ -12,29 +12,31 @@ namespace Serpent.Chain.Decorators.LimitedThroughput
             if (int.TryParse(text, out var maxNumberOfMessagesPerPeriod))
             {
                 return new LimitedThroughputConfiguration
-                           {
-                               MaxNumberOfMessagesPerPeriod = maxNumberOfMessagesPerPeriod,
-                               Period = TimeSpan.FromSeconds(1)
-                           };
+                {
+                    MaxNumberOfMessagesPerPeriod = maxNumberOfMessagesPerPeriod,
+                    Period = TimeSpan.FromSeconds(1)
+                };
             }
 
             throw new Exception("LimitedThroughput: Could not convert text to integer " + text);
         }
 
-        protected override void WireUpFromAttribute<TMessageType, THandlerType>(
+        protected override bool WireUpFromAttribute<TMessageType, THandlerType>(
             LimitedThroughputAttribute attribute,
             IChainBuilder<TMessageType> chainBuilder,
             THandlerType handler)
         {
             chainBuilder.LimitedThroughput(attribute.MaxNumberOfMessagesPerPeriod, attribute.Period);
+            return true;
         }
 
-        protected override void WireUpFromConfiguration<TMessageType, THandlerType>(
+        protected override bool WireUpFromConfiguration<TMessageType, THandlerType>(
             LimitedThroughputConfiguration configuration,
             IChainBuilder<TMessageType> chainBuilder,
             THandlerType handler)
         {
             chainBuilder.LimitedThroughput(configuration.MaxNumberOfMessagesPerPeriod, configuration.Period);
+            return true;
         }
     }
 }

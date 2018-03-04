@@ -22,9 +22,9 @@ namespace Serpent.Chain
             this IChainBuilder<TMessageType> chainBuilder,
             Func<TMessageType, bool> predicate)
         {
-            return chainBuilder.AddDecorator((currentHandler, services) => new TakeWhileDecorator<TMessageType>(new TakeWhileDecoratorConfiguration<TMessageType>
+            return chainBuilder.AddDecorator((nextHandler, services) => new TakeWhileDecorator<TMessageType>(new TakeWhileDecoratorConfiguration<TMessageType>
             {
-                HandlerFunc = currentHandler,
+                HandlerFunc = nextHandler,
                 Predicate = predicate,
                 Services = services
             }));
@@ -41,9 +41,9 @@ namespace Serpent.Chain
             this IChainBuilder<TMessageType> chainBuilder,
             Func<TMessageType, Task<bool>> predicate)
         {
-            return chainBuilder.AddDecorator((currentHandler, services) => new TakeWhileAsyncDecorator<TMessageType>(new TakeWhileAsyncDecoratorConfiguration<TMessageType>
+            return chainBuilder.AddDecorator((nextHandler, services) => new TakeWhileAsyncDecorator<TMessageType>(new TakeWhileAsyncDecoratorConfiguration<TMessageType>
             {
-                HandlerFunc = currentHandler,
+                HandlerFunc = nextHandler,
                 Predicate = predicate,
                 Services = services
             }));

@@ -18,12 +18,12 @@
         protected override DistinctConfiguration CreateAndParseConfigurationFromDefaultValue(string text)
         {
             return new DistinctConfiguration
-                       {
-                           PropertyName = text
-                       };
+            {
+                PropertyName = text
+            };
         }
 
-        protected override void WireUpFromAttribute<TMessageType, THandlerType>(
+        protected override bool WireUpFromAttribute<TMessageType, THandlerType>(
             DistinctAttribute attribute,
             IChainBuilder<TMessageType> chainBuilder,
             THandlerType handler)
@@ -31,7 +31,7 @@
             if (string.IsNullOrWhiteSpace(attribute.PropertyName))
             {
                 chainBuilder.Distinct(msg => msg);
-                return;
+                return true;
             }
 
             SelectorSetup<TMessageType>
@@ -39,14 +39,16 @@
                     attribute.PropertyName,
                         DistinctMethodInfo,
                     (typedMethodInfo, selector) => typedMethodInfo.Invoke(null, new object[] { chainBuilder, selector }));
+
+            return true;
         }
 
-        protected override void WireUpFromConfiguration<TMessageType, THandlerType>(DistinctConfiguration configuration, IChainBuilder<TMessageType> chainBuilder, THandlerType handler)
+        protected override bool WireUpFromConfiguration<TMessageType, THandlerType>(DistinctConfiguration configuration, IChainBuilder<TMessageType> chainBuilder, THandlerType handler)
         {
             if (string.IsNullOrWhiteSpace(configuration.PropertyName))
             {
                 chainBuilder.Distinct(msg => msg.ToString());
-                return;
+                return true;
             }
 
             SelectorSetup<TMessageType>
@@ -54,6 +56,8 @@
                     configuration.PropertyName,
                     DistinctMethodInfo,
                     (methodInfo, selector) => methodInfo.Invoke(null, new object[] { chainBuilder, selector }));
+
+            return true;
         }
     }
 }

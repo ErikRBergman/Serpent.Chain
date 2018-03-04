@@ -20,7 +20,7 @@ namespace Serpent.Chain
         /// <returns>The builder</returns>
         public static IChainBuilder<TMessageType> Delay<TMessageType>(this IChainBuilder<TMessageType> chainBuilder, TimeSpan timeToWait)
         {
-            return chainBuilder.AddDecorator(currentHandler => new DelayDecorator<TMessageType>(currentHandler, timeToWait).HandleMessageAsync);
+            return chainBuilder.AddDecorator(nextHandler => new DelayDecorator<TMessageType>(nextHandler, timeToWait).HandleMessageAsync);
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace Serpent.Chain
             int timeInMilliseconds)
         {
             return chainBuilder.AddDecorator(
-                currentHandler => new DelayDecorator<TMessageType>(currentHandler, TimeSpan.FromMilliseconds(timeInMilliseconds)).HandleMessageAsync);
+                nextHandler => new DelayDecorator<TMessageType>(nextHandler, TimeSpan.FromMilliseconds(timeInMilliseconds)).HandleMessageAsync);
         }
     }
 }
