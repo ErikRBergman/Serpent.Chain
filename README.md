@@ -4,8 +4,8 @@
 |:--:|:--:|:--:|
 |master|[![Build Status](https://travis-ci.org/ErikRBergman/Serpent.Chain.svg?branch=master)](https://travis-ci.org/ErikRBergman/Serpent.MessageBus)|[![BCH compliance](https://bettercodehub.com/edge/badge/ErikRBergman/Serpent.Chain?branch=master)](https://bettercodehub.com/)|
 
-
 ## Introduction
+
 Serpent.Chain started as a part of Serpent.MessageBus as a way to customize the behavior of the message bus subscriptions. 
 I found out, people were not that interested in message bus functionality, but rather just wanted to use it's decorators.
 
@@ -15,16 +15,21 @@ The project use mostly fluent coding style allow you to pack as much as possible
 
 For example, you can easily parallelize, retry after a period of time, limit throughput, limit access to a service based on a key and much more.
 
+Feel free to fork the project, send pull requests, report errors/bugs, suggestions, ideas, ask questions etc.
+
 ### Code example
+
 Let's say you have some online service and you want to send notifications to your customers. We'll use `SmtpClient` for this example but it could just as well be push notifications through Azure Notification hubs or anything else.
 
 ```csharp
 public interface INotificationService
 {
-	Task SendNotificationAsync(NotificationData notification);
+    Task SendNotificationAsync(NotificationData notification);
 }
 ```
+
 The "normal" implementation:
+
 ```csharp
 public class NotificationService : INotificationService
 {
@@ -36,7 +41,9 @@ public class NotificationService : INotificationService
     }
 }
 ```
+
 The client:
+
 ```csharp
 INotificationService notificationService = new NotificationService();
 
@@ -52,15 +59,34 @@ foreach (var recipient in recipients)
                 Body = "Welcome ..."
             });
 ```
+
 If you've implemented something like this before, you know that sending a lot of e-mail messages sequentially will be too slow, but at the same time you do not want to put too much load on the mail server.
-Often, you would write code to queue the messages and have worker tasks send the notifications out. 
+Often, you would write code to queue the messages and have worker tasks send the notifications out.
 
+A quick and simple way to add concurrency and retry functionality could look like this, using Serpent.Chain:
 
+```csharp
+    public class NotificationServiceWithDecorators : INotificationService
+    {
+        private readonly SmtpClient smtpClient = new SmtpClient();
 
-.....
+        private readonly Func<NotificationData, Task> sendMailFunc;
 
+        public NotificationServiceWithDecorators()
+        {
+            this.sendMailFunc = Create.SimpleFunc<NotificationData>(
+                b => b
+                    .Retry(r => r.MaximumNumberOfAttempts(3).RetryDelay(TimeSpan.FromSeconds(15)))
+                    .Concurrent(10)
+                    .Handler(notification => this.smtpClient.SendMailAsync(new MailMessage("noreply@serpent.chain", notification.RecipientEmailAddress, notification.Subject, notification.Body))));
+        }
 
-Feel free to fork the project, send pull requests, report errors/bugs, suggestions, ideas, ask questions etc.
+        public Task SendNotificationAsync(NotificationData notification)
+        {
+            return this.sendMailFunc(notification);
+        }
+    }
+```
 
 ## Creating chains
 
@@ -343,6 +369,7 @@ bus
 
 
 #### `.BranchOut()`
+
 `.BranchOut()` works like `.Branch()` but adds one or more parallel MHC trees to the current tree instead of splitting the current tree into one or more trees. 
 
 ##### Overloads
@@ -409,6 +436,7 @@ var subscription = bus
 ```
 
 ##### `.Retry()` stacked with `.Concurrent()`
+
 We can specify `.Retry()` before `.Concurrent()` to process other messages while a failed attempt is waiting to retry, or `.Retry()` after `.Concurrent()` to lock upp one of the 20 concurrent handlers for upp to 4 minutes waiting for a retry.
 
 ```csharp
@@ -434,6 +462,7 @@ var subscription = bus
 ```
 
 #### `.ConcurrentFireAndForget()`
+
 `.ConcurrentFireAndForget()` is roughly the same as `.SoftFireAndForget().Concurrent()` - feedback can't pass through, but for scenarios where performance is very important, `.ConcurrentFireAndForget()` has smaller overhead.
 
 ##### Overloads
@@ -1110,15 +1139,18 @@ var subscription2 = bus2
 The example above limits the concurrency to 1 simultaneous message being handled with the same Id. If subscription1 is handling a message, subscription2 will have to wait if another message with the same id is published to subscription2 until subscription1 is done handling the message.
 
 #### `.Skip()`
+
 Skips X messages before allowing messages to pass through.
 
-##### Overloads
+##### `.Skip` overloads
+
 ```csharp
 .Skip(int numberOfMessages);
 ```
 * `numberOfMessages` the number of messages to skip before letting messages through
 
-##### Examples
+##### `.Skip` examples
+
 ```csharp
 var subscription = bus
     .Subscribe()
@@ -1130,6 +1162,7 @@ var subscription = bus
 ```
 
 #### `.SkipWhile()`
+
 Skips all messages as long as the predicate returns true.
 
 ##### Overloads
@@ -1224,7 +1257,6 @@ var subscription = bus
             Console.WriteLine("The message is among the first");
         });
 ```
-
 
 #### `.WeakReference()`
 
@@ -1356,6 +1388,7 @@ var bus = new ConcurrentMessageBus<TestMessage>(
 Make sure you call the handler method at the end of the MHC chain or your subscribers will not be called.
 
 ## Creating your own custom MHC decorator
+
 When you have requirements that can not be fullfilled using the existing decorators, it might be time to write your very own.
 
 This first example is the very simple `.Where()` decorator:
