@@ -1,24 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <Version>0.0.0.17</Version>
+    <Version>0.0.0.18</Version>
     <Authors>Erik Bergman</Authors>
     <Company />
     <Description>Message handler Chain</Description>
-    <AssemblyVersion>0.0.0.17</AssemblyVersion>
-    <FileVersion>0.0.0.17</FileVersion>
+    <AssemblyVersion>0.0.0.18</AssemblyVersion>
+    <FileVersion>0.0.0.18</FileVersion>
     <PackageReleaseNotes>Allowing stackable .Where in the RetryDecoratorBuilder</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/ErikRBergman/Serpent.Chain</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ErikRBergman/Serpent.Chain</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>async message handler tpl weak reference concurrency retry semaphore</PackageTags>
-	<IncludeSymbols>true</IncludeSymbols>
+    <IncludeSymbols>true</IncludeSymbols>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>bin\Release\netstandard2.0\Serpent.Chain.xml</DocumentationFile>
   </PropertyGroup>
-
 </Project>
